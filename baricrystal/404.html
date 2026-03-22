@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Page Not Found — BARICRYSTAL INTERNATIONAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+  .not-found {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 48px; position: relative;
+  }
+  .not-found::before {
+    content: '404';
+    font-family: 'Cormorant Garamond', serif; font-size: 240px; font-weight: 400;
+    color: rgba(200,155,60,0.05); position: absolute;
+    line-height: 1; pointer-events: none; user-select: none;
+  }
+  .not-found-tag { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+  .not-found h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(36px, 5vw, 60px); font-weight: 500; margin-bottom: 16px; }
+  .not-found p { font-size: 15px; color: var(--text-muted); max-width: 400px; margin-bottom: 40px; line-height: 1.8; }
+  .not-found-links { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+</style>
+</head>
+<body>
+<script src="nav.js"></script>
+<div class="not-found">
+  <div class="not-found-tag">Page Not Found</div>
+  <h1>This Page Doesn't Exist</h1>
+  <p>The page you're looking for may have been moved or the link might be incorrect.</p>
+  <div class="not-found-links">
+    <a href="index.html" class="btn-primary">Go to Homepage</a>
+    <a href="contact.html" class="btn-outline">Contact Us</a>
+  </div>
+</div>
+<script src="footer.js"></script>
+</body>
+</html>
