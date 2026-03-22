@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FAQ — BARICRYSTAL INTERNATIONAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+  .faq-section { padding: 80px 48px 100px; max-width: 900px; }
+  .faq-list { display: flex; flex-direction: column; }
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-item:first-child { border-top: 1px solid var(--border); }
+  .faq-question {
+    width: 100%; background: none; border: none; cursor: pointer;
+    padding: 28px 0; display: flex; justify-content: space-between; align-items: center;
+    gap: 24px; text-align: left; color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .faq-question:hover .faq-q-text { color: var(--gold); }
+  .faq-q-text { font-size: 16px; font-weight: 500; line-height: 1.4; transition: color 0.2s; }
+  .faq-icon {
+    width: 28px; height: 28px; border: 1px solid var(--border);
+    border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--gold); transition: all 0.3s;
+    line-height: 1;
+  }
+  .faq-item.open .faq-icon { background: var(--gold); color: var(--dark); transform: rotate(45deg); }
+  .faq-answer { display: none; padding: 0 0 28px; padding-right: 52px; }
+  .faq-item.open .faq-answer { display: block; }
+  .faq-answer p { font-size: 14px; color: var(--text-muted); line-height: 1.9; }
+  .faq-answer p + p { margin-top: 12px; }
+
+  .faq-contact {
+    margin: 0 48px 100px; background: var(--dark-2);
+    border: 1px solid var(--border); padding: 48px;
+    display: flex; justify-content: space-between; align-items: center; gap: 40px;
+  }
+  .faq-contact-text h3 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 500; margin-bottom: 8px; }
+  .faq-contact-text p { font-size: 14px; color: var(--text-muted); }
+
+  @media (max-width: 900px) {
+    .faq-section { padding: 64px 24px; }
+    .faq-contact { margin: 0 24px 64px; padding: 32px 24px; flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<script src="nav.js"></script>
+
+<div class="page-hero">
+  <div class="page-tag fade-up">Frequently Asked Questions</div>
+  <h1 class="page-title fade-up-1">Got <em>Questions?</em><br>We Have Answers.</h1>
+  <p class="page-sub fade-up-2">Everything you need to know about working with BARICRYSTAL INTERNATIONAL and applying for international employment.</p>
+</div>
+
+<div class="faq-section">
+  <div class="faq-list">
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span class="faq-q-text">How long does the recruitment process take?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>The processing time varies depending on the employer, job category, and documentation requirements. Initial application review typically takes 3–5 business days. The full process from application to departure can range from a few weeks to a few months depending on visa processing times and employer timelines.</p>
+        <p>Our team will keep you informed at every stage so you always know where things stand.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Do I need prior work experience to apply?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>It depends on the role. Many positions — including factory work, cleaning, and agricultural jobs — do not require prior experience and provide training for beginners. Some construction and hospitality roles may require relevant skills or experience.</p>
+        <p>When you apply, our team will assess your background and match you with opportunities suited to your current skill level.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What documents are required to apply?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>You will generally need a valid international passport, a government-issued ID, and a CV or resume. Some positions may require additional documentation such as educational certificates, medical clearance, or police clearance depending on the employer and destination country.</p>
+        <p>Our team will provide you with a full document checklist once your application is received and reviewed.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Are accommodation and transportation provided?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>This depends entirely on the employer and the specific job contract. Many agricultural and factory positions include accommodation as part of the employment package. Others provide transportation allowances or airport pickup.</p>
+        <p>We will clearly communicate what is included in your specific job offer before you commit to anything.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Is the registration fee refundable?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>The registration fee covers the cost of application processing, document verification, and employer matching services. Please contact our team directly to understand the terms that apply to your specific situation before completing payment.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Which countries can I be placed in?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>We work with employers across multiple regions including Europe, the Middle East, and other international destinations. The available countries depend on current employer partnerships and job openings at the time of your application.</p>
+        <p>You can indicate your preferred country of employment in your application and our team will do their best to match you accordingly.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span class="faq-q-text">How do I know the job offers are genuine?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>We only work with verified employers and registered recruitment partners. Every opportunity we present has been vetted by our team. We do not charge candidates for job placement itself — our model is built on transparency and accountability.</p>
+        <p>If you ever have concerns about a specific offer, our team is always available to address them directly.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Can I apply if I don't have a passport yet?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>You can begin the application process and express your interest, but a valid international passport will be required before any job placement can be confirmed. We recommend beginning your passport application as early as possible as processing times can vary.</p>
+        <p>Our team can advise you on next steps while your passport is being processed.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="faq-contact">
+  <div class="faq-contact-text">
+    <h3>Still have questions?</h3>
+    <p>Our team is available via WhatsApp and email to answer anything not covered here.</p>
+  </div>
+  <a href="contact.html" class="btn-outline">Contact Us</a>
+</div>
+
+<script src="footer.js"></script>
+<script>
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
+</body>
+</html>
