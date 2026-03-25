@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — BARICRYSTAL INTERNATIONAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+body {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--dark-2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 32px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  padding: 0 24px 32px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.sidebar-logo a {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.sidebar-logo span {
+  color: var(--text);
+}
+
+.sidebar-logo small {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  margin-top: 4px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.nav-section-title {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 24px 8px;
+  margin-top: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  font-size: 13px;
+}
+
+.nav-item:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.nav-item.active {
+  color: var(--gold);
+  border-left-color: var(--gold);
+  background: rgba(200, 155, 60, 0.05);
+}
+
+.nav-icon {
+  font-size: 14px;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sidebar-user {
+  padding: 24px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(200, 155, 60, 0.15);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.user-info {
+  font-size: 12px;
+}
+
+.user-name {
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.user-email {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid rgba(226, 75, 74, 0.3);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* MAIN CONTENT */
+.main {
+  margin-left: 280px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  height: 70px;
+  background: var(--dark-2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.topbar-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.topbar-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.content {
+  padding: 32px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 32px;
+}
+
+.tab-btn {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 24px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+}
+
+.tab-btn.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* PLAN SECTION */
+.plan-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 40px;
+}
+
+.plan-card {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  padding: 32px;
+}
+
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.plan-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.plan-badge {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(200, 155, 60, 0.15);
+  color: var(--gold);
+  padding: 4px 12px;
+  border: 1px solid rgba(200, 155, 60, 0.3);
+}
+
+.plan-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.detail-row strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.plan-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-upgrade {
+  flex: 1;
+  padding: 12px;
+  background: var(--gold);
+  color: var(--dark);
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.btn-upgrade:hover {
+  opacity: 0.85;
+}
+
+/* JOBS SECTION */
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.job-card {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  padding: 24px;
+  transition: all 0.2s;
+}
+
+.job-card:hover {
+  border-color: var(--gold);
+  background: rgba(200, 155, 60, 0.02);
+}
+
+.job-icon {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.job-name {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.job-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.job-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.apply-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--gold);
+  padding: 6px 14px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.apply-btn:hover {
+  border-color: var(--gold);
+  background: rgba(200, 155, 60, 0.1);
+}
+
+/* SETTINGS */
+.settings-section {
+  max-width: 600px;
+}
+
+.settings-box {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  padding: 28px;
+  margin-bottom: 20px;
+}
+
+.settings-title {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settings-field {
+  margin-bottom: 16px;
+}
+
+.settings-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.settings-value {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.btn-save {
+  padding: 11px 24px;
+  background: var(--gold);
+  color: var(--dark);
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.btn-save:hover {
+  opacity: 0.85;
+}
+
+.danger-zone {
+  background: rgba(226, 75, 74, 0.05);
+  border: 1px solid rgba(226, 75, 74, 0.15);
+  padding: 28px;
+}
+
+.danger-title {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--error);
+  margin-bottom: 12px;
+}
+
+.danger-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.btn-delete {
+  padding: 11px 24px;
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-delete:hover {
+  background: rgba(226, 75, 74, 0.1);
+}
+
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.modal-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.7;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.modal-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.modal-cancel:hover {
+  color: var(--text);
+}
+
+.modal-confirm {
+  background: var(--error);
+  color: var(--text);
+}
+
+.modal-confirm:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 1024px) {
+  .plan-section {
+    grid-template-columns: 1fr;
+  }
+  .jobs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    z-index: 200;
+  }
+  .main {
+    margin-left: 0;
+  }
+  .topbar {
+    padding: 0 20px;
+  }
+  .content {
+    padding: 20px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">Bari<span>crystal</span></a>
+    <small>Candidate Dashboard</small>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Main</div>
+    <a class="nav-item active" onclick="switchTab('overview', this)">
+      <span class="nav-icon">◈</span>
+      Overview
+    </a>
+    <a class="nav-item" onclick="switchTab('jobs', this)">
+      <span class="nav-icon">◆</span>
+      Job Opportunities
+    </a>
+    <a class="nav-item" onclick="switchTab('applications', this)">
+      <span class="nav-icon">◎</span>
+      My Applications
+    </a>
+
+    <div class="nav-section-title" style="margin-top: 20px;">Account</div>
+    <a class="nav-item" onclick="switchTab('settings', this)">
+      <span class="nav-icon">◉</span>
+      Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-badge">
+      <div class="user-avatar">JD</div>
+      <div class="user-info">
+        <div class="user-name">John Doe</div>
+        <div class="user-email">john@email.com</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Overview</div>
+    <div class="topbar-date" id="topbar-date"></div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchSubTab('plan', this)">Current Plan</button>
+        <button class="tab-btn" onclick="switchSubTab('upgrade', this)">Upgrade Plan</button>
+      </div>
+
+      <!-- Current Plan -->
+      <div class="tab-content active" id="tab-plan">
+        <div class="plan-section">
+          <div class="plan-card">
+            <div class="plan-header">
+              <div class="plan-title">6 Month Plan</div>
+              <div class="plan-badge">Active</div>
+            </div>
+            <div class="plan-details">
+              <div class="detail-row">
+                <span>Plan Name:</span>
+                <strong>6 Month Subscription</strong>
+              </div>
+              <div class="detail-row">
+                <span>Amount Paid:</span>
+                <strong>₦150,000</strong>
+              </div>
+              <div class="detail-row">
+                <span>Renewal Date:</span>
+                <strong>June 25, 2026</strong>
+              </div>
+              <div class="detail-row">
+                <span>Status:</span>
+                <strong style="color: var(--success);">Active</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="plan-card">
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.8;">
+              <strong style="color: var(--text); display: block; margin-bottom: 12px;">What's Included:</strong>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div>✓ Full access to job matching</div>
+                <div>✓ Application processing</div>
+                <div>✓ Dedicated support agent</div>
+                <div>✓ Document verification</div>
+                <div>✓ Employer connections</div>
+                <div>✓ WhatsApp support</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrade Plan -->
+      <div class="tab-content" id="tab-upgrade">
+        <div class="plan-section" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="plan-card">
+            <div class="plan-title">3 Month</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin: 12px 0 20px;">
+              Standard access to job opportunities
+            </div>
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); font-weight: 500; margin-bottom: 20px;">
+              ₦200,000
+            </div>
+            <button class="btn-upgrade" onclick="upgradePlan('3 Month', '200000')">Upgrade</button>
+          </div>
+
+          <div class="plan-card" style="border-color: var(--gold);">
+            <div class="plan-header" style="margin-bottom: 12px;">
+              <div class="plan-title">6 Month</div>
+              <div class="plan-badge">Current</div>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin: 12px 0 20px;">
+              Extended access with priority support
+            </div>
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); font-weight: 500; margin-bottom: 20px;">
+              ₦150,000
+            </div>
+            <button class="btn-upgrade" style="opacity: 0.5; cursor: not-allowed;" disabled>Current Plan</button>
+          </div>
+
+          <div class="plan-card">
+            <div class="plan-title">12 Month</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin: 12px 0 20px;">
+              Full year access with all perks
+            </div>
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); font-weight: 500; margin-bottom: 20px;">
+              ₦100,000
+            </div>
+            <button class="btn-upgrade" onclick="upgradePlan('12 Month', '100000')">Upgrade</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOBS TAB -->
+    <div class="tab-content" id="tab-jobs">
+      <div class="jobs-grid">
+        <div class="job-card">
+          <div class="job-icon">⚙</div>
+          <div class="job-name">Factory & Production</div>
+          <div class="job-desc">Manufacturing and packaging roles with training provided. No experience required.</div>
+          <div class="job-footer">
+            <span>Poland · 10 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon">🏗</div>
+          <div class="job-name">Construction Engineer</div>
+          <div class="job-desc">Skilled and unskilled construction work in Germany. Competitive pay.</div>
+          <div class="job-footer">
+            <span>Germany · 8 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon">🚗</div>
+          <div class="job-name">Auto-mobile Engineer</div>
+          <div class="job-desc">Automotive assembly and maintenance in UAE. Technical skills valued.</div>
+          <div class="job-footer">
+            <span>UAE · 5 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon">⚡</div>
+          <div class="job-name">Electricians</div>
+          <div class="job-desc">Electrical installations and maintenance. Certifications valued.</div>
+          <div class="job-footer">
+            <span>UK · 6 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon">🏢</div>
+          <div class="job-name">Architecture</div>
+          <div class="job-desc">Design and planning roles on international projects. Professional level.</div>
+          <div class="job-footer">
+            <span>Netherlands · 12 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon">🌾</div>
+          <div class="job-name">Agricultural Work</div>
+          <div class="job-desc">Seasonal and long-term farming opportunities. Accommodation included.</div>
+          <div class="job-footer">
+            <span>Romania · 15 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPLICATIONS TAB -->
+    <div class="tab-content" id="tab-applications">
+      <p style="color: var(--text-muted); font-size: 14px;">You haven't applied to any jobs yet. Browse available opportunities and submit your applications.</p>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div class="tab-content" id="tab-settings">
+      <div class="settings-section">
+        <div class="settings-box">
+          <div class="settings-title">Profile Information</div>
+          <div class="settings-field">
+            <label class="settings-label">Full Name</label>
+            <div class="settings-value">John Doe</div>
+          </div>
+          <div class="settings-field">
+            <label class="settings-label">Email Address</label>
+            <div class="settings-value">john@email.com</div>
+          </div>
+          <div class="settings-field">
+            <label class="settings-label">Phone / WhatsApp</label>
+            <div class="settings-value">+234 801 234 5678</div>
+          </div>
+          <button class="btn-save">Edit Profile</button>
+        </div>
+
+        <div class="settings-box">
+          <div class="settings-title">Password & Security</div>
+          <div class="settings-field">
+            <label class="settings-label">Last Changed</label>
+            <div class="settings-value">March 10, 2026</div>
+          </div>
+          <button class="btn-save">Change Password</button>
+        </div>
+
+        <div class="danger-zone">
+          <div class="danger-title">Danger Zone</div>
+          <div class="danger-text">
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </div>
+          <button class="btn-delete" onclick="showDeleteModal()">Delete Account</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DELETE ACCOUNT MODAL -->
+<div class="modal" id="delete-modal">
+  <div class="modal-content">
+    <div class="modal-title">Delete Account?</div>
+    <div class="modal-text">
+      Are you sure you want to permanently delete your account? All your data, applications, and account information will be removed. This action cannot be undone.
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="modal-btn modal-confirm" onclick="confirmDelete()">Delete My Account</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Set date
+document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+function switchTab(tabId, navEl) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  
+  const tabElement = document.getElementById('tab-' + tabId);
+  if (tabElement) {
+    tabElement.classList.add('active');
+  }
+  
+  if (navEl) {
+    navEl.classList.add('active');
+  }
+  
+  const titles = {
+    overview: 'Overview',
+    jobs: 'Job Opportunities',
+    applications: 'My Applications',
+    settings: 'Settings'
+  };
+  
+  document.getElementById('page-title').textContent = titles[tabId] || tabId;
+}
+
+function switchSubTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => {
+    if (el.id === 'tab-' + tabId || el.id === 'tab-plan' || el.id === 'tab-upgrade') {
+      el.classList.remove('active');
+    }
+  });
+  
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  
+  document.getElementById('tab-' + tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+function upgradePlan(planName, amount) {
+  alert('Redirecting to payment for ' + planName + ' plan (₦' + amount + ')');
+  // window.location.href = 'payment.html';
+}
+
+function showDeleteModal() {
+  document.getElementById('delete-modal').classList.add('show');
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.remove('show');
+}
+
+function confirmDelete() {
+  alert('Your account has been deleted. Redirecting to homepage...');
+  window.location.href = 'index.html';
+}
+
+function handleLogout() {
+  alert('Logging out...');
+  window.location.href = 'login.html';
+}
+</script>
+</body>
+</html>
