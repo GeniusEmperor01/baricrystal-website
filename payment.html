@@ -123,18 +123,24 @@
     <div class="form-block">
       <div class="plan-label">Select Registration Plan</div>
       <div class="plans">
-        <label class="plan-card selected" onclick="selectPlan(this,'Standard','25,000')">
+        <label class="plan-card selected" onclick="selectPlan(this,'3 Month','200,000')">
           <input type="radio" name="plan" checked/>
-          <div class="plan-name">Standard</div>
-          <div class="plan-desc">Full application processing and employer matching.</div>
-          <div class="plan-price">₦25,000 <span>/ one-time</span></div>
+          <div class="plan-name">3 Month</div>
+          <div class="plan-desc">Full access to job matching and application support.</div>
+          <div class="plan-price">₦200,000 <span>/ 3 months</span></div>
         </label>
-        <label class="plan-card" onclick="selectPlan(this,'Priority','45,000')">
+        <label class="plan-card" onclick="selectPlan(this,'6 Month','150,000')">
           <input type="radio" name="plan"/>
           <div class="plan-badge">Popular</div>
-          <div class="plan-name">Priority</div>
-          <div class="plan-desc">Faster processing, dedicated agent, premium placement.</div>
-          <div class="plan-price">₦45,000 <span>/ one-time</span></div>
+          <div class="plan-name">6 Month</div>
+          <div class="plan-desc">Extended access with dedicated agent and priority support.</div>
+          <div class="plan-price">₦150,000 <span>/ 6 months</span></div>
+        </label>
+        <label class="plan-card" onclick="selectPlan(this,'12 Month','100,000')">
+          <input type="radio" name="plan"/>
+          <div class="plan-name">12 Month</div>
+          <div class="plan-desc">Full year of unlimited job access and continuous employer matching.</div>
+          <div class="plan-price">₦100,000 <span>/ 12 months</span></div>
         </label>
       </div>
     </div>
@@ -208,8 +214,8 @@
       </div>
     </div>
     <div class="summary-plan" id="summary-plan">
-      <div class="summary-plan-name">Standard Registration</div>
-      <div class="summary-plan-desc">Full application processing, document verification, and employer matching.</div>
+      <div class="summary-plan-name">3 Month Subscription</div>
+      <div class="summary-plan-desc">Full access to job matching, application processing, and employer connections.</div>
     </div>
     <div>
       <div class="summary-line"><span class="lbl">Registration Fee</span><span class="val" id="summary-fee">₦25,000</span></div>
