@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Dashboard — BARICRYSTAL INTERNATIONAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold: #C89B3C;
+  --dark: #0A0A0A;
+  --dark-2: #141414;
+  --dark-3: #1E1E1E;
+  --dark-4: #252525;
+  --text: #F0EDE6;
+  --text-muted: #9A9080;
+  --border: rgba(200,155,60,0.15);
+  --border-subtle: rgba(240,237,230,0.07);
+  --success: #2D9E6B;
+  --warning: #E8A838;
+  --error: #E24B4A;
+  --info: #3A8AC4;
+}
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--dark); color: var(--text);
+  font-size: 14px; line-height: 1.6;
+  display: flex; min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--dark-2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 100; overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo a {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; font-weight: 600;
+  letter-spacing: 0.06em; color: var(--gold);
+  text-transform: uppercase; text-decoration: none; display: block;
+}
+.sidebar-logo a span { color: var(--text); }
+.sidebar-logo small { display: block; font-size: 10px; color: var(--text-muted); letter-spacing: 0.12em; margin-top: 2px; }
+
+.sidebar-section { padding: 16px 0; border-bottom: 1px solid var(--border-subtle); }
+.sidebar-label { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); padding: 0 20px 8px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px; font-size: 13px; color: var(--text-muted);
+  text-decoration: none; transition: all 0.2s; cursor: pointer;
+  border-left: 2px solid transparent;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(200,155,60,0.05); }
+.nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+
+.sidebar-bottom { margin-top: auto; padding: 16px 0; border-top: 1px solid var(--border); }
+.admin-badge {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px;
+}
+.admin-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(200,155,60,0.15); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif; font-size: 13px; color: var(--gold);
+  flex-shrink: 0;
+}
+.admin-name { font-size: 12px; font-weight: 500; }
+.admin-role { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+
+/* MAIN */
+.main {
+  margin-left: 240px; flex: 1;
+  display: flex; flex-direction: column;
+  min-height: 100vh;
+}
+
+/* TOP BAR */
+.topbar {
+  height: 60px; background: var(--dark-2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-date { font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; }
+.logout-btn {
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 7px 16px; border: 1px solid var(--border);
+  color: var(--text-muted); background: transparent; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.2s; text-decoration: none;
+}
+.logout-btn:hover { border-color: var(--error); color: var(--error); }
+
+/* PAGE CONTENT */
+.content { padding: 32px; flex: 1; }
+
+/* TABS */
+.page-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+.tab-btn {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 12px 20px; color: var(--text-muted); cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all 0.2s;
+  background: none; border-top: none; border-left: none; border-right: none;
+  font-family: 'DM Sans', sans-serif; color: var(--text-muted);
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* STAT CARDS */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+.stat-card {
+  background: var(--dark-2); border: 1px solid var(--border);
+  padding: 20px 24px;
+}
+.stat-card-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.stat-card-num { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 500; line-height: 1; margin-bottom: 6px; }
+.stat-card-num.gold { color: var(--gold); }
+.stat-card-num.green { color: var(--success); }
+.stat-card-num.amber { color: var(--warning); }
+.stat-card-num.red { color: var(--error); }
+.stat-card-change { font-size: 11px; color: var(--text-muted); }
+.stat-card-change.up { color: var(--success); }
+
+/* TABLE */
+.table-wrap { background: var(--dark-2); border: 1px solid var(--border); }
+.table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid var(--border);
+}
+.table-title { font-size: 13px; font-weight: 500; }
+.table-actions { display: flex; gap: 10px; align-items: center; }
+.search-input {
+  background: var(--dark-3); border: 1px solid var(--border-subtle);
+  padding: 8px 14px; color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 12px; outline: none; width: 200px; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--gold); }
+.search-input::placeholder { color: var(--text-muted); }
+.filter-btn {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 8px 14px; border: 1px solid var(--border-subtle);
+  color: var(--text-muted); background: var(--dark-3); cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+}
+.filter-btn:hover, .filter-btn.active { border-color: var(--gold); color: var(--gold); }
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-muted); padding: 12px 16px; text-align: left;
+  border-bottom: 1px solid var(--border-subtle); font-weight: 500;
+}
+td { padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); font-size: 13px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.badge {
+  display: inline-block; font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 3px 10px;
+  border-radius: 2px; font-weight: 500;
+}
+.badge-pending { background: rgba(232,168,56,0.12); color: var(--warning); border: 1px solid rgba(232,168,56,0.25); }
+.badge-approved { background: rgba(45,158,107,0.12); color: var(--success); border: 1px solid rgba(45,158,107,0.25); }
+.badge-rejected { background: rgba(226,75,74,0.1); color: var(--error); border: 1px solid rgba(226,75,74,0.2); }
+.badge-paid { background: rgba(200,155,60,0.1); color: var(--gold); border: 1px solid rgba(200,155,60,0.25); }
+.badge-processing { background: rgba(58,138,196,0.1); color: var(--info); border: 1px solid rgba(58,138,196,0.25); }
+
+.action-btn {
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 5px 12px; border: 1px solid var(--border-subtle);
+  color: var(--text-muted); background: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+}
+.action-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.candidate-info { display: flex; align-items: center; gap: 10px; }
+.candidate-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--dark-4); border: 1px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--text-muted); flex-shrink: 0;
+}
+.candidate-name { font-size: 13px; font-weight: 500; }
+.candidate-email { font-size: 11px; color: var(--text-muted); }
+
+/* JOBS TABLE */
+.job-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-muted);
+}
+.job-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.job-dot.open { background: var(--success); }
+.job-dot.filled { background: var(--text-muted); }
+
+/* OVERVIEW CHARTS PLACEHOLDER */
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+.chart-card { background: var(--dark-2); border: 1px solid var(--border); padding: 24px; }
+.chart-card-title { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+.chart-card-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 20px; }
+.bar-chart { display: flex; gap: 8px; align-items: flex-end; height: 100px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bar { width: 100%; background: rgba(200,155,60,0.2); border-top: 1px solid var(--gold); transition: all 0.3s; }
+.bar:hover { background: rgba(200,155,60,0.35); }
+.bar-label { font-size: 9px; color: var(--text-muted); text-align: center; }
+
+.recent-activity { background: var(--dark-2); border: 1px solid var(--border); padding: 24px; }
+.activity-title { font-size: 12px; font-weight: 500; margin-bottom: 16px; }
+.activity-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+.activity-item:last-child { border-bottom: none; }
+.activity-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.activity-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.activity-text strong { color: var(--text); font-weight: 500; }
+.activity-time { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.content { animation: fadeUp 0.4s ease both; }
+
+@media (max-width: 1024px) {
+  .sidebar { width: 200px; }
+  .main { margin-left: 200px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .chart-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .main { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">Bari<span>crystal</span></a>
+    <small>Admin Dashboard</small>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Main</div>
+    <div class="nav-item active" onclick="showTab('overview', this)">
+      <span class="nav-icon">◈</span> Overview
+    </div>
+    <div class="nav-item" onclick="showTab('applications', this)">
+      <span class="nav-icon">◎</span> Applications
+      <span style="margin-left:auto;font-size:10px;background:rgba(200,155,60,0.15);color:var(--gold);padding:1px 7px;">12</span>
+    </div>
+    <div class="nav-item" onclick="showTab('payments', this)">
+      <span class="nav-icon">◇</span> Payments
+    </div>
+    <div class="nav-item" onclick="showTab('jobs', this)">
+      <span class="nav-icon">◆</span> Job Listings
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Manage</div>
+    <div class="nav-item" onclick="showTab('users', this)">
+      <span class="nav-icon">○</span> Users
+    </div>
+    <div class="nav-item" onclick="showTab('settings', this)">
+      <span class="nav-icon">◉</span> Settings
+    </div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="admin-badge">
+      <div class="admin-avatar">A</div>
+      <div>
+        <div class="admin-name">Admin</div>
+        <div class="admin-role">Super Admin</div>
+      </div>
+    </div>
+    <a href="login.html" class="nav-item" style="color:var(--error);">
+      <span class="nav-icon">→</span> Logout
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Overview</div>
+    <div class="topbar-right">
+      <div class="topbar-date" id="topbar-date"></div>
+      <a href="login.html" class="logout-btn">Logout</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-card-label">Total Applications</div>
+          <div class="stat-card-num gold">47</div>
+          <div class="stat-card-change up">↑ 8 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Approved</div>
+          <div class="stat-card-num green">18</div>
+          <div class="stat-card-change up">↑ 3 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Pending Review</div>
+          <div class="stat-card-num amber">21</div>
+          <div class="stat-card-change">Awaiting action</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Total Revenue</div>
+          <div class="stat-card-num gold">₦1.4M</div>
+          <div class="stat-card-change up">↑ ₦225k this week</div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="chart-card-title">Applications This Month</div>
+          <div class="chart-card-sub">Daily breakdown — March 2025</div>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar" style="height:40%"></div><div class="bar-label">W1</div></div>
+            <div class="bar-col"><div class="bar" style="height:65%"></div><div class="bar-label">W2</div></div>
+            <div class="bar-col"><div class="bar" style="height:55%"></div><div class="bar-label">W3</div></div>
+            <div class="bar-col"><div class="bar" style="height:80%"></div><div class="bar-label">W4</div></div>
+            <div class="bar-col"><div class="bar" style="height:45%"></div><div class="bar-label">W5</div></div>
+          </div>
+        </div>
+        <div class="recent-activity">
+          <div class="activity-title">Recent Activity</div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--success)"></div>
+            <div><div class="activity-text"><strong>Adebayo Okon</strong> was approved for Factory Work</div><div class="activity-time">2 hours ago</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--gold)"></div>
+            <div><div class="activity-text"><strong>Chioma Nwosu</strong> completed payment — Priority Plan</div><div class="activity-time">4 hours ago</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--info)"></div>
+            <div><div class="activity-text"><strong>Emeka Ibe</strong> submitted a new application</div><div class="activity-time">6 hours ago</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--warning)"></div>
+            <div><div class="activity-text"><strong>Fatima Kano</strong> application pending document upload</div><div class="activity-time">Yesterday</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--success)"></div>
+            <div><div class="activity-text"><strong>Segun Adeyemi</strong> departed for employment</div><div class="activity-time">Yesterday</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent applications mini table -->
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">Recent Applications</div>
+          <button class="filter-btn" onclick="showTab('applications', document.querySelector('.nav-item:nth-child(2)'))">View All</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Candidate</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Date</th>
+          </tr></thead>
+          <tbody>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>Factory & Production</td><td>Priority</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>Hotel & Hospitality</td><td>Standard</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>Construction</td><td>Priority</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>Agricultural</td><td>Standard</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 19</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- APPLICATIONS TAB -->
+    <div class="tab-panel" id="tab-applications">
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">All Applications <span style="color:var(--text-muted);font-weight:400;">(47)</span></div>
+          <div class="table-actions">
+            <input class="search-input" placeholder="Search candidates..." oninput="filterTable(this.value)"/>
+            <button class="filter-btn active" onclick="filterStatus('all', this)">All</button>
+            <button class="filter-btn" onclick="filterStatus('pending', this)">Pending</button>
+            <button class="filter-btn" onclick="filterStatus('approved', this)">Approved</button>
+          </div>
+        </div>
+        <table id="applications-table">
+          <thead><tr>
+            <th>Candidate</th><th>Phone</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Applied</th><th>Action</th>
+          </tr></thead>
+          <tbody>
+            <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Factory & Production</td><td>Priority</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="processing"><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Hotel & Hospitality</td><td>Standard</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Construction</td><td>Priority</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>+234 804 567 8901</td><td>Agricultural</td><td>Standard</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 19</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">SA</div><div><div class="candidate-name">Segun Adeyemi</div><div class="candidate-email">segun@email.com</div></div></div></td><td>+234 805 678 9012</td><td>Cleaning & Maintenance</td><td>Standard</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 18</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="rejected"><td><div class="candidate-info"><div class="candidate-avatar">BM</div><div><div class="candidate-name">Blessing Moses</div><div class="candidate-email">blessing@email.com</div></div></div></td><td>+234 806 789 0123</td><td>Factory & Production</td><td>Standard</td><td><span class="badge badge-rejected">Rejected</span></td><td>Mar 17</td><td><button class="action-btn">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAYMENTS TAB -->
+    <div class="tab-panel" id="tab-payments">
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card"><div class="stat-card-label">Total Collected</div><div class="stat-card-num gold">₦1.4M</div><div class="stat-card-change">47 transactions</div></div>
+        <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-num green">₦450,000</div><div class="stat-card-change up">↑ 18 payments</div></div>
+        <div class="stat-card"><div class="stat-card-label">Pending Payments</div><div class="stat-card-num amber">8</div><div class="stat-card-change">Awaiting confirmation</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><div class="table-title">Payment Records</div></div>
+        <table>
+          <thead><tr><th>Candidate</th><th>Plan</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+            <tr><td><div class="candidate-name">Adebayo Okon</div></td><td>Priority</td><td>₦45,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 22</td></tr>
+            <tr><td><div class="candidate-name">Chioma Nwosu</div></td><td>Standard</td><td>₦25,000</td><td>Flutterwave</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 21</td></tr>
+            <tr><td><div class="candidate-name">Emeka Ibe</div></td><td>Priority</td><td>₦45,000</td><td>Bank Transfer</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
+            <tr><td><div class="candidate-name">Fatima Kano</div></td><td>Standard</td><td>₦25,000</td><td>Paga</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 19</td></tr>
+            <tr><td><div class="candidate-name">Segun Adeyemi</div></td><td>Standard</td><td>₦25,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 18</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- JOBS TAB -->
+    <div class="tab-panel" id="tab-jobs">
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card"><div class="stat-card-label">Total Slots</div><div class="stat-card-num gold">50</div></div>
+        <div class="stat-card"><div class="stat-card-label">Open</div><div class="stat-card-num green">32</div></div>
+        <div class="stat-card"><div class="stat-card-label">Filled</div><div class="stat-card-num amber">18</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><div class="table-title">Job Listings</div></div>
+        <table>
+          <thead><tr><th>#</th><th>Job Title</th><th>Category</th><th>Country</th><th>Slots</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--text-muted)">001</td><td>Production Line Worker</td><td>Factory</td><td>Poland</td><td>10</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
+            <tr><td style="color:var(--text-muted)">002</td><td>General Construction Labour</td><td>Construction</td><td>Germany</td><td>8</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
+            <tr><td style="color:var(--text-muted)">003</td><td>Hotel Housekeeper</td><td>Hospitality</td><td>UAE</td><td>5</td><td><div class="job-pill"><div class="job-dot filled"></div>Filled</div></td><td><button class="action-btn">Edit</button></td></tr>
+            <tr><td style="color:var(--text-muted)">004</td><td>Farm Harvest Worker</td><td>Agriculture</td><td>Netherlands</td><td>12</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
+            <tr><td style="color:var(--text-muted)">005</td><td>Office Cleaning Staff</td><td>Cleaning</td><td>UK</td><td>6</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
+            <tr><td style="color:var(--text-muted)">006</td><td>Packaging Operator</td><td>Factory</td><td>Romania</td><td>9</td><td><div class="job-pill"><div class="job-dot filled"></div>Filled</div></td><td><button class="action-btn">Edit</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div class="tab-panel" id="tab-users">
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">Registered Users <span style="color:var(--text-muted);font-weight:400;">(47)</span></div>
+          <input class="search-input" placeholder="Search users..."/>
+        </div>
+        <table>
+          <thead><tr><th>User</th><th>Phone</th><th>State</th><th>Registered</th><th>Application</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Lagos</td><td>Mar 15</td><td><span class="badge badge-approved">Approved</span></td><td><button class="action-btn">View</button></td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Anambra</td><td>Mar 16</td><td><span class="badge badge-processing">Processing</span></td><td><button class="action-btn">View</button></td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Enugu</td><td>Mar 17</td><td><span class="badge badge-pending">Pending</span></td><td><button class="action-btn">View</button></td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>+234 804 567 8901</td><td>Kano</td><td>Mar 18</td><td><span class="badge badge-pending">Pending</span></td><td><button class="action-btn">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div class="tab-panel" id="tab-settings">
+      <div style="max-width:560px;">
+        <div style="background:var(--dark-2);border:1px solid var(--border);padding:32px;margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:500;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">Agency Information</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Agency Name</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" value="BARICRYSTAL INTERNATIONAL"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Contact Email</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" value="info@baricrystalinternational.com"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">WhatsApp Number</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="+234 XXX XXX XXXX"/></div>
+          </div>
+          <button style="margin-top:20px;padding:11px 28px;background:var(--gold);color:var(--dark);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;">Save Changes</button>
+        </div>
+        <div style="background:var(--dark-2);border:1px solid var(--border);padding:32px;">
+          <div style="font-size:12px;font-weight:500;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">Admin Password</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Current Password</div><input type="password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">New Password</div><input type="password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/></div>
+          </div>
+          <button style="margin-top:20px;padding:11px 28px;background:transparent;color:var(--gold);border:1px solid var(--gold);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;">Update Password</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Set date
+document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+const titles = { overview:'Overview', applications:'Applications', payments:'Payments', jobs:'Job Listings', users:'Users', settings:'Settings' };
+
+function showTab(tabId, navEl) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('page-title').textContent = titles[tabId] || tabId;
+}
+
+function filterTable(val) {
+  const rows = document.querySelectorAll('#applications-table tbody tr');
+  rows.forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function filterStatus(status, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const rows = document.querySelectorAll('#applications-table tbody tr');
+  rows.forEach(row => {
+    row.style.display = status === 'all' || row.dataset.status === status ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

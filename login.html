@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Login — BARICRYSTAL INTERNATIONAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold: #C89B3C;
+  --dark: #0A0A0A;
+  --dark-2: #141414;
+  --dark-3: #1E1E1E;
+  --text: #F0EDE6;
+  --text-muted: #9A9080;
+  --border: rgba(200,155,60,0.2);
+  --border-subtle: rgba(240,237,230,0.08);
+  --error: #E24B4A;
+}
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--dark);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Split layout */
+.left-panel {
+  width: 480px;
+  flex-shrink: 0;
+  background: var(--dark-2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.left-panel::before {
+  content: '';
+  position: absolute;
+  bottom: -100px; left: -100px;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,155,60,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.panel-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 600;
+  letter-spacing: 0.08em; color: var(--gold);
+  text-transform: uppercase; text-decoration: none;
+}
+.panel-logo span { color: var(--text); }
+.panel-logo small { display: block; font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; margin-top: 2px; font-weight: 400; }
+
+.panel-middle { }
+.panel-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px; font-weight: 500;
+  line-height: 1.2; margin-bottom: 16px;
+  color: var(--text);
+}
+.panel-quote em { font-style: normal; color: var(--gold); }
+.panel-sub { font-size: 13px; color: var(--text-muted); line-height: 1.7; max-width: 300px; }
+
+.panel-bottom { }
+.panel-stats { display: flex; gap: 32px; }
+.pstat-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+.pstat-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+
+/* Right panel — form */
+.right-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+.form-wrap {
+  width: 100%;
+  max-width: 400px;
+}
+.form-tag {
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.form-tag::before { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
+.form-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px; font-weight: 500; margin-bottom: 8px;
+}
+.form-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 36px; }
+.form-sub a { color: var(--gold); text-decoration: none; }
+.form-sub a:hover { text-decoration: underline; }
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
+}
+.field input {
+  width: 100%; background: var(--dark-2);
+  border: 1px solid var(--border-subtle);
+  padding: 13px 16px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  transition: border-color 0.2s; outline: none;
+}
+.field input::placeholder { color: var(--text-muted); }
+.field input:focus { border-color: var(--gold); }
+.field input.error { border-color: var(--error); }
+
+.field-row-inline {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.field-row-inline label { margin-bottom: 0; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+.forgot-link { font-size: 11px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+.forgot-link:hover { color: var(--gold); }
+
+.error-msg {
+  display: none;
+  font-size: 12px; color: var(--error);
+  margin-top: 6px; padding: 10px 14px;
+  background: rgba(226,75,74,0.08);
+  border: 1px solid rgba(226,75,74,0.2);
+}
+.error-msg.show { display: block; }
+
+.submit-btn {
+  width: 100%; padding: 14px;
+  background: var(--gold); color: var(--dark);
+  border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500;
+  transition: opacity 0.2s; margin-top: 8px;
+}
+.submit-btn:hover { opacity: 0.85; }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 24px 0; font-size: 11px; color: var(--text-muted);
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border-subtle);
+}
+
+.signup-link {
+  text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 24px;
+}
+.signup-link a { color: var(--gold); text-decoration: none; font-weight: 500; }
+.signup-link a:hover { text-decoration: underline; }
+
+.back-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); text-decoration: none;
+  margin-bottom: 40px; transition: color 0.2s;
+}
+.back-link:hover { color: var(--gold); }
+.back-link svg { transition: transform 0.2s; }
+.back-link:hover svg { transform: translateX(-3px); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.form-wrap { animation: fadeUp 0.5s ease both; }
+
+@media (max-width: 800px) {
+  body { flex-direction: column; }
+  .left-panel { width: 100%; padding: 32px 24px; border-right: none; border-bottom: 1px solid var(--border); }
+  .panel-middle { margin: 32px 0; }
+  .panel-quote { font-size: 28px; }
+  .panel-bottom { display: none; }
+  .right-panel { padding: 40px 24px; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="left-panel">
+  <a href="index.html" class="panel-logo">
+    Bari<span>crystal</span>
+    <small>International Employment Agency</small>
+  </a>
+  <div class="panel-middle">
+    <div class="panel-quote">Your path to<br><em>working abroad</em><br>starts here.</div>
+    <p class="panel-sub">Sign in to track your application, view your status, and stay updated on your international employment journey.</p>
+  </div>
+  <div class="panel-bottom">
+    <div class="panel-stats">
+      <div><div class="pstat-num">50</div><div class="pstat-label">Job Openings</div></div>
+      <div><div class="pstat-num">5+</div><div class="pstat-label">Industries</div></div>
+      <div><div class="pstat-num">Global</div><div class="pstat-label">Placements</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right-panel">
+  <div class="form-wrap">
+
+    <a href="index.html" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 7H2M7 12L2 7l5-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back to site
+    </a>
+
+    <div class="form-tag">Candidate Portal</div>
+    <h1 class="form-title">Welcome Back</h1>
+    <p class="form-sub">Don't have an account? <a href="signup.html">Sign up here</a></p>
+
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="email" placeholder="john@email.com"/>
+    </div>
+
+    <div class="field">
+      <div class="field-row-inline">
+        <label>Password</label>
+        <a href="#" class="forgot-link">Forgot password?</a>
+      </div>
+      <input type="password" id="password" placeholder="Enter your password"/>
+    </div>
+
+    <div class="error-msg" id="error-msg">Incorrect email or password. Please try again.</div>
+
+    <button class="submit-btn" onclick="handleLogin()">Sign In</button>
+
+    <div class="signup-link">
+      New here? <a href="signup.html">Create an account</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function handleLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const errorMsg = document.getElementById('error-msg');
+
+  document.getElementById('email').classList.remove('error');
+  document.getElementById('password').classList.remove('error');
+  errorMsg.classList.remove('show');
+
+  if (!email || !password) {
+    errorMsg.textContent = 'Please fill in all fields.';
+    errorMsg.classList.add('show');
+    if (!email) document.getElementById('email').classList.add('error');
+    if (!password) document.getElementById('password').classList.add('error');
+    return;
+  }
+
+  // Frontend-only demo credentials
+  // Admin
+  if (email === 'admin@baricrystalinternational.com' && password === 'admin123') {
+    window.location.href = 'admin.html';
+    return;
+  }
+  // Demo candidate
+  if (email === 'candidate@email.com' && password === 'candidate123') {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  errorMsg.textContent = 'Incorrect email or password. Please try again.';
+  errorMsg.classList.add('show');
+  document.getElementById('email').classList.add('error');
+  document.getElementById('password').classList.add('error');
+}
+
+// Allow Enter key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') handleLogin();
+});
+</script>
+</body>
+</html>
