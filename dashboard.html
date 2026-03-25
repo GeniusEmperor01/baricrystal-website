@@ -10,6 +10,7 @@
 body {
   display: flex;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* SIDEBAR */
@@ -172,6 +173,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow-y: auto;
 }
 
 .topbar {
@@ -184,7 +186,7 @@ body {
   padding: 0 32px;
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 100;
 }
 
 .topbar-title {
@@ -490,6 +492,25 @@ body {
   background: rgba(226, 75, 74, 0.1);
 }
 
+.btn-file-upload {
+  padding: 11px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--gold);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-file-upload:hover {
+  border-color: var(--gold);
+  background: rgba(200, 155, 60, 0.1);
+}
+
 /* MODAL */
 .modal {
   display: none;
@@ -588,7 +609,7 @@ body {
     border-bottom: 1px solid var(--border);
     transform: translateY(-100%);
     transition: transform 0.3s ease;
-    z-index: 200;
+    z-index: 99;
   }
 
   .sidebar.open {
@@ -597,12 +618,14 @@ body {
 
   .main {
     margin-left: 0;
+    overflow-y: visible;
   }
 
   .topbar {
     padding: 0 16px;
     height: 60px;
     justify-content: space-between;
+    z-index: 100;
   }
 
   .topbar-title {
@@ -1097,7 +1120,7 @@ body {
     <div class="tab-content" id="tab-settings">
       <div class="settings-section">
         <div class="settings-box">
-          <div class="settings-title">Profile Information</div>
+          <div class="settings-title">Personal Details</div>
           <div class="settings-field">
             <label class="settings-label">Full Name</label>
             <div class="settings-value">John Doe</div>
@@ -1110,7 +1133,82 @@ body {
             <label class="settings-label">Phone / WhatsApp</label>
             <div class="settings-value">+234 801 234 5678</div>
           </div>
-          <button class="btn-save">Edit Profile</button>
+          <div class="settings-field">
+            <label class="settings-label">State of Origin</label>
+            <div class="settings-value">Lagos</div>
+          </div>
+          <button class="btn-save">Edit Details</button>
+        </div>
+
+        <div class="settings-box">
+          <div class="settings-title">Upload Documents</div>
+          <div class="settings-field">
+            <label class="settings-label">Curriculum Vitae (CV)</label>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+              PDF or DOC • Max 5MB
+            </div>
+            <input type="file" id="cv-upload" accept=".pdf,.doc,.docx" style="display: none;"/>
+            <button class="btn-file-upload" onclick="document.getElementById('cv-upload').click()">
+              Choose File
+            </button>
+            <div id="cv-status" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;"></div>
+          </div>
+
+          <div class="settings-field">
+            <label class="settings-label">Passport / National ID</label>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+              JPEG or PNG • Max 5MB
+            </div>
+            <input type="file" id="passport-upload" accept=".jpg,.jpeg,.png,.pdf" style="display: none;"/>
+            <button class="btn-file-upload" onclick="document.getElementById('passport-upload').click()">
+              Choose File
+            </button>
+            <div id="passport-status" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;"></div>
+          </div>
+
+          <div class="settings-field">
+            <label class="settings-label">Other Documents</label>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+              Certificates, qualifications, etc. • Max 5MB
+            </div>
+            <input type="file" id="other-upload" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display: none;"/>
+            <button class="btn-file-upload" onclick="document.getElementById('other-upload').click()">
+              Choose File
+            </button>
+            <div id="other-status" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;"></div>
+          </div>
+
+          <button class="btn-save" onclick="uploadDocuments()">Save Documents</button>
+        </div>
+
+        <div class="settings-box">
+          <div class="settings-title">Job Preferences</div>
+          <div class="settings-field">
+            <label class="settings-label">Preferred Job Category</label>
+            <select id="job-category" style="width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle); padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;">
+              <option>Factory & Production</option>
+              <option>Construction Engineer</option>
+              <option>Auto-mobile Engineer</option>
+              <option>Electricians</option>
+              <option>Architecture</option>
+              <option>Agricultural Work</option>
+              <option>No Preference</option>
+            </select>
+          </div>
+          <div class="settings-field">
+            <label class="settings-label">Preferred Countries</label>
+            <div style="font-size: 12px; color: var(--text-muted);">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label><input type="checkbox" name="job-countries" value="Poland" style="margin-right: 6px; accent-color: var(--gold);">Poland</label>
+                <label><input type="checkbox" name="job-countries" value="Germany" style="margin-right: 6px; accent-color: var(--gold);">Germany</label>
+                <label><input type="checkbox" name="job-countries" value="UAE" style="margin-right: 6px; accent-color: var(--gold);">UAE</label>
+                <label><input type="checkbox" name="job-countries" value="UK" style="margin-right: 6px; accent-color: var(--gold);">UK</label>
+                <label><input type="checkbox" name="job-countries" value="Netherlands" style="margin-right: 6px; accent-color: var(--gold);">Netherlands</label>
+                <label><input type="checkbox" name="job-countries" value="Romania" style="margin-right: 6px; accent-color: var(--gold);">Romania</label>
+              </div>
+            </div>
+          </div>
+          <button class="btn-save" onclick="saveJobPreferences()">Save Preferences</button>
         </div>
 
         <div class="settings-box">
@@ -1222,6 +1320,94 @@ function confirmDelete() {
 function handleLogout() {
   alert('Logging out...');
   window.location.href = 'login.html';
+}
+
+// File upload handling
+document.addEventListener('DOMContentLoaded', function() {
+  // CV upload
+  const cvUpload = document.getElementById('cv-upload');
+  if (cvUpload) {
+    cvUpload.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        
+        if (file.size > maxSize) {
+          document.getElementById('cv-status').innerHTML = '<span style="color: #e24b4a;">File is too large. Maximum 5MB.</span>';
+        } else if (!allowedTypes.includes(file.type)) {
+          document.getElementById('cv-status').innerHTML = '<span style="color: #e24b4a;">Invalid file type. Please use PDF or Word document.</span>';
+        } else {
+          document.getElementById('cv-status').innerHTML = `<span style="color: var(--gold);">✓ ${file.name} (${(file.size / 1024).toFixed(0)}KB) ready to upload</span>`;
+        }
+      }
+    });
+  }
+
+  // Passport upload
+  const passportUpload = document.getElementById('passport-upload');
+  if (passportUpload) {
+    passportUpload.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+        
+        if (file.size > maxSize) {
+          document.getElementById('passport-status').innerHTML = '<span style="color: #e24b4a;">File is too large. Maximum 5MB.</span>';
+        } else if (!allowedTypes.includes(file.type)) {
+          document.getElementById('passport-status').innerHTML = '<span style="color: #e24b4a;">Invalid file type. Please use JPEG, PNG or PDF.</span>';
+        } else {
+          document.getElementById('passport-status').innerHTML = `<span style="color: var(--gold);">✓ ${file.name} (${(file.size / 1024).toFixed(0)}KB) ready to upload</span>`;
+        }
+      }
+    });
+  }
+
+  // Other documents upload
+  const otherUpload = document.getElementById('other-upload');
+  if (otherUpload) {
+    otherUpload.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        
+        if (file.size > maxSize) {
+          document.getElementById('other-status').innerHTML = '<span style="color: #e24b4a;">File is too large. Maximum 5MB.</span>';
+        } else {
+          document.getElementById('other-status').innerHTML = `<span style="color: var(--gold);">✓ ${file.name} (${(file.size / 1024).toFixed(0)}KB) ready to upload</span>`;
+        }
+      }
+    });
+  }
+});
+
+function uploadDocuments() {
+  const cvFile = document.getElementById('cv-upload').files[0];
+  const passportFile = document.getElementById('passport-upload').files[0];
+  const otherFile = document.getElementById('other-upload').files[0];
+  
+  if (!cvFile && !passportFile && !otherFile) {
+    alert('Please select at least one document to upload.');
+    return;
+  }
+  
+  alert('Documents uploaded successfully!');
+  // TODO: Send files to backend for storage
+}
+
+function saveJobPreferences() {
+  const categorySelect = document.getElementById('job-category');
+  const countryCheckboxes = document.querySelectorAll('input[name="job-countries"]:checked');
+  
+  if (categorySelect) {
+    const category = categorySelect.value;
+    const countries = Array.from(countryCheckboxes).map(cb => cb.value);
+    
+    console.log('Job preferences saved:', { category, countries });
+    alert('Job preferences saved successfully!');
+    // TODO: Send preferences to backend for storage
+  }
 }
 </script>
 </body>
