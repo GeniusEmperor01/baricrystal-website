@@ -212,7 +212,7 @@ body { display: flex; min-height: 100vh; }
 
     <div class="error-msg" id="error-msg">Incorrect email or password. Please try again.</div>
 
-    <button class="submit-btn" onclick="handleLogin()">Sign In</button>
+    <button class="submit-btn" type="button" id="login-btn">Sign In</button>
 
     <div class="signup-link">
       New here? <a href="signup.html">Create an account</a>
@@ -221,11 +221,35 @@ body { display: flex; min-height: 100vh; }
   </div>
 </div>
 
-<script>
-function handleLogin() {
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAVKKOJ1_U2lMC3-oLQlL5U1u4XvFPPTTs",
+  authDomain: "baricrystal-7a83c.firebaseapp.com",
+  databaseURL: "https://baricrystal-7a83c-default-rtdb.firebaseio.com",
+  projectId: "baricrystal-7a83c",
+  storageBucket: "baricrystal-7a83c.firebasestorage.app",
+  messagingSenderId: "1000686748611",
+  appId: "1:1000686748611:web:6265d0c77dbf5c0bde58c8",
+  measurementId: "G-EM5G0BFQPT"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const database = getDatabase(app);
+const analytics = getAnalytics(app);
+
+window.firebaseLogin = async function() {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   const errorMsg = document.getElementById('error-msg');
+  const submitBtn = document.querySelector('.submit-btn');
 
   document.getElementById('email').classList.remove('error');
   document.getElementById('password').classList.remove('error');
@@ -239,28 +263,48 @@ function handleLogin() {
     return;
   }
 
-  // Frontend-only demo credentials
-  // Admin
-  if (email === 'admin@baricrystalinternational.com' && password === 'admin123') {
-    window.location.href = 'admin.html';
-    return;
-  }
-  // Demo candidate
-  if (email === 'candidate@gmail.com' && password === 'candidate123') {
-    window.location.href = 'dashboard.html';
-    return;
-  }
+  // Disable button and show loading state
+  submitBtn.disabled = true;
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Signing in...';
 
-  errorMsg.textContent = 'Incorrect email or password. Please try again.';
-  errorMsg.classList.add('show');
-  document.getElementById('email').classList.add('error');
-  document.getElementById('password').classList.add('error');
-}
+  try {
+    // Firebase authentication
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Get user data from database to determine role
+    const userRef = ref(database, 'users/' + user.uid);
+    const snapshot = await get(userRef);
+
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      // Redirect based on role or default to dashboard
+      window.location.href = userData.role === 'admin' ? 'admin.html' : 'dashboard.html';
+    } else {
+      // User exists in auth but not in database, redirect to dashboard
+      window.location.href = 'dashboard.html';
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    errorMsg.textContent = error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' 
+      ? 'Incorrect email or password. Please try again.' 
+      : error.message;
+    errorMsg.classList.add('show');
+    document.getElementById('email').classList.add('error');
+    document.getElementById('password').classList.add('error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
+};
 
 // Allow Enter key
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') handleLogin();
+  if (e.key === 'Enter') window.firebaseLogin();
 });
+
+// Attach click listener to login button
+document.getElementById('login-btn').addEventListener('click', window.firebaseLogin);
 </script>
 </body>
 </html>
