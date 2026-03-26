@@ -6,7 +6,8 @@ const errorMsg = document.getElementById('error-msg');
 const submitBtn = document.getElementById('login-btn');
 
 // ============================================================================
-// AUTH STATE — only redirect verified users
+// AUTH STATE
+// FIX: Only redirect verified users — unverified sessions are ignored
 // ============================================================================
 onAuthStateChanged(auth, (user) => {
   if (user && user.emailVerified) {
@@ -50,7 +51,7 @@ async function firebaseLogin() {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Block unverified users
+    // FIX: Block unverified users from logging in
     if (!user.emailVerified) {
       await auth.signOut();
       showError('Please verify your email before logging in. Check your inbox for the verification link.');
@@ -59,14 +60,14 @@ async function firebaseLogin() {
       return;
     }
 
-    // Update last login timestamp
+    // Update last login + sync verified status to DB
     const userRef = ref(database, 'users/' + user.uid);
     await update(userRef, {
       lastLogin: new Date().toISOString(),
       emailVerified: true
     });
 
-    // Check role and redirect
+    // Redirect based on role
     const snapshot = await get(userRef);
     if (snapshot.exists()) {
       const userData = snapshot.val();
@@ -78,10 +79,12 @@ async function firebaseLogin() {
   } catch (error) {
     console.error('❌ Login error:', error.code, error.message);
 
+    // FIX: auth/user-not-found and auth/wrong-password are legacy codes —
+    // newer Firebase returns auth/invalid-credential for both
     const errorMessages = {
+      'auth/invalid-credential': 'Incorrect email or password. Please try again.',
       'auth/user-not-found': 'No account found with this email.',
       'auth/wrong-password': 'Incorrect password. Please try again.',
-      'auth/invalid-credential': 'Incorrect email or password. Please try again.',
       'auth/too-many-requests': 'Too many failed attempts. Please wait a moment and try again.',
       'auth/network-request-failed': 'Network error. Check your internet connection.',
     };

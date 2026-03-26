@@ -1,5 +1,5 @@
 import { auth, database, baseUrl } from './firebase-config.js';
-import { createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 // ============================================================================
@@ -57,7 +57,9 @@ function showMessage(text, type = 'error') {
 }
 
 // ============================================================================
-// AUTH STATE — only redirect if email is verified
+// AUTH STATE
+// FIX: Only redirect if user is verified — prevents leftover sessions
+// from booting users off the signup page before they can see the form
 // ============================================================================
 onAuthStateChanged(auth, (user) => {
   if (user && user.emailVerified) {
@@ -142,12 +144,9 @@ window.firebaseSignup = async function() {
     recordSignupAttempt();
 
     // 2. Save to Realtime Database
-    const suspiciousPatterns = {
-      hasNumbers: /\d{5,}/.test(fname + lname),
-      hasSpecialChars: /[!@#$%^&*]/.test(fname + lname),
-      tooShort: fname.length < 2 || lname.length < 2
-    };
-    const flagForReview = Object.values(suspiciousPatterns).some(Boolean);
+    const flagForReview = /\d{5,}/.test(fname + lname) ||
+                          /[!@#$%^&*]/.test(fname + lname) ||
+                          fname.length < 2 || lname.length < 2;
 
     await set(ref(database, 'users/' + user.uid), {
       firstName: fname,
@@ -173,7 +172,11 @@ window.firebaseSignup = async function() {
     console.log('✅ Verification email sent to:', email);
     console.log('✅ Redirect URL:', baseUrl + 'dashboard.html');
 
-    // 4. Show success + resend option
+    // 4. FIX: Sign out after signup so the unverified session doesn't
+    // cause unexpected behaviour elsewhere in the app
+    await signOut(auth);
+
+    // 5. Show success + resend option
     const errorMsg = document.getElementById('error-msg');
     errorMsg.innerHTML = `
       ✓ Account created! A verification email was sent to <strong>${email}</strong>.<br>

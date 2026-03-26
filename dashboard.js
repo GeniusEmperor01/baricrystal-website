@@ -45,18 +45,14 @@ onAuthStateChanged(auth, async (user) => {
 async function loadUserData(uid) {
   try {
     const snapshot = await get(ref(database, 'users/' + uid));
-    if (snapshot.exists()) {
-      userData = snapshot.val();
-    } else {
-      userData = {
-        firstName: 'User',
-        lastName: '',
-        email: currentUser.email,
-        phone: '',
-        state: '',
-        createdAt: new Date().toISOString()
-      };
-    }
+    userData = snapshot.exists() ? snapshot.val() : {
+      firstName: 'User',
+      lastName: '',
+      email: currentUser.email,
+      phone: '',
+      state: '',
+      createdAt: new Date().toISOString()
+    };
   } catch (error) {
     console.error('Error loading user data:', error);
   }
@@ -69,15 +65,14 @@ function displayUserInfo() {
   if (!userData) return;
 
   const initials = (userData.firstName?.[0] || 'U') + (userData.lastName?.[0] || '');
-  const el = (id) => document.querySelector(id);
 
-  const avatar = el('.user-avatar');
+  const avatar = document.querySelector('.user-avatar');
   if (avatar) avatar.textContent = initials.toUpperCase();
 
-  const userName = el('.user-name');
+  const userName = document.querySelector('.user-name');
   if (userName) userName.textContent = `${userData.firstName || 'User'} ${userData.lastName || ''}`.trim();
 
-  const userEmail = el('.user-email');
+  const userEmail = document.querySelector('.user-email');
   if (userEmail) userEmail.textContent = userData.email || '';
 
   updateSettingsDisplay();
@@ -147,6 +142,11 @@ window.saveAccountChanges = async function() {
     return;
   }
 
+  // FIX: Target save button specifically inside the edit box, not the first
+  // .btn-save on the page which could be any button
+  const saveBtn = document.querySelector('#personal-details-edit .btn-save');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+
   try {
     await update(ref(database, 'users/' + currentUser.uid), {
       firstName: fname,
@@ -163,11 +163,15 @@ window.saveAccountChanges = async function() {
   } catch (error) {
     console.error('Error saving changes:', error);
     alert('Error updating account: ' + error.message);
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Changes'; }
   }
 };
 
 // ============================================================================
 // DELETE ACCOUNT
+// FIX: Now prompts for password re-authentication before deletion
+// to avoid auth/requires-recent-login errors
 // ============================================================================
 window.showDeleteModal = function() {
   document.getElementById('delete-modal')?.classList.add('show');
@@ -175,27 +179,41 @@ window.showDeleteModal = function() {
 
 window.closeDeleteModal = function() {
   document.getElementById('delete-modal')?.classList.remove('show');
+  const input = document.getElementById('delete-password-input');
+  if (input) input.value = '';
 };
 
 window.confirmDelete = async function() {
   if (!currentUser) return;
 
+  const passwordInput = document.getElementById('delete-password-input');
+  const password = passwordInput?.value;
+
+  if (!password) {
+    alert('Please enter your password to confirm account deletion.');
+    return;
+  }
+
   const confirmBtn = document.querySelector('#delete-modal .modal-confirm');
   if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Deleting...'; }
 
   try {
+    // Re-authenticate before delete to prevent auth/requires-recent-login
+    const credential = EmailAuthProvider.credential(currentUser.email, password);
+    await reauthenticateWithCredential(currentUser, credential);
+
     await remove(ref(database, 'users/' + currentUser.uid));
     await deleteUser(currentUser);
+
     window.location.href = baseUrl + 'index.html';
   } catch (error) {
     console.error('Error deleting account:', error);
-    if (error.code === 'auth/requires-recent-login') {
-      alert('Please log out and log back in before deleting your account.');
-      window.location.href = baseUrl + 'login.html';
+    if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      alert('Incorrect password. Please try again.');
     } else {
       alert('Error deleting account: ' + error.message);
-      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Delete My Account'; }
     }
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Delete My Account'; }
   }
 };
 
@@ -245,9 +263,10 @@ window.changePassword = async function() {
     window.closeChangePasswordModal();
   } catch (error) {
     console.error('Error changing password:', error);
-    alert(error.code === 'auth/wrong-password'
-      ? 'Current password is incorrect.'
-      : 'Error changing password: ' + error.message
+    alert(
+      error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential'
+        ? 'Current password is incorrect.'
+        : 'Error changing password: ' + error.message
     );
   } finally {
     if (changeBtn) { changeBtn.disabled = false; changeBtn.textContent = 'Change Password'; }
@@ -269,6 +288,8 @@ window.handleLogout = async function() {
 
 // ============================================================================
 // SIDEBAR & TABS
+// FIX: switchSubTab now only targets sub-tabs within the currently active
+// main tab, so switching sub-tabs doesn't wipe other main tab content
 // ============================================================================
 window.toggleSidebar = function() {
   document.querySelector('.sidebar')?.classList.toggle('open');
@@ -281,7 +302,7 @@ window.closeSidebarOnMobile = function() {
 };
 
 window.switchTab = function(tabId, navEl) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.main > .content > .tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tabId)?.classList.add('active');
   if (navEl) navEl.classList.add('active');
@@ -297,7 +318,11 @@ window.switchTab = function(tabId, navEl) {
 };
 
 window.switchSubTab = function(tabId, btn) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  // FIX: Only target sub-tabs within the active main tab container
+  const activeMainTab = document.querySelector('.main > .content > .tab-content.active');
+  if (activeMainTab) {
+    activeMainTab.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  }
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tabId)?.classList.add('active');
   btn.classList.add('active');
@@ -328,7 +353,7 @@ window.uploadDocuments = function() {
 window.saveJobPreferences = function() {
   const category = document.getElementById('job-category')?.value;
   const countries = Array.from(document.querySelectorAll('input[name="job-countries"]:checked')).map(cb => cb.value);
-  console.log('Preferences saved — Category:', category, '| Countries:', countries);
+  console.log('Preferences — Category:', category, '| Countries:', countries);
   alert('Job preferences saved!');
 };
 
@@ -336,6 +361,7 @@ window.saveJobPreferences = function() {
 // INIT
 // ============================================================================
 document.addEventListener('DOMContentLoaded', function() {
+  // Set date in topbar
   const topbarDate = document.getElementById('topbar-date');
   if (topbarDate) {
     topbarDate.textContent = new Date().toLocaleDateString('en-GB', {

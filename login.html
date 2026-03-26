@@ -5,10 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Login — BARICRYSTAL INTERNATIONAL</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="shared.css"/>
 <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold: #C89B3C;
+  --dark: #0A0A0A;
+  --dark-2: #141414;
+  --dark-3: #1E1E1E;
+  --text: #F0EDE6;
+  --text-muted: #9A9080;
+  --border: rgba(200,155,60,0.2);
+  --border-subtle: rgba(240,237,230,0.08);
+  --error: #E24B4A;
+}
 html, body { height: 100%; }
-body { display: flex; min-height: 100vh; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--dark);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
 
 /* Split layout */
 .left-panel {
@@ -126,6 +143,14 @@ body { display: flex; min-height: 100vh; }
 .submit-btn:hover { opacity: 0.85; }
 .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 24px 0; font-size: 11px; color: var(--text-muted);
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border-subtle);
+}
+
 .signup-link {
   text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 24px;
 }
@@ -197,14 +222,14 @@ body { display: flex; min-height: 100vh; }
     <div class="field">
       <div class="field-row-inline">
         <label>Password</label>
-        <a href="forgot_password.html" class="forgot-link">Forgot password?</a>
+        <a href="#" class="forgot-link">Forgot password?</a>
       </div>
       <input type="password" id="password" placeholder="Enter your password"/>
     </div>
 
-    <div class="error-msg" id="error-msg"></div>
+    <div class="error-msg" id="error-msg">Incorrect email or password. Please try again.</div>
 
-    <button class="submit-btn" type="button" id="login-btn">Sign In</button>
+    <button class="submit-btn" onclick="handleLogin()">Sign In</button>
 
     <div class="signup-link">
       New here? <a href="signup.html">Create an account</a>
@@ -213,7 +238,46 @@ body { display: flex; min-height: 100vh; }
   </div>
 </div>
 
-<script type="module" src="login.js"></script>
+<script>
+function handleLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const errorMsg = document.getElementById('error-msg');
 
+  document.getElementById('email').classList.remove('error');
+  document.getElementById('password').classList.remove('error');
+  errorMsg.classList.remove('show');
+
+  if (!email || !password) {
+    errorMsg.textContent = 'Please fill in all fields.';
+    errorMsg.classList.add('show');
+    if (!email) document.getElementById('email').classList.add('error');
+    if (!password) document.getElementById('password').classList.add('error');
+    return;
+  }
+
+  // Frontend-only demo credentials
+  // Admin
+  if (email === 'admin@baricrystalinternational.com' && password === 'admin123') {
+    window.location.href = 'admin.html';
+    return;
+  }
+  // Demo candidate
+  if (email === 'candidate@email.com' && password === 'candidate123') {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  errorMsg.textContent = 'Incorrect email or password. Please try again.';
+  errorMsg.classList.add('show');
+  document.getElementById('email').classList.add('error');
+  document.getElementById('password').classList.add('error');
+}
+
+// Allow Enter key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') handleLogin();
+});
+</script>
 </body>
 </html>

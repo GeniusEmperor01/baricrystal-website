@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin Dashboard — BARICRYSTAL INTERNATIONAL</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="shared.css"/>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -286,7 +285,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <div class="admin-role">Super Admin</div>
       </div>
     </div>
-    <a href="index.html" class="nav-item" style="color:var(--error);">
+    <a href="login.html" class="nav-item" style="color:var(--error);">
       <span class="nav-icon">→</span> Logout
     </a>
   </div>
@@ -298,7 +297,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="topbar-title" id="page-title">Overview</div>
     <div class="topbar-right">
       <div class="topbar-date" id="topbar-date"></div>
-      <a href="index.html" class="logout-btn">Logout</a>
+      <a href="login.html" class="logout-btn">Logout</a>
     </div>
   </div>
 
@@ -377,10 +376,10 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <th>Candidate</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Date</th>
           </tr></thead>
           <tbody>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>Factory & Production</td><td>6 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td></tr>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>Auto-mobile Engineer</td><td>3 Month</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td></tr>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>Construction Engineer</td><td>6 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>Agriculture</td><td>3 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 19</td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>Factory & Production</td><td>Priority</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>Hotel & Hospitality</td><td>Standard</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>Construction</td><td>Priority</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
+            <tr><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>Agricultural</td><td>Standard</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 19</td></tr>
           </tbody>
         </table>
       </div>
@@ -403,12 +402,12 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <th>Candidate</th><th>Phone</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Applied</th><th>Action</th>
           </tr></thead>
           <tbody>
-            <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Factory & Production</td><td>6 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="processing"><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Auto-mobile Engineer</td><td>3 Month</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Construction Engineer</td><td>6 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>+234 804 567 8901</td><td>Agriculture</td><td>3 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 19</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">SA</div><div><div class="candidate-name">Segun Adeyemi</div><div class="candidate-email">segun@email.com</div></div></div></td><td>+234 805 678 9012</td><td>Electricians</td><td>12 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 18</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="rejected"><td><div class="candidate-info"><div class="candidate-avatar">BM</div><div><div class="candidate-name">Blessing Moses</div><div class="candidate-email">blessing@email.com</div></div></div></td><td>+234 806 789 0123</td><td>Factory & Production</td><td>3 Month</td><td><span class="badge badge-rejected">Rejected</span></td><td>Mar 17</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Factory & Production</td><td>Priority</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="processing"><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Hotel & Hospitality</td><td>Standard</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Construction</td><td>Priority</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>+234 804 567 8901</td><td>Agricultural</td><td>Standard</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 19</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">SA</div><div><div class="candidate-name">Segun Adeyemi</div><div class="candidate-email">segun@email.com</div></div></div></td><td>+234 805 678 9012</td><td>Cleaning & Maintenance</td><td>Standard</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 18</td><td><button class="action-btn">View</button></td></tr>
+            <tr data-status="rejected"><td><div class="candidate-info"><div class="candidate-avatar">BM</div><div><div class="candidate-name">Blessing Moses</div><div class="candidate-email">blessing@email.com</div></div></div></td><td>+234 806 789 0123</td><td>Factory & Production</td><td>Standard</td><td><span class="badge badge-rejected">Rejected</span></td><td>Mar 17</td><td><button class="action-btn">View</button></td></tr>
           </tbody>
         </table>
       </div>
@@ -426,11 +425,11 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <table>
           <thead><tr><th>Candidate</th><th>Plan</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
           <tbody>
-            <tr><td><div class="candidate-name">Adebayo Okon</div></td><td>6 Month</td><td>₦150,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 22</td></tr>
-            <tr><td><div class="candidate-name">Chioma Nwosu</div></td><td>3 Month</td><td>₦200,000</td><td>Flutterwave</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 21</td></tr>
-            <tr><td><div class="candidate-name">Emeka Ibe</div></td><td>6 Month</td><td>₦150,000</td><td>Bank Transfer</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
-            <tr><td><div class="candidate-name">Fatima Kano</div></td><td>3 Month</td><td>₦200,000</td><td>Paga</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 19</td></tr>
-            <tr><td><div class="candidate-name">Segun Adeyemi</div></td><td>12 Month</td><td>₦100,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 18</td></tr>
+            <tr><td><div class="candidate-name">Adebayo Okon</div></td><td>Priority</td><td>₦45,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 22</td></tr>
+            <tr><td><div class="candidate-name">Chioma Nwosu</div></td><td>Standard</td><td>₦25,000</td><td>Flutterwave</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 21</td></tr>
+            <tr><td><div class="candidate-name">Emeka Ibe</div></td><td>Priority</td><td>₦45,000</td><td>Bank Transfer</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
+            <tr><td><div class="candidate-name">Fatima Kano</div></td><td>Standard</td><td>₦25,000</td><td>Paga</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 19</td></tr>
+            <tr><td><div class="candidate-name">Segun Adeyemi</div></td><td>Standard</td><td>₦25,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 18</td></tr>
           </tbody>
         </table>
       </div>

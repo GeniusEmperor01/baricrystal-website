@@ -22,4 +22,5 @@ export const auth = getAuth(app);
 export const database = getDatabase(app);
 
 // GitHub Pages compatible base URL
+// Handles: https://user.github.io/repo/ and custom domains
 export const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
