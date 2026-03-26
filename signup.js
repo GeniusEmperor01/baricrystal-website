@@ -32,17 +32,6 @@ function isBlockedEmailDomain(email) {
 }
 
 // ============================================================================
-// PHONE VALIDATION
-// ============================================================================
-function validateNigerianPhone(phone) {
-  const cleaned = phone.replace(/\s+/g, '');
-  return /^(\+234|0)[789][01]\d{8}$/.test(cleaned);
-}
-
-// Exposed globally so signup.html validateForm can also use it safely
-window.validatePhone = validateNigerianPhone;
-
-// ============================================================================
 // RATE LIMITING
 // ============================================================================
 const SIGNUP_ATTEMPT_KEY = 'signup_attempts';
@@ -132,7 +121,7 @@ window.firebaseSignup = async function() {
   const terms = document.getElementById('terms-check').checked;
   const btn = document.getElementById('signup-btn');
 
-  // --- Inline validation (no dependency on module load order) ---
+  // --- Validation ---
   if (!fname || !lname || !email || !phone || !state || !password || !confirm) {
     showMessage('Please fill in all required fields.');
     return;
@@ -147,10 +136,6 @@ window.firebaseSignup = async function() {
   }
   if (!terms) {
     showMessage('Please accept the Terms & Conditions to continue.');
-    return;
-  }
-  if (!validateNigerianPhone(phone)) {
-    showMessage('Please enter a valid Nigerian phone number (e.g., +234 801 234 5678).');
     return;
   }
   if (!checkRateLimit()) {
