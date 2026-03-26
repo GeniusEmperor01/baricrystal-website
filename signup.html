@@ -349,6 +349,16 @@ body { display: flex; min-height: 100vh; }
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 1000);
+
+      set(ref(database, 'users/' + user.uid), {
+        firstName: fname,
+        lastName: lname,
+        email: email,
+        phone: phone,
+        state: state,
+        createdAt: new Date().toISOString()
+      });
+      
     } catch (error) {
       errorMsg.textContent = error.message;
       errorMsg.classList.add('show');
