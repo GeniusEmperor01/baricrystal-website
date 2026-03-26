@@ -1124,25 +1124,64 @@ body {
     <!-- SETTINGS TAB -->
     <div class="tab-content" id="tab-settings">
       <div class="settings-section">
-        <div class="settings-box">
+        <div class="settings-box" id="personal-details-display">
           <div class="settings-title">Personal Details</div>
           <div class="settings-field">
-            <label class="settings-label">Full Name</label>
-            <div class="settings-value">John Doe</div>
+            <label class="settings-label">First Name</label>
+            <div class="settings-value" id="fname-display">Loading...</div>
+          </div>
+          <div class="settings-field">
+            <label class="settings-label">Last Name</label>
+            <div class="settings-value" id="lname-display">Loading...</div>
           </div>
           <div class="settings-field">
             <label class="settings-label">Email Address</label>
-            <div class="settings-value">john@email.com</div>
+            <div class="settings-value" id="email-display">Loading...</div>
           </div>
           <div class="settings-field">
             <label class="settings-label">Phone / WhatsApp</label>
-            <div class="settings-value">+234 801 234 5678</div>
+            <div class="settings-value" id="phone-display">Not provided</div>
           </div>
           <div class="settings-field">
             <label class="settings-label">State of Origin</label>
-            <div class="settings-value">Lagos</div>
+            <div class="settings-value" id="state-display">Not provided</div>
           </div>
-          <button class="btn-save">Edit Details</button>
+          <button class="btn-save" id="edit-toggle-btn" onclick="toggleEditMode()">Edit Details</button>
+        </div>
+
+        <div class="settings-box" id="personal-details-edit" style="display: none;">
+          <div class="settings-title">Edit Personal Details</div>
+          <div class="settings-field">
+            <label class="settings-label">First Name</label>
+            <input type="text" id="fname-edit" placeholder="First name" style="width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle); padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;" />
+          </div>
+          <div class="settings-field">
+            <label class="settings-label">Last Name</label>
+            <input type="text" id="lname-edit" placeholder="Last name" style="width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle); padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;" />
+          </div>
+          <div class="settings-field">
+            <label class="settings-label">Phone / WhatsApp</label>
+            <input type="tel" id="phone-edit" placeholder="+234 000 000 0000" style="width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle); padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;" />
+          </div>
+          <div class="settings-field">
+            <label class="settings-label">State of Origin</label>
+            <select id="state-edit" style="width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle); padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;">
+              <option value="">Select your state</option>
+              <option>Abia</option><option>Adamawa</option><option>Akwa Ibom</option><option>Anambra</option>
+              <option>Bauchi</option><option>Bayelsa</option><option>Benue</option><option>Borno</option>
+              <option>Cross River</option><option>Delta</option><option>Ebonyi</option><option>Edo</option>
+              <option>Ekiti</option><option>Enugu</option><option>FCT - Abuja</option><option>Gombe</option>
+              <option>Imo</option><option>Jigawa</option><option>Kaduna</option><option>Kano</option>
+              <option>Katsina</option><option>Kebbi</option><option>Kogi</option><option>Kwara</option>
+              <option>Lagos</option><option>Nasarawa</option><option>Niger</option><option>Ogun</option>
+              <option>Ondo</option><option>Osun</option><option>Oyo</option><option>Plateau</option>
+              <option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option><option>Zamfara</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn-save" onclick="window.saveAccountChanges()" style="flex: 1;">Save Changes</button>
+            <button class="btn-save" onclick="toggleEditMode()" style="flex: 1; background: var(--border-subtle); color: var(--text-muted);">Cancel</button>
+          </div>
         </div>
 
         <div class="settings-box">
@@ -1252,168 +1291,6 @@ body {
   </div>
 </div>
 
-<script>
-// Set date
-document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-function toggleSidebar() {
-  const sidebar = document.querySelector('.sidebar');
-  sidebar.classList.toggle('open');
-}
-
-function closeSidebarOnMobile() {
-  if (window.innerWidth <= 768) {
-    document.querySelector('.sidebar').classList.remove('open');
-  }
-}
-
-function switchTab(tabId, navEl) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  
-  const tabElement = document.getElementById('tab-' + tabId);
-  if (tabElement) {
-    tabElement.classList.add('active');
-  }
-  
-  if (navEl) {
-    navEl.classList.add('active');
-  }
-  
-  const titles = {
-    overview: 'Overview',
-    jobs: 'Job Opportunities',
-    applications: 'My Applications',
-    settings: 'Settings'
-  };
-  
-  document.getElementById('page-title').textContent = titles[tabId] || tabId;
-  closeSidebarOnMobile();
-}
-
-function switchSubTab(tabId, btn) {
-  document.querySelectorAll('.tab-content').forEach(el => {
-    if (el.id === 'tab-' + tabId || el.id === 'tab-plan' || el.id === 'tab-upgrade') {
-      el.classList.remove('active');
-    }
-  });
-  
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  
-  document.getElementById('tab-' + tabId).classList.add('active');
-  btn.classList.add('active');
-}
-
-function upgradePlan(planName, amount) {
-  alert('Redirecting to payment for ' + planName + ' plan (₦' + amount + ')');
-  // window.location.href = 'payment.html';
-}
-
-function showDeleteModal() {
-  document.getElementById('delete-modal').classList.add('show');
-}
-
-function closeDeleteModal() {
-  document.getElementById('delete-modal').classList.remove('show');
-}
-
-function confirmDelete() {
-  alert('Your account has been deleted. Redirecting to homepage...');
-  window.location.href = 'index.html';
-}
-
-function handleLogout() {
-  alert('Logging out...');
-  window.location.href = 'login.html';
-}
-
-// File upload handling
-document.addEventListener('DOMContentLoaded', function() {
-  // CV upload
-  const cvUpload = document.getElementById('cv-upload');
-  if (cvUpload) {
-    cvUpload.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-        
-        if (file.size > maxSize) {
-          document.getElementById('cv-status').innerHTML = '<span style="color: #e24b4a;">File is too large. Maximum 5MB.</span>';
-        } else if (!allowedTypes.includes(file.type)) {
-          document.getElementById('cv-status').innerHTML = '<span style="color: #e24b4a;">Invalid file type. Please use PDF or Word document.</span>';
-        } else {
-          document.getElementById('cv-status').innerHTML = `<span style="color: var(--gold);">✓ ${file.name} (${(file.size / 1024).toFixed(0)}KB) ready to upload</span>`;
-        }
-      }
-    });
-  }
-
-  // Passport upload
-  const passportUpload = document.getElementById('passport-upload');
-  if (passportUpload) {
-    passportUpload.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-        
-        if (file.size > maxSize) {
-          document.getElementById('passport-status').innerHTML = '<span style="color: #e24b4a;">File is too large. Maximum 5MB.</span>';
-        } else if (!allowedTypes.includes(file.type)) {
-          document.getElementById('passport-status').innerHTML = '<span style="color: #e24b4a;">Invalid file type. Please use JPEG, PNG or PDF.</span>';
-        } else {
-          document.getElementById('passport-status').innerHTML = `<span style="color: var(--gold);">✓ ${file.name} (${(file.size / 1024).toFixed(0)}KB) ready to upload</span>`;
-        }
-      }
-    });
-  }
-
-  // Other documents upload
-  const otherUpload = document.getElementById('other-upload');
-  if (otherUpload) {
-    otherUpload.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        
-        if (file.size > maxSize) {
-          document.getElementById('other-status').innerHTML = '<span style="color: #e24b4a;">File is too large. Maximum 5MB.</span>';
-        } else {
-          document.getElementById('other-status').innerHTML = `<span style="color: var(--gold);">✓ ${file.name} (${(file.size / 1024).toFixed(0)}KB) ready to upload</span>`;
-        }
-      }
-    });
-  }
-});
-
-function uploadDocuments() {
-  const cvFile = document.getElementById('cv-upload').files[0];
-  const passportFile = document.getElementById('passport-upload').files[0];
-  const otherFile = document.getElementById('other-upload').files[0];
-  
-  if (!cvFile && !passportFile && !otherFile) {
-    alert('Please select at least one document to upload.');
-    return;
-  }
-  
-  alert('Documents uploaded successfully!');
-  // TODO: Send files to backend for storage
-}
-
-function saveJobPreferences() {
-  const categorySelect = document.getElementById('job-category');
-  const countryCheckboxes = document.querySelectorAll('input[name="job-countries"]:checked');
-  
-  if (categorySelect) {
-    const category = categorySelect.value;
-    const countries = Array.from(countryCheckboxes).map(cb => cb.value);
-    
-    console.log('Job preferences saved:', { category, countries });
-    alert('Job preferences saved successfully!');
-    // TODO: Send preferences to backend for storage
-  }
-}
-</script>
+<script type="module" src="dashboard.js"></script>
 </body>
 </html>
