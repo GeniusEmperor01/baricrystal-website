@@ -224,7 +224,7 @@ body { display: flex; min-height: 100vh; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
 
 // Firebase configuration
@@ -273,8 +273,13 @@ window.firebaseLogin = async function() {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Get user data from database to determine role
+    // Update user login details in database
     const userRef = ref(database, 'users/' + user.uid);
+    await update(userRef, {
+      lastLogin: new Date().toISOString()
+    });
+
+    // Get user data from database to determine role
     const snapshot = await get(userRef);
 
     if (snapshot.exists()) {
