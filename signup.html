@@ -232,6 +232,43 @@ body { display: flex; min-height: 100vh; }
 </div>
 
 <script>
+  // Form validation and password strength checker - accessible to modules
+  window.validateForm = function() {
+    const fname = document.getElementById('fname').value.trim();
+    const lname = document.getElementById('lname').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const state = document.getElementById('state').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm').value;
+    const terms = document.getElementById('terms-check').checked;
+    const errorMsg = document.getElementById('error-msg');
+
+    errorMsg.classList.remove('show');
+
+    if (!fname || !lname || !email || !phone || !state || !password || !confirm) {
+      errorMsg.textContent = 'Please fill in all required fields.';
+      errorMsg.classList.add('show');
+      return false;
+    }
+    if (password.length < 8) {
+      errorMsg.textContent = 'Password must be at least 8 characters.';
+      errorMsg.classList.add('show');
+      return false;
+    }
+    if (password !== confirm) {
+      errorMsg.textContent = 'Passwords do not match.';
+      errorMsg.classList.add('show');
+      return false;
+    }
+    if (!terms) {
+      errorMsg.textContent = 'Please accept the Terms & Conditions to continue.';
+      errorMsg.classList.add('show');
+      return false;
+    }
+    return true;
+  };
+
   // Password strength checker
   function checkStrength(val) {
     const bars = [1,2,3,4].map(i => document.getElementById('bar' + i));
@@ -276,7 +313,7 @@ body { display: flex; min-height: 100vh; }
 
   // Expose signup function globally
   window.firebaseSignup = async function() {
-    if (!validateForm()) return;
+    if (!window.validateForm()) return;
 
     const fname = document.getElementById('fname').value.trim();
     const lname = document.getElementById('lname').value.trim();
