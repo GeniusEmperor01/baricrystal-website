@@ -1258,10 +1258,10 @@ body {
         <div class="settings-box">
           <div class="settings-title">Password & Security</div>
           <div class="settings-field">
-            <label class="settings-label">Last Changed</label>
-            <div class="settings-value">March 10, 2026</div>
+            <label class="settings-label">Password Protection</label>
+            <div class="settings-value">Secure</div>
           </div>
-          <button class="btn-save">Change Password</button>
+          <button class="btn-save" onclick="window.showChangePasswordModal()">Change Password</button>
         </div>
 
         <div class="danger-zone">
@@ -1285,8 +1285,32 @@ body {
       Are you sure you want to permanently delete your account? All your data, applications, and account information will be removed. This action cannot be undone.
     </div>
     <div class="modal-actions">
-      <button class="modal-btn modal-cancel" onclick="closeDeleteModal()">Cancel</button>
-      <button class="modal-btn modal-confirm" onclick="confirmDelete()">Delete My Account</button>
+      <button class="modal-btn modal-cancel" onclick="window.closeDeleteModal()">Cancel</button>
+      <button class="modal-btn modal-confirm" onclick="window.confirmDelete()">Delete My Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal" id="change-password-modal">
+  <div class="modal-content">
+    <div class="modal-title">Change Password</div>
+    <div class="modal-text">Enter your current password and create a new one.</div>
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Current Password</label>
+      <input type="password" id="current-password" placeholder="Enter current password" style="width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle); padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; box-sizing: border-box;" />
+    </div>
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">New Password</label>
+      <input type="password" id="new-password" placeholder="Enter new password (min. 8 characters)" style="width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle); padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; box-sizing: border-box;" />
+    </div>
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Confirm New Password</label>
+      <input type="password" id="confirm-new-password" placeholder="Confirm new password" style="width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle); padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; box-sizing: border-box;" />
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-cancel" onclick="window.closeChangePasswordModal()">Cancel</button>
+      <button class="modal-btn modal-confirm" onclick="window.changePassword()">Change Password</button>
     </div>
   </div>
 </div>

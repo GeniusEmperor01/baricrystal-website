@@ -188,7 +188,7 @@ body { display: flex; min-height: 100vh; }
       <div class="field"><label>Last Name</label><input type="text" id="lname" placeholder="Doe"/></div>
     </div>
     <div class="field"><label>Email Address</label><input type="email" id="email" placeholder="john@email.com"/></div>
-    <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="phone" placeholder="+234 000 000 0000"/></div>
+    <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="phone" placeholder="+234 801 234 5678" oninput="this.value=this.value.replace(/[^0-9+\s]/g,'')" maxlength="20"/></div>
     <div class="field">
       <label>State of Origin</label>
       <select id="state">
@@ -266,6 +266,12 @@ body { display: flex; min-height: 100vh; }
       errorMsg.classList.add('show');
       return false;
     }
+    // Validate Nigerian phone format
+    if (!window.validatePhone || !window.validatePhone(phone)) {
+      errorMsg.textContent = 'Please enter a valid Nigerian phone number (e.g., +234 801 234 5678).';
+      errorMsg.classList.add('show');
+      return false;
+    }
     return true;
   };
 
@@ -289,112 +295,8 @@ body { display: flex; min-height: 100vh; }
 
 </script>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-  import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyB2Z3nEWjxrpIeiD0CQiCCWtrPf_A6tys4",
-    authDomain: "baricrystal-auth.firebaseapp.com",
-    databaseURL: "https://baricrystal-auth-default-rtdb.firebaseio.com",
-    projectId: "baricrystal-auth",
-    storageBucket: "baricrystal-auth.firebasestorage.app",
-    messagingSenderId: "766524714838",
-    appId: "1:766524714838:web:2774d97067139b585fb0f7",
-    measurementId: "G-958DK8D2QL"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const database = getDatabase(app);
-  const analytics = getAnalytics(app);
-
-  // Monitor authentication state
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // User is signed in
-      console.log('User is signed in:', user.uid);
-      const uid = user.uid;
-      // Auto-redirect to dashboard if already authenticated
-      window.location.href = 'dashboard.html';
-    } else {
-      // User is signed out
-      console.log('User is signed out');
-    }
-  });
-
-  // Expose signup function globally
-  window.firebaseSignup = async function() {
-    if (!window.validateForm()) return;
-
-    const fname = document.getElementById('fname').value.trim();
-    const lname = document.getElementById('lname').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const state = document.getElementById('state').value.trim();
-    const password = document.getElementById('password').value;
-    const errorMsg = document.getElementById('error-msg');
-    const btn = document.getElementById('signup-btn');
-
-    btn.disabled = true;
-    btn.textContent = 'Creating account...';
-
-    // Email verification settings
-    const actionCodeSettings = {
-      url: window.location.origin + '/login.html',
-      handleCodeInApp: true
-    };
-
-    try {
-      // Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Send email verification
-      await sendEmailVerification(user, actionCodeSettings);
-
-      // Save user data to Realtime Database
-      await set(ref(database, 'users/' + user.uid), {
-        firstName: fname,
-        lastName: lname,
-        email: email,
-        phone: phone,
-        state: state,
-        createdAt: new Date().toISOString(),
-        emailVerified: false
-      });
-
-      console.log('User created and verification email sent:', user.uid);
-      errorMsg.classList.remove('show');
-      
-      // Show success message and redirect after delay
-      errorMsg.textContent = 'Account created! Verification email sent to ' + email + '. Check your inbox.';
-      errorMsg.style.background = 'rgba(45, 158, 107, 0.08)';
-      errorMsg.style.borderColor = 'rgba(45, 158, 107, 0.2)';
-      errorMsg.style.color = '#2D9E6B';
-      errorMsg.classList.add('show');
-      
-      setTimeout(() => {
-        window.location.href = 'dashboard.html';
-      }, 3000);
-
-    } catch (error) {
-      console.error('Signup error:', error);
-      errorMsg.textContent = error.message || 'An error occurred during signup.';
-      errorMsg.style.background = 'rgba(226,75,74,0.08)';
-      errorMsg.style.borderColor = 'rgba(226,75,74,0.2)';
-      errorMsg.style.color = 'var(--error)';
-      errorMsg.classList.add('show');
-      btn.disabled = false;
-      btn.textContent = 'Create Account';
-    }
-  };
-
-  // Add click listener to button
-  document.getElementById('signup-btn').addEventListener('click', window.firebaseSignup);
-</script>
+<!-- Firebase signup module with validation and fraud prevention -->
+<script type="module" src="signup.js"></script>
 
 </body>
 </html>

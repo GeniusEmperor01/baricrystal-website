@@ -1,6 +1,6 @@
 // Firebase configuration and initialization
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { getDatabase, ref, get, update, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
 
@@ -32,6 +32,28 @@ onAuthStateChanged(auth, async (user) => {
     // User is not authenticated, redirect to login
     console.log('No authenticated user, redirecting to login');
     window.location.href = 'login.html';
+    return;
+  }
+
+  // Check if email is verified
+  if (!user.emailVerified) {
+    console.warn('Email not verified. User must verify email first.');
+    // Show verification pending message
+    const content = document.querySelector('.content');
+    if (content) {
+      content.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px;">
+          <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 28px; margin-bottom: 16px;">Email Verification Required</h2>
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;">
+            Please verify your email address to access your dashboard. A verification email has been sent to:<br>
+            <strong style="color: var(--text);">${user.email}</strong><br><br>
+            Check your inbox and click the verification link to continue.
+          </p>
+          <button onclick="window.location.reload()" style="padding: 12px 24px; background: var(--gold); color: var(--dark); border: none; cursor: pointer; font-weight: 500;">Refresh</button>
+          <button onclick="handleLogout()" style="padding: 12px 24px; background: transparent; border: 1px solid var(--border); color: var(--text); margin-left: 12px; cursor: pointer;">Logout</button>
+        </div>
+      `;
+    }
     return;
   }
 
@@ -277,6 +299,86 @@ window.confirmDelete = async function() {
     if (confirmBtn) {
       confirmBtn.disabled = false;
       confirmBtn.textContent = originalText;
+    }
+  }
+};
+
+// ============================================================================
+// PASSWORD MANAGEMENT
+// ============================================================================
+
+window.showChangePasswordModal = function() {
+  const modal = document.getElementById('change-password-modal');
+  if (modal) {
+    modal.classList.add('show');
+  }
+};
+
+window.closeChangePasswordModal = function() {
+  const modal = document.getElementById('change-password-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    // Clear form
+    document.getElementById('current-password').value = '';
+    document.getElementById('new-password').value = '';
+    document.getElementById('confirm-new-password').value = '';
+  }
+};
+
+window.changePassword = async function() {
+  if (!currentUser) {
+    alert('User not found.');
+    return;
+  }
+
+  const currentPassword = document.getElementById('current-password')?.value;
+  const newPassword = document.getElementById('new-password')?.value;
+  const confirmPassword = document.getElementById('confirm-new-password')?.value;
+  const changeBtn = document.querySelector('.modal-confirm[onclick*="changePassword"]');
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    alert('Please fill in all password fields.');
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    alert('New password must be at least 8 characters.');
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    alert('New passwords do not match.');
+    return;
+  }
+
+  try {
+    if (changeBtn) {
+      changeBtn.disabled = true;
+      changeBtn.textContent = 'Changing...';
+    }
+
+    // Reauthenticate user with current password
+    const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+    await reauthenticateWithCredential(currentUser, credential);
+
+    // Update password
+    await updatePassword(currentUser, newPassword);
+
+    console.log('Password changed successfully');
+    alert('Your password has been changed successfully.');
+    window.closeChangePasswordModal();
+
+  } catch (error) {
+    console.error('Error changing password:', error);
+    if (error.code === 'auth/wrong-password') {
+      alert('Current password is incorrect.');
+    } else {
+      alert('Error changing password: ' + error.message);
+    }
+  } finally {
+    if (changeBtn) {
+      changeBtn.disabled = false;
+      changeBtn.textContent = 'Change Password';
     }
   }
 };
