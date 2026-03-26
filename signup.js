@@ -1,22 +1,6 @@
-// Firebase configuration and initialization
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB2Z3nEWjxrpIeiD0CQiCCWtrPf_A6tys4",
-  authDomain: "baricrystal-auth.firebaseapp.com",
-  databaseURL: "https://baricrystal-auth-default-rtdb.firebaseio.com",
-  projectId: "baricrystal-auth",
-  storageBucket: "baricrystal-auth.firebasestorage.app",
-  messagingSenderId: "766524714838",
-  appId: "1:766524714838:web:2774d97067139b585fb0f7",
-  measurementId: "G-958DK8D2QL"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
+import { auth, database, baseUrl } from './firebase-config.js';
+import { createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 // ============================================================================
 // BLOCKED EMAIL DOMAINS
@@ -77,7 +61,7 @@ function showMessage(text, type = 'error') {
 // ============================================================================
 onAuthStateChanged(auth, (user) => {
   if (user && user.emailVerified) {
-    window.location.href = 'dashboard.html';
+    window.location.href = baseUrl + 'dashboard.html';
   }
 });
 
@@ -93,7 +77,7 @@ window.resendVerificationEmail = async function() {
 
   try {
     await sendEmailVerification(user, {
-      url: window.location.origin + '/dashboard.html',
+      url: baseUrl + 'dashboard.html',
       handleCodeInApp: true
     });
     showMessage('✓ Verification email resent! Check your inbox (and spam folder).', 'success');
@@ -182,11 +166,12 @@ window.firebaseSignup = async function() {
 
     // 3. Send verification email
     await sendEmailVerification(user, {
-      url: window.location.origin + '/dashboard.html',
+      url: baseUrl + 'dashboard.html',
       handleCodeInApp: true
     });
 
     console.log('✅ Verification email sent to:', email);
+    console.log('✅ Redirect URL:', baseUrl + 'dashboard.html');
 
     // 4. Show success + resend option
     const errorMsg = document.getElementById('error-msg');

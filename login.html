@@ -126,14 +126,6 @@ body { display: flex; min-height: 100vh; }
 .submit-btn:hover { opacity: 0.85; }
 .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.divider {
-  display: flex; align-items: center; gap: 12px;
-  margin: 24px 0; font-size: 11px; color: var(--text-muted);
-}
-.divider::before, .divider::after {
-  content: ''; flex: 1; height: 1px; background: var(--border-subtle);
-}
-
 .signup-link {
   text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 24px;
 }
@@ -210,7 +202,7 @@ body { display: flex; min-height: 100vh; }
       <input type="password" id="password" placeholder="Enter your password"/>
     </div>
 
-    <div class="error-msg" id="error-msg">Incorrect email or password. Please try again.</div>
+    <div class="error-msg" id="error-msg"></div>
 
     <button class="submit-btn" type="button" id="login-btn">Sign In</button>
 
@@ -221,108 +213,7 @@ body { display: flex; min-height: 100vh; }
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+<script type="module" src="login.js"></script>
 
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyB2Z3nEWjxrpIeiD0CQiCCWtrPf_A6tys4",
-  authDomain: "baricrystal-auth.firebaseapp.com",
-  databaseURL: "https://baricrystal-auth-default-rtdb.firebaseio.com",
-  projectId: "baricrystal-auth",
-  storageBucket: "baricrystal-auth.firebasestorage.app",
-  messagingSenderId: "766524714838",
-  appId: "1:766524714838:web:2774d97067139b585fb0f7",
-  measurementId: "G-958DK8D2QL"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
-const analytics = getAnalytics(app);
-
-// Monitor authentication state
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // User is signed in, redirect to dashboard
-    console.log('User is signed in:', user.uid);
-    const uid = user.uid;
-    window.location.href = 'dashboard.html';
-  } else {
-    // User is signed out
-    console.log('User is signed out');
-  }
-});
-
-window.firebaseLogin = async function() {
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  const errorMsg = document.getElementById('error-msg');
-  const submitBtn = document.querySelector('.submit-btn');
-
-  document.getElementById('email').classList.remove('error');
-  document.getElementById('password').classList.remove('error');
-  errorMsg.classList.remove('show');
-
-  if (!email || !password) {
-    errorMsg.textContent = 'Please fill in all fields.';
-    errorMsg.classList.add('show');
-    if (!email) document.getElementById('email').classList.add('error');
-    if (!password) document.getElementById('password').classList.add('error');
-    return;
-  }
-
-  // Disable button and show loading state
-  submitBtn.disabled = true;
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = 'Signing in...';
-
-  try {
-    // Firebase authentication
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    // Update user login details in database
-    const userRef = ref(database, 'users/' + user.uid);
-    await update(userRef, {
-      lastLogin: new Date().toISOString()
-    });
-
-    // Get user data from database to determine role
-    const snapshot = await get(userRef);
-
-    if (snapshot.exists()) {
-      const userData = snapshot.val();
-      // Redirect based on role or default to dashboard
-      window.location.href = userData.role === 'admin' ? 'admin.html' : 'dashboard.html';
-    } else {
-      // User exists in auth but not in database, redirect to dashboard
-      window.location.href = 'dashboard.html';
-    }
-  } catch (error) {
-    console.error('Login error:', error);
-    errorMsg.textContent = error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' 
-      ? 'Incorrect email or password. Please try again.' 
-      : error.message;
-    errorMsg.classList.add('show');
-    document.getElementById('email').classList.add('error');
-    document.getElementById('password').classList.add('error');
-    submitBtn.disabled = false;
-    submitBtn.textContent = originalText;
-  }
-};
-
-// Allow Enter key
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') window.firebaseLogin();
-});
-
-// Attach click listener to login button
-document.getElementById('login-btn').addEventListener('click', window.firebaseLogin);
-</script>
 </body>
 </html>
