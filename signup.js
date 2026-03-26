@@ -1,8 +1,7 @@
 // Firebase configuration and initialization
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB2Z3nEWjxrpIeiD0CQiCCWtrPf_A6tys4",
@@ -18,100 +17,110 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const database = getDatabase(app);
-const analytics = getAnalytics(app);
 
 // ============================================================================
-// BLOCKED EMAIL DOMAINS (Fake Email Prevention)
+// BLOCKED EMAIL DOMAINS
 // ============================================================================
-
 const blockedDomains = [
-  'tempmail.com',
-  'guerrillamail.com',
-  '10minutemail.com',
-  'mailinator.com',
-  'throwaway.email',
-  'temp-mail.org',
-  'maildrop.cc'
-  // Add more disposable email domains as needed
+  'tempmail.com', 'guerrillamail.com', '10minutemail.com',
+  'mailinator.com', 'throwaway.email', 'temp-mail.org', 'maildrop.cc'
 ];
 
 function isBlockedEmailDomain(email) {
-  const domain = email.split('@')[1].toLowerCase();
+  const domain = email.split('@')[1]?.toLowerCase();
   return blockedDomains.includes(domain);
 }
 
 // ============================================================================
-// PHONE NUMBER VALIDATION (Nigerian Format)
+// PHONE VALIDATION
 // ============================================================================
-
 function validateNigerianPhone(phone) {
-  // Accept formats: +234XXXXXXXXXX, +234 XXX XXX XXXX, 0XXXXXXXXXX, etc.
   const nigerianPhoneRegex = /^(\+234|0)[789][01]\d{8}$/;
   const cleaned = phone.replace(/\s+/g, '');
   return nigerianPhoneRegex.test(cleaned);
 }
 
 // ============================================================================
-// RATE LIMITING (Prevent Multiple Signups)
+// RATE LIMITING
 // ============================================================================
-
 const SIGNUP_ATTEMPT_KEY = 'signup_attempts';
-const RATE_LIMIT_WINDOW = 3600000; // 1 hour in milliseconds
-const MAX_ATTEMPTS = 5; // Max signup attempts per hour
+const RATE_LIMIT_WINDOW = 3600000;
+const MAX_ATTEMPTS = 5;
 
 function checkRateLimit() {
   const attempts = JSON.parse(localStorage.getItem(SIGNUP_ATTEMPT_KEY) || '[]');
-  const now = Date.now();
-  
-  // Filter out old attempts (older than 1 hour)
-  const recentAttempts = attempts.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
-  
-  if (recentAttempts.length >= MAX_ATTEMPTS) {
-    return false; // Rate limited
-  }
-  
-  return true;
+  const recentAttempts = attempts.filter(t => Date.now() - t < RATE_LIMIT_WINDOW);
+  return recentAttempts.length < MAX_ATTEMPTS;
 }
 
 function recordSignupAttempt() {
   const attempts = JSON.parse(localStorage.getItem(SIGNUP_ATTEMPT_KEY) || '[]');
-  const now = Date.now();
-  attempts.push(now);
-  
-  // Keep only recent attempts
-  const recentAttempts = attempts.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+  const recentAttempts = attempts.filter(t => Date.now() - t < RATE_LIMIT_WINDOW);
+  recentAttempts.push(Date.now());
   localStorage.setItem(SIGNUP_ATTEMPT_KEY, JSON.stringify(recentAttempts));
 }
 
 // ============================================================================
-// AUTHENTICATION STATE MONITORING
+// SHOW MESSAGE HELPER
 // ============================================================================
+function showMessage(text, type = 'error') {
+  const errorMsg = document.getElementById('error-msg');
+  if (!errorMsg) return;
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // User is already signed in, redirect to dashboard
-    console.log('User already signed in:', user.uid);
-    window.location.href = 'dashboard.html';
+  if (type === 'success') {
+    errorMsg.style.background = 'rgba(45, 158, 107, 0.08)';
+    errorMsg.style.borderColor = 'rgba(45, 158, 107, 0.2)';
+    errorMsg.style.color = '#2D9E6B';
   } else {
-    console.log('User is not signed in');
+    errorMsg.style.background = 'rgba(226,75,74,0.08)';
+    errorMsg.style.borderColor = 'rgba(226,75,74,0.2)';
+    errorMsg.style.color = 'var(--error)';
+  }
+
+  errorMsg.textContent = text;
+  errorMsg.classList.add('show');
+}
+
+// ============================================================================
+// AUTH STATE — only redirect if email is verified
+// ============================================================================
+onAuthStateChanged(auth, (user) => {
+  if (user && user.emailVerified) {
+    window.location.href = 'dashboard.html';
   }
 });
 
 // ============================================================================
-// PHONE VALIDATION (called from form)
+// RESEND VERIFICATION EMAIL
 // ============================================================================
+window.resendVerificationEmail = async function() {
+  const user = auth.currentUser;
+  if (!user) {
+    showMessage('No account session found. Please sign up again.');
+    return;
+  }
 
-window.validatePhone = function(phone) {
-  if (!phone) return false;
-  return validateNigerianPhone(phone);
+  try {
+    await sendEmailVerification(user, {
+      url: window.location.origin + '/dashboard.html',
+      handleCodeInApp: true
+    });
+    showMessage('✓ Verification email resent! Check your inbox (and spam folder).', 'success');
+  } catch (error) {
+    console.error('Resend error:', error);
+    if (error.code === 'auth/too-many-requests') {
+      showMessage('Too many requests. Please wait a few minutes before trying again.');
+    } else {
+      showMessage('Failed to resend email: ' + error.message);
+    }
+  }
 };
 
 // ============================================================================
-// FIREBASE SIGNUP WITH EMAIL VERIFICATION
+// MAIN SIGNUP
 // ============================================================================
-
 window.firebaseSignup = async function() {
-  if (!window.validateForm()) return;
+  if (!window.validateForm || !window.validateForm()) return;
 
   const fname = document.getElementById('fname').value.trim();
   const lname = document.getElementById('lname').value.trim();
@@ -119,67 +128,41 @@ window.firebaseSignup = async function() {
   const phone = document.getElementById('phone').value.trim();
   const state = document.getElementById('state').value.trim();
   const password = document.getElementById('password').value;
-  const errorMsg = document.getElementById('error-msg');
   const btn = document.getElementById('signup-btn');
 
-  // Check rate limiting
   if (!checkRateLimit()) {
-    errorMsg.textContent = 'Too many signup attempts. Please try again in 1 hour.';
-    errorMsg.style.background = 'rgba(226,75,74,0.08)';
-    errorMsg.style.borderColor = 'rgba(226,75,74,0.2)';
-    errorMsg.style.color = 'var(--error)';
-    errorMsg.classList.add('show');
+    showMessage('Too many signup attempts. Please try again in 1 hour.');
     return;
   }
 
-  // Check for blocked email domains
   if (isBlockedEmailDomain(email)) {
-    errorMsg.textContent = 'Please use a valid email domain. Temporary email services are not allowed.';
-    errorMsg.style.background = 'rgba(226,75,74,0.08)';
-    errorMsg.style.borderColor = 'rgba(226,75,74,0.2)';
-    errorMsg.style.color = 'var(--error)';
-    errorMsg.classList.add('show');
+    showMessage('Temporary email services are not allowed. Please use a real email.');
     return;
   }
 
-  // Validate phone format
   if (!validateNigerianPhone(phone)) {
-    errorMsg.textContent = 'Please enter a valid Nigerian phone number (e.g., +234 801 234 5678).';
-    errorMsg.style.background = 'rgba(226,75,74,0.08)';
-    errorMsg.style.borderColor = 'rgba(226,75,74,0.2)';
-    errorMsg.style.color = 'var(--error)';
-    errorMsg.classList.add('show');
+    showMessage('Please enter a valid Nigerian phone number (e.g., +234 801 234 5678).');
     return;
   }
 
   btn.disabled = true;
   btn.textContent = 'Creating account...';
 
-  const actionCodeSettings = {
-    url: window.location.origin + '/dashboard.html',
-    handleCodeInApp: true
-  };
-
   try {
-    // Create user in Firebase Auth
+    // 1. Create Firebase Auth user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
     recordSignupAttempt();
 
-    // Flag suspicious patterns for admin review
-    let flagForReview = false;
+    // 2. Save to Realtime Database
     const suspiciousPatterns = {
-      hasNumbers: /\d{5,}/.test(fname + lname), // Multiple consecutive numbers in name
-      hasSpecialChars: /[!@#$%^&*]/.test(fname + lname), // Special characters in name
-      tooShort: fname.length < 2 || lname.length < 2 // Very short names
+      hasNumbers: /\d{5,}/.test(fname + lname),
+      hasSpecialChars: /[!@#$%^&*]/.test(fname + lname),
+      tooShort: fname.length < 2 || lname.length < 2
     };
+    const flagForReview = Object.values(suspiciousPatterns).some(Boolean);
 
-    if (suspiciousPatterns.hasNumbers || suspiciousPatterns.hasSpecialChars || suspiciousPatterns.tooShort) {
-      flagForReview = true;
-    }
-
-    // Save user data to Realtime Database
     await set(ref(database, 'users/' + user.uid), {
       firstName: fname,
       lastName: lname,
@@ -190,49 +173,53 @@ window.firebaseSignup = async function() {
       emailVerified: false,
       flaggedForReview: flagForReview,
       reviewReason: flagForReview ? 'Suspicious name pattern detected' : null,
-      accountStatus: 'pending_verification' // pending_verification, verified, suspended
+      accountStatus: 'pending_verification'
     });
 
-    // Send email verification
-    await sendEmailVerification(user, actionCodeSettings);
+    console.log('✅ User saved to DB:', user.uid);
 
-    console.log('User created, verification email sent:', user.uid);
-    errorMsg.classList.remove('show');
+    // 3. Send verification email
+    await sendEmailVerification(user, {
+      url: window.location.origin + '/dashboard.html',
+      handleCodeInApp: true
+    });
 
-    // Show success message
-    errorMsg.textContent = '✓ Account created! Verification email sent to ' + email + '. Check your inbox and verify your email.';
+    console.log('✅ Verification email sent to:', email);
+
+    // 4. Show success + resend option
+    const errorMsg = document.getElementById('error-msg');
+    errorMsg.innerHTML = `
+      ✓ Account created! A verification email was sent to <strong>${email}</strong>.<br>
+      Didn't get it? Check your spam folder or 
+      <a href="#" onclick="resendVerificationEmail(); return false;" 
+         style="color: #2D9E6B; font-weight: 600;">click here to resend</a>.
+    `;
     errorMsg.style.background = 'rgba(45, 158, 107, 0.08)';
     errorMsg.style.borderColor = 'rgba(45, 158, 107, 0.2)';
     errorMsg.style.color = '#2D9E6B';
     errorMsg.classList.add('show');
 
-    setTimeout(() => {
-      window.location.href = 'dashboard.html';
-    }, 3000);
+    btn.textContent = 'Check your email';
 
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error('❌ Signup error:', error.code, error.message);
 
-    let errorText = error.message;
-    if (error.code === 'auth/email-already-in-use') {
-      errorText = 'This email is already registered. Please log in or use a different email.';
-    } else if (error.code === 'auth/weak-password') {
-      errorText = 'Password is too weak. Please use a stronger password.';
-    } else if (error.code === 'auth/invalid-email') {
-      errorText = 'Invalid email format. Please check and try again.';
-    }
+    const errorMessages = {
+      'auth/email-already-in-use': 'This email is already registered. Please log in instead.',
+      'auth/weak-password': 'Password is too weak. Use at least 6 characters.',
+      'auth/invalid-email': 'Invalid email format. Please check and try again.',
+      'auth/network-request-failed': 'Network error. Check your internet connection and try again.',
+    };
 
-    errorMsg.textContent = errorText;
-    errorMsg.style.background = 'rgba(226,75,74,0.08)';
-    errorMsg.style.borderColor = 'rgba(226,75,74,0.2)';
-    errorMsg.style.color = 'var(--error)';
-    errorMsg.classList.add('show');
+    showMessage(errorMessages[error.code] || error.message);
     btn.disabled = false;
     btn.textContent = 'Create Account';
   }
 };
 
-// Add click listener to button
+// ============================================================================
+// INIT
+// ============================================================================
 document.addEventListener('DOMContentLoaded', function() {
   const signupBtn = document.getElementById('signup-btn');
   if (signupBtn) {
