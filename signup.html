@@ -292,7 +292,7 @@ body { display: flex; min-height: 100vh; }
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
   import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-  import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
 
   const firebaseConfig = {
@@ -341,10 +341,19 @@ body { display: flex; min-height: 100vh; }
     btn.disabled = true;
     btn.textContent = 'Creating account...';
 
+    // Email verification settings
+    const actionCodeSettings = {
+      url: window.location.origin + '/login.html',
+      handleCodeInApp: true
+    };
+
     try {
       // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      // Send email verification
+      await sendEmailVerification(user, actionCodeSettings);
 
       // Save user data to Realtime Database
       await set(ref(database, 'users/' + user.uid), {
@@ -353,30 +362,31 @@ body { display: flex; min-height: 100vh; }
         email: email,
         phone: phone,
         state: state,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        emailVerified: false
       });
 
-      console.log('User created and data saved:', user.uid);
+      console.log('User created and verification email sent:', user.uid);
       errorMsg.classList.remove('show');
       
-      // Redirect after success
+      // Show success message and redirect after delay
+      errorMsg.textContent = 'Account created! Verification email sent to ' + email + '. Check your inbox.';
+      errorMsg.style.background = 'rgba(45, 158, 107, 0.08)';
+      errorMsg.style.borderColor = 'rgba(45, 158, 107, 0.2)';
+      errorMsg.style.color = '#2D9E6B';
+      errorMsg.classList.add('show');
+      
       setTimeout(() => {
         window.location.href = 'dashboard.html';
-      }, 1000);
-
-      set(ref(database, 'users/' + user.uid), {
-        firstName: fname,
-        lastName: lname,
-        email: email,
-        phone: phone,
-        state: state,
-        createdAt: new Date().toISOString()
-      });
+      }, 3000);
 
     } catch (error) {
-      errorMsg.textContent = error.message;
+      console.error('Signup error:', error);
+      errorMsg.textContent = error.message || 'An error occurred during signup.';
+      errorMsg.style.background = 'rgba(226,75,74,0.08)';
+      errorMsg.style.borderColor = 'rgba(226,75,74,0.2)';
+      errorMsg.style.color = 'var(--error)';
       errorMsg.classList.add('show');
-      console.error('Error:', error);
       btn.disabled = false;
       btn.textContent = 'Create Account';
     }
