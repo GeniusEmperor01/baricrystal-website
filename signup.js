@@ -35,10 +35,12 @@ function isBlockedEmailDomain(email) {
 // PHONE VALIDATION
 // ============================================================================
 function validateNigerianPhone(phone) {
-  const nigerianPhoneRegex = /^(\+234|0)[789][01]\d{8}$/;
   const cleaned = phone.replace(/\s+/g, '');
-  return nigerianPhoneRegex.test(cleaned);
+  return /^(\+234|0)[789][01]\d{8}$/.test(cleaned);
 }
+
+// Exposed globally so signup.html validateForm can also use it safely
+window.validatePhone = validateNigerianPhone;
 
 // ============================================================================
 // RATE LIMITING
@@ -120,28 +122,43 @@ window.resendVerificationEmail = async function() {
 // MAIN SIGNUP
 // ============================================================================
 window.firebaseSignup = async function() {
-  if (!window.validateForm || !window.validateForm()) return;
-
   const fname = document.getElementById('fname').value.trim();
   const lname = document.getElementById('lname').value.trim();
   const email = document.getElementById('email').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const state = document.getElementById('state').value.trim();
   const password = document.getElementById('password').value;
+  const confirm = document.getElementById('confirm').value;
+  const terms = document.getElementById('terms-check').checked;
   const btn = document.getElementById('signup-btn');
 
+  // --- Inline validation (no dependency on module load order) ---
+  if (!fname || !lname || !email || !phone || !state || !password || !confirm) {
+    showMessage('Please fill in all required fields.');
+    return;
+  }
+  if (password.length < 8) {
+    showMessage('Password must be at least 8 characters.');
+    return;
+  }
+  if (password !== confirm) {
+    showMessage('Passwords do not match.');
+    return;
+  }
+  if (!terms) {
+    showMessage('Please accept the Terms & Conditions to continue.');
+    return;
+  }
+  if (!validateNigerianPhone(phone)) {
+    showMessage('Please enter a valid Nigerian phone number (e.g., +234 801 234 5678).');
+    return;
+  }
   if (!checkRateLimit()) {
     showMessage('Too many signup attempts. Please try again in 1 hour.');
     return;
   }
-
   if (isBlockedEmailDomain(email)) {
     showMessage('Temporary email services are not allowed. Please use a real email.');
-    return;
-  }
-
-  if (!validateNigerianPhone(phone)) {
-    showMessage('Please enter a valid Nigerian phone number (e.g., +234 801 234 5678).');
     return;
   }
 
@@ -190,8 +207,8 @@ window.firebaseSignup = async function() {
     const errorMsg = document.getElementById('error-msg');
     errorMsg.innerHTML = `
       ✓ Account created! A verification email was sent to <strong>${email}</strong>.<br>
-      Didn't get it? Check your spam folder or 
-      <a href="#" onclick="resendVerificationEmail(); return false;" 
+      Didn't get it? Check your spam folder or
+      <a href="#" onclick="resendVerificationEmail(); return false;"
          style="color: #2D9E6B; font-weight: 600;">click here to resend</a>.
     `;
     errorMsg.style.background = 'rgba(45, 158, 107, 0.08)';
