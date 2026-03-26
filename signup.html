@@ -5,26 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Sign Up — BARICRYSTAL INTERNATIONAL</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --gold: #C89B3C;
-  --dark: #0A0A0A;
-  --dark-2: #141414;
-  --dark-3: #1E1E1E;
-  --text: #F0EDE6;
-  --text-muted: #9A9080;
-  --border: rgba(200,155,60,0.2);
-  --border-subtle: rgba(240,237,230,0.08);
-  --error: #E24B4A;
-  --success: #2D9E6B;
-}
 html, body { height: 100%; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--dark); color: var(--text);
-  display: flex; min-height: 100vh;
-}
+body { display: flex; min-height: 100vh; }
 
 .left-panel {
   width: 480px; flex-shrink: 0;
@@ -204,7 +188,7 @@ body {
       <div class="field"><label>Last Name</label><input type="text" id="lname" placeholder="Doe"/></div>
     </div>
     <div class="field"><label>Email Address</label><input type="email" id="email" placeholder="john@email.com"/></div>
-    <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="phone" placeholder="+234 000 000 0000"/></div>
+    <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="phone" placeholder="+234 801 234 5678" oninput="this.value=this.value.replace(/[^0-9+\s]/g,'')" maxlength="20"/></div>
     <div class="field">
       <label>State of Origin</label>
       <select id="state">
@@ -240,65 +224,79 @@ body {
 
     <div class="error-msg" id="error-msg"></div>
 
-    <button class="submit-btn" onclick="handleSignup()">Create Account</button>
+    <button class="submit-btn" id="signup-btn" type="button">Create Account</button>
 
-    <div class="login-link">Already registered? <a href="login.html">Sign in</a></div>
+    <div class="login-link">Already registered? <a href="login.html">Log in</a></div>
 
   </div>
 </div>
 
 <script>
-function checkStrength(val) {
-  const bars = [1,2,3,4].map(i => document.getElementById('bar' + i));
-  const label = document.getElementById('strength-label');
-  bars.forEach(b => b.className = 'strength-bar');
-  if (!val) { label.textContent = ''; return; }
-  let score = 0;
-  if (val.length >= 8) score++;
-  if (/[A-Z]/.test(val)) score++;
-  if (/[0-9]/.test(val)) score++;
-  if (/[^A-Za-z0-9]/.test(val)) score++;
-  const cls = score <= 1 ? 'weak' : score <= 2 ? 'medium' : 'strong';
-  const labels = ['','Weak','Fair','Good','Strong'];
-  for (let i = 0; i < score; i++) bars[i].classList.add(cls);
-  label.textContent = labels[score] || '';
-  label.style.color = cls === 'weak' ? 'var(--error)' : cls === 'medium' ? '#E8A838' : '#2D9E6B';
-}
+  // Form validation and password strength checker - accessible to modules
+  window.validateForm = function() {
+    const fname = document.getElementById('fname').value.trim();
+    const lname = document.getElementById('lname').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const state = document.getElementById('state').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm').value;
+    const terms = document.getElementById('terms-check').checked;
+    const errorMsg = document.getElementById('error-msg');
 
-function handleSignup() {
-  const fname = document.getElementById('fname').value.trim();
-  const lname = document.getElementById('lname').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const password = document.getElementById('password').value;
-  const confirm = document.getElementById('confirm').value;
-  const terms = document.getElementById('terms-check').checked;
-  const errorMsg = document.getElementById('error-msg');
+    errorMsg.classList.remove('show');
 
-  errorMsg.classList.remove('show');
+    if (!fname || !lname || !email || !phone || !state || !password || !confirm) {
+      errorMsg.textContent = 'Please fill in all required fields.';
+      errorMsg.classList.add('show');
+      return false;
+    }
+    if (password.length < 8) {
+      errorMsg.textContent = 'Password must be at least 8 characters.';
+      errorMsg.classList.add('show');
+      return false;
+    }
+    if (password !== confirm) {
+      errorMsg.textContent = 'Passwords do not match.';
+      errorMsg.classList.add('show');
+      return false;
+    }
+    if (!terms) {
+      errorMsg.textContent = 'Please accept the Terms & Conditions to continue.';
+      errorMsg.classList.add('show');
+      return false;
+    }
+    // Validate Nigerian phone format
+    if (!window.validatePhone || !window.validatePhone(phone)) {
+      errorMsg.textContent = 'Please enter a valid Nigerian phone number (e.g., +234 801 234 5678).';
+      errorMsg.classList.add('show');
+      return false;
+    }
+    return true;
+  };
 
-  if (!fname || !lname || !email || !phone || !password || !confirm) {
-    errorMsg.textContent = 'Please fill in all required fields.';
-    errorMsg.classList.add('show'); return;
+  // Password strength checker
+  function checkStrength(val) {
+    const bars = [1,2,3,4].map(i => document.getElementById('bar' + i));
+    const label = document.getElementById('strength-label');
+    bars.forEach(b => b.className = 'strength-bar');
+    if (!val) { label.textContent = ''; return; }
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const cls = score <= 1 ? 'weak' : score <= 2 ? 'medium' : 'strong';
+    const labels = ['','Weak','Fair','Good','Strong'];
+    for (let i = 0; i < score; i++) bars[i].classList.add(cls);
+    label.textContent = labels[score] || '';
+    label.style.color = cls === 'weak' ? 'var(--error)' : cls === 'medium' ? '#E8A838' : '#2D9E6B';
   }
-  if (password.length < 8) {
-    errorMsg.textContent = 'Password must be at least 8 characters.';
-    errorMsg.classList.add('show'); return;
-  }
-  if (password !== confirm) {
-    errorMsg.textContent = 'Passwords do not match.';
-    errorMsg.classList.add('show'); return;
-  }
-  if (!terms) {
-    errorMsg.textContent = 'Please accept the Terms & Conditions to continue.';
-    errorMsg.classList.add('show'); return;
-  }
 
-  // Frontend demo — redirect to dashboard
-  window.location.href = 'dashboard.html';
-}
-
-document.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
 </script>
+
+<!-- Firebase signup module with validation and fraud prevention -->
+<script type="module" src="signup.js"></script>
+
 </body>
 </html>

@@ -17,7 +17,7 @@
       ${links.map(l => `<a href="${l.href}" class="nav-link${page === l.href ? ' active' : ''}">${l.label}</a>`).join('')}
     </div>
     <div class="nav-right">
-      <a href="payment.html" class="nav-cta">Apply Now</a>
+      <a href="signup.html" class="nav-cta">Apply Now</a>
       <button class="nav-burger" id="nav-burger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -25,7 +25,7 @@
   </nav>
   <div class="nav-mobile-menu" id="nav-mobile">
     ${links.map(l => `<a href="${l.href}" class="nav-mobile-link${page === l.href ? ' active' : ''}">${l.label}</a>`).join('')}
-    <a href="payment.html" class="nav-mobile-cta">Apply Now</a>
+    <a href="signup.html" class="nav-mobile-cta">Apply Now</a>
   </div>`;
 
   const wrapper = document.createElement('div');
