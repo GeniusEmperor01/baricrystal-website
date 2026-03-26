@@ -292,7 +292,7 @@ body { display: flex; min-height: 100vh; }
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
   import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
 
   const firebaseConfig = {
@@ -310,6 +310,20 @@ body { display: flex; min-height: 100vh; }
   const auth = getAuth(app);
   const database = getDatabase(app);
   const analytics = getAnalytics(app);
+
+  // Monitor authentication state
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in
+      console.log('User is signed in:', user.uid);
+      const uid = user.uid;
+      // Auto-redirect to dashboard if already authenticated
+      window.location.href = 'dashboard.html';
+    } else {
+      // User is signed out
+      console.log('User is signed out');
+    }
+  });
 
   // Expose signup function globally
   window.firebaseSignup = async function() {
@@ -358,7 +372,7 @@ body { display: flex; min-height: 100vh; }
         state: state,
         createdAt: new Date().toISOString()
       });
-      
+
     } catch (error) {
       errorMsg.textContent = error.message;
       errorMsg.classList.add('show');

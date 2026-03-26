@@ -223,7 +223,7 @@ body { display: flex; min-height: 100vh; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
 
@@ -244,6 +244,19 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const database = getDatabase(app);
 const analytics = getAnalytics(app);
+
+// Monitor authentication state
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // User is signed in, redirect to dashboard
+    console.log('User is signed in:', user.uid);
+    const uid = user.uid;
+    window.location.href = 'dashboard.html';
+  } else {
+    // User is signed out
+    console.log('User is signed out');
+  }
+});
 
 window.firebaseLogin = async function() {
   const email = document.getElementById('email').value.trim();

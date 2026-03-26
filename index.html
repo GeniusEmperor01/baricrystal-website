@@ -137,5 +137,33 @@
 </div>
 
 <script src="footer.js"></script>
-</body>
-</html>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB2Z3nEWjxrpIeiD0CQiCCWtrPf_A6tys4",
+  authDomain: "baricrystal-auth.firebaseapp.com",
+  databaseURL: "https://baricrystal-auth-default-rtdb.firebaseio.com",
+  projectId: "baricrystal-auth",
+  storageBucket: "baricrystal-auth.firebasestorage.app",
+  messagingSenderId: "766524714838",
+  appId: "1:766524714838:web:2774d97067139b585fb0f7",
+  measurementId: "G-958DK8D2QL"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const analytics = getAnalytics(app);
+
+// Monitor authentication state
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // User is signed in, redirect to dashboard
+    console.log('User is signed in:', user.uid);
+    window.location.href = 'dashboard.html';
+  }
+});
+</script>
