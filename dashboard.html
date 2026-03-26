@@ -1282,7 +1282,15 @@ body {
   <div class="modal-content">
     <div class="modal-title">Delete Account?</div>
     <div class="modal-text">
-      Are you sure you want to permanently delete your account? All your data, applications, and account information will be removed. This action cannot be undone.
+      This will permanently delete your account and all associated data. This action cannot be undone.<br><br>
+      Enter your password to confirm.
+    </div>
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Your Password</label>
+      <input type="password" id="delete-password-input" placeholder="Enter your password"
+        style="width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle);
+               padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif;
+               font-size: 13px; outline: none; box-sizing: border-box;" />
     </div>
     <div class="modal-actions">
       <button class="modal-btn modal-cancel" onclick="window.closeDeleteModal()">Cancel</button>
@@ -1290,6 +1298,7 @@ body {
     </div>
   </div>
 </div>
+
 
 <!-- CHANGE PASSWORD MODAL -->
 <div class="modal" id="change-password-modal">
