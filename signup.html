@@ -224,7 +224,7 @@ body { display: flex; min-height: 100vh; }
 
     <div class="error-msg" id="error-msg"></div>
 
-    <button class="submit-btn" onclick="handleSignup()">Create Account</button>
+    <button class="submit-btn" id="signup-btn" type="button">Create Account</button>
 
     <div class="login-link">Already registered? <a href="login.html">Log in</a></div>
 
@@ -232,57 +232,98 @@ body { display: flex; min-height: 100vh; }
 </div>
 
 <script>
-function checkStrength(val) {
-  const bars = [1,2,3,4].map(i => document.getElementById('bar' + i));
-  const label = document.getElementById('strength-label');
-  bars.forEach(b => b.className = 'strength-bar');
-  if (!val) { label.textContent = ''; return; }
-  let score = 0;
-  if (val.length >= 8) score++;
-  if (/[A-Z]/.test(val)) score++;
-  if (/[0-9]/.test(val)) score++;
-  if (/[^A-Za-z0-9]/.test(val)) score++;
-  const cls = score <= 1 ? 'weak' : score <= 2 ? 'medium' : 'strong';
-  const labels = ['','Weak','Fair','Good','Strong'];
-  for (let i = 0; i < score; i++) bars[i].classList.add(cls);
-  label.textContent = labels[score] || '';
-  label.style.color = cls === 'weak' ? 'var(--error)' : cls === 'medium' ? '#E8A838' : '#2D9E6B';
-}
-
-function handleSignup() {
-  const fname = document.getElementById('fname').value.trim();
-  const lname = document.getElementById('lname').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const password = document.getElementById('password').value;
-  const confirm = document.getElementById('confirm').value;
-  const terms = document.getElementById('terms-check').checked;
-  const errorMsg = document.getElementById('error-msg');
-
-  errorMsg.classList.remove('show');
-
-  if (!fname || !lname || !email || !phone || !password || !confirm) {
-    errorMsg.textContent = 'Please fill in all required fields.';
-    errorMsg.classList.add('show'); return;
-  }
-  if (password.length < 8) {
-    errorMsg.textContent = 'Password must be at least 8 characters.';
-    errorMsg.classList.add('show'); return;
-  }
-  if (password !== confirm) {
-    errorMsg.textContent = 'Passwords do not match.';
-    errorMsg.classList.add('show'); return;
-  }
-  if (!terms) {
-    errorMsg.textContent = 'Please accept the Terms & Conditions to continue.';
-    errorMsg.classList.add('show'); return;
+  // Password strength checker
+  function checkStrength(val) {
+    const bars = [1,2,3,4].map(i => document.getElementById('bar' + i));
+    const label = document.getElementById('strength-label');
+    bars.forEach(b => b.className = 'strength-bar');
+    if (!val) { label.textContent = ''; return; }
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const cls = score <= 1 ? 'weak' : score <= 2 ? 'medium' : 'strong';
+    const labels = ['','Weak','Fair','Good','Strong'];
+    for (let i = 0; i < score; i++) bars[i].classList.add(cls);
+    label.textContent = labels[score] || '';
+    label.style.color = cls === 'weak' ? 'var(--error)' : cls === 'medium' ? '#E8A838' : '#2D9E6B';
   }
 
-  // Frontend demo — redirect to dashboard
-  window.location.href = 'dashboard.html';
-}
-
-document.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
 </script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB2Z3nEWjxrpIeiD0CQiCCWtrPf_A6tys4",
+    authDomain: "baricrystal-auth.firebaseapp.com",
+    databaseURL: "https://baricrystal-auth-default-rtdb.firebaseio.com",
+    projectId: "baricrystal-auth",
+    storageBucket: "baricrystal-auth.firebasestorage.app",
+    messagingSenderId: "766524714838",
+    appId: "1:766524714838:web:2774d97067139b585fb0f7",
+    measurementId: "G-958DK8D2QL"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const database = getDatabase(app);
+  const analytics = getAnalytics(app);
+
+  // Expose signup function globally
+  window.firebaseSignup = async function() {
+    if (!validateForm()) return;
+
+    const fname = document.getElementById('fname').value.trim();
+    const lname = document.getElementById('lname').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const state = document.getElementById('state').value.trim();
+    const password = document.getElementById('password').value;
+    const errorMsg = document.getElementById('error-msg');
+    const btn = document.getElementById('signup-btn');
+
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+
+    try {
+      // Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Save user data to Realtime Database
+      await set(ref(database, 'users/' + user.uid), {
+        firstName: fname,
+        lastName: lname,
+        email: email,
+        phone: phone,
+        state: state,
+        createdAt: new Date().toISOString()
+      });
+
+      console.log('User created and data saved:', user.uid);
+      errorMsg.classList.remove('show');
+      
+      // Redirect after success
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 1000);
+    } catch (error) {
+      errorMsg.textContent = error.message;
+      errorMsg.classList.add('show');
+      console.error('Error:', error);
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    }
+  };
+
+  // Add click listener to button
+  document.getElementById('signup-btn').addEventListener('click', window.firebaseSignup);
+</script>
+
 </body>
 </html>
