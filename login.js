@@ -7,12 +7,18 @@ const submitBtn = document.getElementById('login-btn');
 
 // ============================================================================
 // AUTH STATE
-// FIX: Admin bypasses verification; normal users still require it
+// Admin bypasses verification; normal users still require it
 // ============================================================================
+const ADMIN_EMAIL = 'admin@baricrystal.com';
+
+function normalizeEmail(email) {
+  return (email || '').trim().toLowerCase();
+}
+
 onAuthStateChanged(auth, (user) => {
   if (!user) return;
 
-  const isAdmin = (user.email || '').toLowerCase() === 'admin@baricrystal.com';
+  const isAdmin = normalizeEmail(user.email) === ADMIN_EMAIL;
   if (user.emailVerified || isAdmin) {
     window.location.href = baseUrl + (isAdmin ? 'admin.html' : 'dashboard.html');
   }
@@ -54,9 +60,9 @@ async function firebaseLogin() {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    const isAdmin = (user.email || '').toLowerCase() === 'admin@baricrystal.com';
+    const isAdmin = normalizeEmail(user.email) === ADMIN_EMAIL;
 
-    // FIX: Block unverified users from logging in, except admin
+    // Block unverified users from logging in, except admin
     if (!isAdmin && !user.emailVerified) {
       await signOut(auth);
       showError('Please verify your email before logging in. Check your inbox for the verification link.');
@@ -70,7 +76,7 @@ async function firebaseLogin() {
     const snapshot = await get(userRef);
     const payload = {
       lastLogin: new Date().toISOString(),
-      emailVerified: true
+      emailVerified: isAdmin ? true : user.emailVerified
     };
 
     if (isAdmin) payload.role = 'admin';

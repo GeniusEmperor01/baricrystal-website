@@ -63,9 +63,15 @@ function showMessage(text, type = 'error') {
 // ============================================================================
 const ADMIN_EMAIL = 'admin@baricrystal.com';
 
+function normalizeEmail(email) {
+  return (email || '').trim().toLowerCase();
+}
+
 onAuthStateChanged(auth, (user) => {
-  if (user && user.emailVerified && (user.email || '').toLowerCase() !== ADMIN_EMAIL) {
-    window.location.href = baseUrl + 'dashboard.html';
+  if (!user) return;
+  const isAdmin = normalizeEmail(user.email) === ADMIN_EMAIL;
+  if (user.emailVerified || isAdmin) {
+    window.location.href = baseUrl + (isAdmin ? 'admin.html' : 'dashboard.html');
   }
 });
 
@@ -149,6 +155,7 @@ window.firebaseSignup = async function() {
     const flagForReview = /\d{5,}/.test(fname + lname) ||
                           /[!@#$%^&*]/.test(fname + lname) ||
                           fname.length < 2 || lname.length < 2;
+    const isAdmin = normalizeEmail(email) === ADMIN_EMAIL;
 
     await set(ref(database, 'users/' + user.uid), {
       firstName: fname,
@@ -157,41 +164,47 @@ window.firebaseSignup = async function() {
       phone: phone,
       state: state,
       createdAt: new Date().toISOString(),
-      emailVerified: false,
-      flaggedForReview: flagForReview,
-      reviewReason: flagForReview ? 'Suspicious name pattern detected' : null,
-      accountStatus: 'pending_verification'
+      emailVerified: isAdmin ? true : false,
+      flaggedForReview: isAdmin ? false : flagForReview,
+      reviewReason: isAdmin ? null : (flagForReview ? 'Suspicious name pattern detected' : null),
+      accountStatus: isAdmin ? 'paid' : 'pending_verification',
+      role: isAdmin ? 'admin' : 'user'
     });
 
     console.log('✅ User saved to DB:', user.uid);
 
-    // 3. Send verification email
-    await sendEmailVerification(user, {
-      url: baseUrl + 'dashboard.html',
-      handleCodeInApp: true
-    });
+    if (!isAdmin) {
+      // 3. Send verification email for normal users only
+      await sendEmailVerification(user, {
+        url: baseUrl + 'dashboard.html',
+        handleCodeInApp: true
+      });
 
-    console.log('✅ Verification email sent to:', email);
-    console.log('✅ Redirect URL:', baseUrl + 'dashboard.html');
+      console.log('✅ Verification email sent to:', email);
+      console.log('✅ Redirect URL:', baseUrl + 'dashboard.html');
 
-    // 4. FIX: Sign out after signup so the unverified session doesn't
-    // cause unexpected behaviour elsewhere in the app
-    await signOut(auth);
+      // 4. Sign out after signup so the unverified session doesn't
+      // cause unexpected behaviour elsewhere in the app
+      await signOut(auth);
 
-    // 5. Show success + resend option
-    const errorMsg = document.getElementById('error-msg');
-    errorMsg.innerHTML = `
-      ✓ Account created! A verification email was sent to <strong>${email}</strong>.<br>
-      Didn't get it? Check your spam folder or
-      <a href="#" onclick="resendVerificationEmail(); return false;"
-         style="color: #2D9E6B; font-weight: 600;">click here to resend</a>.
-    `;
-    errorMsg.style.background = 'rgba(45, 158, 107, 0.08)';
-    errorMsg.style.borderColor = 'rgba(45, 158, 107, 0.2)';
-    errorMsg.style.color = '#2D9E6B';
-    errorMsg.classList.add('show');
+      // 5. Show success + resend option
+      const errorMsg = document.getElementById('error-msg');
+      errorMsg.innerHTML = `
+        ✓ Account created! A verification email was sent to <strong>${email}</strong>.<br>
+        Didn't get it? Check your spam folder or
+        <a href="#" onclick="resendVerificationEmail(); return false;"
+           style="color: #2D9E6B; font-weight: 600;">click here to resend</a>.
+      `;
+      errorMsg.style.background = 'rgba(45, 158, 107, 0.08)';
+      errorMsg.style.borderColor = 'rgba(45, 158, 107, 0.2)';
+      errorMsg.style.color = '#2D9E6B';
+      errorMsg.classList.add('show');
 
-    btn.textContent = 'Check your email';
+      btn.textContent = 'Check your email';
+    } else {
+      // Admin gets immediate access without email verification
+      window.location.href = baseUrl + 'admin.html';
+    }
 
   } catch (error) {
     console.error('❌ Signup error:', error.code, error.message);
