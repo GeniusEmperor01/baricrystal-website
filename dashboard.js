@@ -5,6 +5,10 @@ import { ref, get, update, remove } from "https://www.gstatic.com/firebasejs/12.
 let currentUser = null;
 let userData = null;
 
+function isSandboxPaymentActive() {
+  return localStorage.getItem('baricrystal_payment_sandbox_status') === 'paid';
+}
+
 // ============================================================================
 // AUTHENTICATION STATE
 // ============================================================================
@@ -88,6 +92,7 @@ function normalizeStatus(raw) {
 }
 
 function isPaidAccount() {
+  if (isSandboxPaymentActive()) return true;
   const status = normalizeStatus(userData?.accountStatus || userData?.paymentStatus);
   return ['paid', 'active', 'approved', 'subscribed'].includes(status);
 }
@@ -111,10 +116,12 @@ function renderAccountBanner() {
         <div style="font-size: 15px; line-height: 1.7;">
           Your account is currently <strong>${status || 'unpaid'}</strong>. ${plan ? `Current plan: <strong>${plan}</strong>.` : ''}
           Pay for a plan before continuing into jobs and applications.
+          ${isSandboxPaymentActive() ? '<br><span style="color: var(--success);">Sandbox payment is active on this browser.</span>' : ''}
         </div>
       </div>
       <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button class="btn-save" onclick="window.openPaymentPage()">Pay Now</button>
+        <button class="btn-save" onclick="window.openSandboxPaymentPage()" style="background: transparent; border: 1px solid rgba(45,158,107,0.4); color: var(--success);">Test Payment</button>
         <button class="btn-save" onclick="window.openCvBuilder()" style="background: transparent; border: 1px solid var(--border); color: var(--text);">Open CV Page</button>
       </div>
     </div>
@@ -423,6 +430,10 @@ window.upgradePlan = function(planName, amount) {
 
 window.openPaymentPage = function() {
   window.location.href = baseUrl + 'payment.html';
+};
+
+window.openSandboxPaymentPage = function() {
+  window.location.href = baseUrl + 'payment.html?sandbox=1';
 };
 
 window.openCvBuilder = function() {

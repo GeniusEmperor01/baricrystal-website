@@ -158,9 +158,10 @@ window.firebaseSignup = async function() {
       emailVerified: false,
       flaggedForReview: flagForReview,
       reviewReason: flagForReview ? 'Suspicious name pattern detected' : null,
+      role: 'user',
       accountStatus: 'unpaid',
       paymentStatus: 'unpaid',
-      planName: 'Unpaid'
+      planName: 'Unpaid Account'
     });
 
     console.log('✅ User saved to DB:', user.uid);
