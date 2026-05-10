@@ -109,13 +109,11 @@ body {
 import { auth, baseUrl } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-const ADMIN_EMAIL = 'admin@baricrystal.com';
-
 onAuthStateChanged(auth, (user) => {
   const authCheck = document.getElementById('auth-check');
   const paymentForm = document.getElementById('payment-form');
 
-  if (!user || (!user.emailVerified && (user.email || '').toLowerCase() !== ADMIN_EMAIL)) {
+  if (!user || !user.emailVerified) {
     // Not authenticated — show login prompt
     authCheck.style.display = 'block';
     paymentForm.style.display = 'none';
@@ -313,7 +311,7 @@ onAuthStateChanged(auth, (user) => {
     </div>
     <div class="help-modal-section">
       <div class="help-section-title">Email Verification</div>
-      <div class="help-section-text">Check your email inbox (and spam folder) for a verification link after signing up. You must verify your email before accessing your dashboard.</div>
+      <div class="help-section-text">Use the same email you registered with. If your account is pending, follow the on-screen instructions to continue.</div>
     </div>
     <div class="help-modal-section">
       <div class="help-section-title">Still Need Help?</div>

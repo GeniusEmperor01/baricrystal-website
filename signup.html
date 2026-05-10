@@ -89,6 +89,28 @@ body { display: flex; min-height: 100vh; }
 .field input::placeholder { color: var(--text-muted); }
 .field input:focus, .field select:focus { border-color: var(--gold); }
 .field input.error { border-color: var(--error); }
+
+.password-field { position: relative; }
+.password-field input { padding-right: 48px; }
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 41px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.toggle-password:hover { color: var(--gold); }
+
 .field select option { background: var(--dark-3); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
@@ -184,11 +206,11 @@ body { display: flex; min-height: 100vh; }
     <p class="form-sub">Already have an account? <a href="login.html">Sign in here</a></p>
 
     <div class="field-row">
-      <div class="field"><label>First Name</label><input type="text" id="fname" placeholder="John"/></div>
-      <div class="field"><label>Last Name</label><input type="text" id="lname" placeholder="Doe"/></div>
+      <div class="field"><label>First Name</label><input type="text" id="fname" placeholder="John" autocomplete="given-name"/></div>
+      <div class="field"><label>Last Name</label><input type="text" id="lname" placeholder="Doe" autocomplete="family-name"/></div>
     </div>
-    <div class="field"><label>Email Address</label><input type="email" id="email" placeholder="john@email.com"/></div>
-    <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="phone" placeholder="+234 801 234 5678" oninput="this.value=this.value.replace(/[^0-9+\s]/g,'')" maxlength="20"/></div>
+    <div class="field"><label>Email Address</label><input type="email" id="email" placeholder="john@email.com" autocomplete="email"/></div>
+    <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="phone" placeholder="+234 801 234 5678" autocomplete="tel" oninput="this.value=this.value.replace(/[^0-9+\s]/g,'')" maxlength="20"/></div>
     <div class="field">
       <label>State of Origin</label>
       <select id="state">
@@ -204,9 +226,10 @@ body { display: flex; min-height: 100vh; }
         <option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option><option>Zamfara</option>
       </select>
     </div>
-    <div class="field">
+    <div class="field password-field">
       <label>Password</label>
-      <input type="password" id="password" placeholder="Min. 8 characters" oninput="checkStrength(this.value)"/>
+      <input type="password" id="password" placeholder="Min. 8 characters" autocomplete="new-password" oninput="checkStrength(this.value)"/>
+      <button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('password', this)">👁</button>
       <div class="password-strength">
         <div class="strength-bar" id="bar1"></div>
         <div class="strength-bar" id="bar2"></div>
@@ -215,7 +238,7 @@ body { display: flex; min-height: 100vh; }
       </div>
       <div class="strength-label" id="strength-label"></div>
     </div>
-    <div class="field"><label>Confirm Password</label><input type="password" id="confirm" placeholder="Repeat your password"/></div>
+    <div class="field password-field"><label>Confirm Password</label><input type="password" id="confirm" placeholder="Repeat your password" autocomplete="new-password"/><button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('confirm', this)">👁</button></div>
 
     <div class="terms">
       <input type="checkbox" id="terms-check"/>
@@ -296,6 +319,19 @@ body { display: flex; min-height: 100vh; }
 </script>
 
 <!-- Firebase signup module with validation and fraud prevention -->
+<script>
+window.togglePassword = function(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  if (btn) {
+    btn.textContent = isPassword ? '🙈' : '👁';
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+  }
+};
+</script>
+
 <script type="module" src="signup.js"></script>
 
 
@@ -480,7 +516,7 @@ body { display: flex; min-height: 100vh; }
     </div>
     <div class="help-modal-section">
       <div class="help-section-title">Email Verification</div>
-      <div class="help-section-text">Check your email inbox (and spam folder) for a verification link after signing up. You must verify your email before accessing your dashboard.</div>
+      <div class="help-section-text">Use the same email you registered with. If your account is pending, follow the on-screen instructions to continue.</div>
     </div>
     <div class="help-modal-section">
       <div class="help-section-title">Still Need Help?</div>

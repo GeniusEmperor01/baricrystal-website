@@ -520,10 +520,9 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { ref, set, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 let currentUser = null;
-const ADMIN_EMAIL = 'admin@baricrystal.com';
 
 onAuthStateChanged(auth, (user) => {
-  if (!user || (!user.emailVerified && (user.email || '').toLowerCase() !== ADMIN_EMAIL)) {
+  if (!user || !user.emailVerified) {
     window.location.href = baseUrl + 'login.html';
     return;
   }
@@ -869,7 +868,7 @@ function showError(msg) {
     </div>
     <div class="help-modal-section">
       <div class="help-section-title">Email Verification</div>
-      <div class="help-section-text">Check your email inbox (and spam folder) for a verification link after signing up. You must verify your email before accessing your dashboard.</div>
+      <div class="help-section-text">Use the same email you registered with. If your account is pending, follow the on-screen instructions to continue.</div>
     </div>
     <div class="help-modal-section">
       <div class="help-section-title">Still Need Help?</div>

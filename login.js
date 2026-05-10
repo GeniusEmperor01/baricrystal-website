@@ -1,26 +1,17 @@
 import { auth, database, baseUrl } from './firebase-config.js';
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { ref, get, update, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { ref, get, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 const errorMsg = document.getElementById('error-msg');
 const submitBtn = document.getElementById('login-btn');
 
 // ============================================================================
 // AUTH STATE
-// Admin bypasses verification; normal users still require it
+// FIX: Only redirect verified users — unverified sessions are ignored
 // ============================================================================
-const ADMIN_EMAIL = 'admin@baricrystal.com';
-
-function normalizeEmail(email) {
-  return (email || '').trim().toLowerCase();
-}
-
 onAuthStateChanged(auth, (user) => {
-  if (!user) return;
-
-  const isAdmin = normalizeEmail(user.email) === ADMIN_EMAIL;
-  if (user.emailVerified || isAdmin) {
-    window.location.href = baseUrl + (isAdmin ? 'admin.html' : 'dashboard.html');
+  if (user && user.emailVerified) {
+    window.location.href = baseUrl + 'dashboard.html';
   }
 });
 
@@ -60,47 +51,33 @@ async function firebaseLogin() {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    const isAdmin = normalizeEmail(user.email) === ADMIN_EMAIL;
-
-    // Block unverified users from logging in, except admin
-    if (!isAdmin && !user.emailVerified) {
-      await signOut(auth);
+    // FIX: Block unverified users from logging in
+    if (!user.emailVerified) {
+      await auth.signOut();
       showError('Please verify your email before logging in. Check your inbox for the verification link.');
       submitBtn.disabled = false;
       submitBtn.textContent = 'Sign In';
       return;
     }
 
-    // Update last login + sync verified status to DB
+    // Update last login + keep account status synced
     const userRef = ref(database, 'users/' + user.uid);
     const snapshot = await get(userRef);
-    const payload = {
+    const userData = snapshot.exists() ? snapshot.val() : {};
+
+    const accountStatus = userData.accountStatus || userData.paymentStatus || 'unpaid';
+
+    await update(userRef, {
       lastLogin: new Date().toISOString(),
-      emailVerified: isAdmin ? true : user.emailVerified
-    };
+      emailVerified: true,
+      accountStatus,
+      paymentStatus: userData.paymentStatus || accountStatus,
+      planName: userData.planName || (accountStatus === 'paid' || accountStatus === 'active' ? 'Active Plan' : 'Unpaid')
+    });
 
-    if (isAdmin) payload.role = 'admin';
-
-    if (snapshot.exists()) {
-      await update(userRef, payload);
-    } else {
-      await set(userRef, {
-        firstName: isAdmin ? 'Admin' : 'User',
-        lastName: '',
-        email: user.email,
-        phone: '',
-        state: '',
-        createdAt: new Date().toISOString(),
-        ...payload
-      });
-    }
-
-    // Redirect based on role / admin email
-    if (isAdmin) {
+    // Redirect based on role
+    if (userData.role === 'admin') {
       window.location.href = baseUrl + 'admin.html';
-    } else if (snapshot.exists()) {
-      const userData = snapshot.val();
-      window.location.href = baseUrl + (userData.role === 'admin' ? 'admin.html' : 'dashboard.html');
     } else {
       window.location.href = baseUrl + 'dashboard.html';
     }

@@ -240,6 +240,28 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   .sidebar { transform: translateX(-100%); }
   .main { margin-left: 0; }
 }
+
+.password-field { position: relative; }
+.password-field input { padding-right: 48px; }
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 34px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.toggle-password:hover { color: var(--gold); }
+
 </style>
 </head>
 <body>
@@ -280,10 +302,10 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
   <div class="sidebar-bottom">
     <div class="admin-badge">
-      <div class="admin-avatar" id="admin-avatar">A</div>
+      <div class="admin-avatar">A</div>
       <div>
-        <div class="admin-name" id="admin-name">Admin</div>
-        <div class="admin-role" id="admin-role">Super Admin</div>
+        <div class="admin-name">Admin</div>
+        <div class="admin-role">Super Admin</div>
       </div>
     </div>
     <a href="index.html" class="nav-item" style="color:var(--error);">
@@ -309,22 +331,22 @@ tr:hover td { background: rgba(255,255,255,0.02); }
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-card-label">Total Applications</div>
-          <div class="stat-card-num gold" id="overview-total-users">47</div>
+          <div class="stat-card-num gold">47</div>
           <div class="stat-card-change up">↑ 8 this week</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Approved</div>
-          <div class="stat-card-num green" id="overview-approved">18</div>
+          <div class="stat-card-num green">18</div>
           <div class="stat-card-change up">↑ 3 this week</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Pending Review</div>
-          <div class="stat-card-num amber" id="overview-pending">21</div>
+          <div class="stat-card-num amber">21</div>
           <div class="stat-card-change">Awaiting action</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Total Revenue</div>
-          <div class="stat-card-num gold" id="overview-collected">₦1.4M</div>
+          <div class="stat-card-num gold">₦1.4M</div>
           <div class="stat-card-change up">↑ ₦225k this week</div>
         </div>
       </div>
@@ -369,14 +391,14 @@ tr:hover td { background: rgba(255,255,255,0.02); }
       <!-- Recent applications mini table -->
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title">Recent Applications <span style="color:var(--text-muted);font-weight:400;" id="recent-app-count">(0)</span></div>
+          <div class="table-title">Recent Applications</div>
           <button class="filter-btn" onclick="showTab('applications', document.querySelector('.nav-item:nth-child(2)'))">View All</button>
         </div>
         <table>
           <thead><tr>
             <th>Candidate</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Date</th>
           </tr></thead>
-          <tbody id="recent-apps-body">
+          <tbody>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>Factory & Production</td><td>6 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td></tr>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>Auto-mobile Engineer</td><td>3 Month</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td></tr>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>Construction Engineer</td><td>6 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
@@ -390,7 +412,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="tab-panel" id="tab-applications">
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title">All Applications <span style="color:var(--text-muted);font-weight:400;" id="all-app-count">(0)</span></div>
+          <div class="table-title">All Applications <span style="color:var(--text-muted);font-weight:400;">(47)</span></div>
           <div class="table-actions">
             <input class="search-input" placeholder="Search candidates..." oninput="filterTable(this.value)"/>
             <button class="filter-btn active" onclick="filterStatus('all', this)">All</button>
@@ -402,7 +424,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
           <thead><tr>
             <th>Candidate</th><th>Phone</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Applied</th><th>Action</th>
           </tr></thead>
-          <tbody id="applications-body">
+          <tbody>
             <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Factory & Production</td><td>6 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td><td><button class="action-btn">View</button></td></tr>
             <tr data-status="processing"><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Auto-mobile Engineer</td><td>3 Month</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td><td><button class="action-btn">View</button></td></tr>
             <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Construction Engineer</td><td>6 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td><td><button class="action-btn">View</button></td></tr>
@@ -417,15 +439,15 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <!-- PAYMENTS TAB -->
     <div class="tab-panel" id="tab-payments">
       <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stat-card"><div class="stat-card-label">Total Collected</div><div class="stat-card-num gold" id="payments-total">₦1.4M</div><div class="stat-card-change">47 transactions</div></div>
-        <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-num green" id="payments-month">₦0</div><div class="stat-card-change up">↑ 18 payments</div></div>
-        <div class="stat-card"><div class="stat-card-label">Pending Payments</div><div class="stat-card-num amber" id="payments-pending">0</div><div class="stat-card-change">Awaiting confirmation</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Collected</div><div class="stat-card-num gold">₦1.4M</div><div class="stat-card-change">47 transactions</div></div>
+        <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-num green">₦450,000</div><div class="stat-card-change up">↑ 18 payments</div></div>
+        <div class="stat-card"><div class="stat-card-label">Pending Payments</div><div class="stat-card-num amber">8</div><div class="stat-card-change">Awaiting confirmation</div></div>
       </div>
       <div class="table-wrap">
         <div class="table-header"><div class="table-title">Payment Records</div></div>
         <table>
           <thead><tr><th>Candidate</th><th>Plan</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
-          <tbody id="payments-body">
+          <tbody>
             <tr><td><div class="candidate-name">Adebayo Okon</div></td><td>6 Month</td><td>₦150,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 22</td></tr>
             <tr><td><div class="candidate-name">Chioma Nwosu</div></td><td>3 Month</td><td>₦200,000</td><td>Flutterwave</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 21</td></tr>
             <tr><td><div class="candidate-name">Emeka Ibe</div></td><td>6 Month</td><td>₦150,000</td><td>Bank Transfer</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
@@ -439,15 +461,15 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <!-- JOBS TAB -->
     <div class="tab-panel" id="tab-jobs">
       <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stat-card"><div class="stat-card-label">Total Slots</div><div class="stat-card-num gold" id="jobs-total">0</div></div>
-        <div class="stat-card"><div class="stat-card-label">Open</div><div class="stat-card-num green" id="jobs-open">0</div></div>
-        <div class="stat-card"><div class="stat-card-label">Filled</div><div class="stat-card-num amber" id="jobs-filled">0</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Slots</div><div class="stat-card-num gold">50</div></div>
+        <div class="stat-card"><div class="stat-card-label">Open</div><div class="stat-card-num green">32</div></div>
+        <div class="stat-card"><div class="stat-card-label">Filled</div><div class="stat-card-num amber">18</div></div>
       </div>
       <div class="table-wrap">
         <div class="table-header"><div class="table-title">Job Listings</div></div>
         <table>
           <thead><tr><th>#</th><th>Job Title</th><th>Category</th><th>Country</th><th>Slots</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="jobs-body">
+          <tbody>
             <tr><td style="color:var(--text-muted)">001</td><td>Production Line Worker</td><td>Factory</td><td>Poland</td><td>10</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
             <tr><td style="color:var(--text-muted)">002</td><td>General Construction Labour</td><td>Construction</td><td>Germany</td><td>8</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
             <tr><td style="color:var(--text-muted)">003</td><td>Hotel Housekeeper</td><td>Hospitality</td><td>UAE</td><td>5</td><td><div class="job-pill"><div class="job-dot filled"></div>Filled</div></td><td><button class="action-btn">Edit</button></td></tr>
@@ -463,12 +485,12 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="tab-panel" id="tab-users">
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title">Registered Users <span style="color:var(--text-muted);font-weight:400;" id="users-count">(0)</span></div>
+          <div class="table-title">Registered Users <span style="color:var(--text-muted);font-weight:400;">(47)</span></div>
           <input class="search-input" placeholder="Search users..."/>
         </div>
         <table>
           <thead><tr><th>User</th><th>Phone</th><th>State</th><th>Registered</th><th>Application</th><th>Action</th></tr></thead>
-          <tbody id="users-body">
+          <tbody>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Lagos</td><td>Mar 15</td><td><span class="badge badge-approved">Approved</span></td><td><button class="action-btn">View</button></td></tr>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Anambra</td><td>Mar 16</td><td><span class="badge badge-processing">Processing</span></td><td><button class="action-btn">View</button></td></tr>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Enugu</td><td>Mar 17</td><td><span class="badge badge-pending">Pending</span></td><td><button class="action-btn">View</button></td></tr>
@@ -484,17 +506,17 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <div style="background:var(--dark-2);border:1px solid var(--border);padding:32px;margin-bottom:16px;">
           <div style="font-size:12px;font-weight:500;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">Agency Information</div>
           <div style="display:flex;flex-direction:column;gap:14px;">
-            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Agency Name</div><input id="agency-name-input" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" value="BARICRYSTAL INTERNATIONAL"/></div>
-            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Contact Email</div><input id="agency-email-input" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" value="info@baricrystalinternational.com"/></div>
-            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">WhatsApp Number</div><input id="agency-whatsapp-input" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="+234 XXX XXX XXXX"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Agency Name</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" value="BARICRYSTAL INTERNATIONAL"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Contact Email</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" value="info@baricrystalinternational.com"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">WhatsApp Number</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="+234 XXX XXX XXXX"/></div>
           </div>
-          <button id="agency-save-btn" onclick="saveAgencySettings()" style="margin-top:20px;padding:11px 28px;background:var(--gold);color:var(--dark);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;">Save Changes</button>
+          <button style="margin-top:20px;padding:11px 28px;background:var(--gold);color:var(--dark);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;">Save Changes</button>
         </div>
         <div style="background:var(--dark-2);border:1px solid var(--border);padding:32px;">
           <div style="font-size:12px;font-weight:500;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">Admin Password</div>
           <div style="display:flex;flex-direction:column;gap:14px;">
-            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Current Password</div><input type="password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/></div>
-            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">New Password</div><input type="password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/></div>
+            <div class="password-field"><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Current Password</div><input id="admin-current-password" type="password" autocomplete="current-password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/><button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('admin-current-password', this)">👁</button></div>
+            <div class="password-field"><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">New Password</div><input id="admin-new-password" type="password" autocomplete="new-password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/><button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('admin-new-password', this)">👁</button></div>
           </div>
           <button style="margin-top:20px;padding:11px 28px;background:transparent;color:var(--gold);border:1px solid var(--gold);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;">Update Password</button>
         </div>
@@ -507,6 +529,17 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 <script>
 // Set date
 document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+window.togglePassword = function(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  if (btn) {
+    btn.textContent = isPassword ? '🙈' : '👁';
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+  }
+};
 
 const titles = { overview:'Overview', applications:'Applications', payments:'Payments', jobs:'Job Listings', users:'Users', settings:'Settings' };
 
@@ -533,6 +566,55 @@ function filterStatus(status, btn) {
     row.style.display = status === 'all' || row.dataset.status === status ? '' : 'none';
   });
 }
+
+function saveAdminSettings() {
+  const payload = {
+    agencyName: document.getElementById('admin-agency-name')?.value || '',
+    contactEmail: document.getElementById('admin-contact-email')?.value || '',
+    whatsapp: document.getElementById('admin-whatsapp')?.value || ''
+  };
+  localStorage.setItem('baricrystal_admin_settings', JSON.stringify(payload));
+  alert('Admin settings saved locally. Firebase can be wired in later.');
+}
+
+function updateAdminPassword() {
+  const currentPassword = document.getElementById('admin-current-password')?.value || '';
+  const newPassword = document.getElementById('admin-new-password')?.value || '';
+  if (!currentPassword || !newPassword) {
+    alert('Fill in both password fields first.');
+    return;
+  }
+  alert('Password update is a placeholder for now. Wire this to Firebase Auth later.');
+}
+
+function handleActionButtonClick(btn) {
+  const row = btn.closest('tr');
+  const text = (btn.textContent || '').trim().toLowerCase();
+  const rowText = row ? row.textContent.replace(/\s+/g, ' ').trim() : '';
+
+  if (text === 'view') {
+    alert('Opening record: ' + rowText);
+    return;
+  }
+
+  if (text === 'edit') {
+    alert('Editing item: ' + rowText);
+    return;
+  }
+
+  if (text === 'save') {
+    saveAdminSettings();
+    return;
+  }
+
+  alert('Action clicked: ' + text);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleActionButtonClick(btn));
+  });
+});
 </script>
 
 <!-- FLOATING HELP PILL -->
@@ -715,8 +797,8 @@ function filterStatus(status, btn) {
       <div class="help-section-text">Use our CV builder to fill out your profile following the BARICRYSTAL template. Make sure to upload all required documents including passport scans and medical reports.</div>
     </div>
     <div class="help-modal-section">
-      <div class="help-section-title">Admin Access</div>
-      <div class="help-section-text">Admin access now uses Firebase login with a direct bypass for the admin account. Normal users still follow the regular verification flow.</div>
+      <div class="help-section-title">Email Verification</div>
+      <div class="help-section-text">Use the same email you registered with. If your account is pending, follow the on-screen instructions to continue.</div>
     </div>
     <div class="help-modal-section">
       <div class="help-section-title">Still Need Help?</div>
@@ -741,330 +823,6 @@ function closeHelpModal(event) {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeHelpModal();
 });
-</script>
-
-
-<script type="module">
-  import { auth, baseUrl } from './firebase-config.js';
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-
-  const ADMIN_EMAIL = 'admin@baricrystal.com';
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.href = baseUrl + 'login.html';
-      return;
-    }
-
-    if ((user.email || '').toLowerCase() !== ADMIN_EMAIL) {
-      window.location.href = baseUrl + 'dashboard.html';
-    }
-  });
-</script>
-
-
-<script type="module">
-  import { auth, database, baseUrl } from './firebase-config.js';
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-  import { ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-
-  const ADMIN_EMAIL = 'admin@baricrystal.com';
-  const els = {
-    avatar: document.getElementById('admin-avatar'),
-    name: document.getElementById('admin-name'),
-    role: document.getElementById('admin-role'),
-    totalUsers: document.getElementById('overview-total-users'),
-    approved: document.getElementById('overview-approved'),
-    pending: document.getElementById('overview-pending'),
-    collected: document.getElementById('overview-collected'),
-    recentAppCount: document.getElementById('recent-app-count'),
-    allAppCount: document.getElementById('all-app-count'),
-    usersCount: document.getElementById('users-count'),
-    paymentsTotal: document.getElementById('payments-total'),
-    paymentsMonth: document.getElementById('payments-month'),
-    paymentsPending: document.getElementById('payments-pending'),
-    jobsTotal: document.getElementById('jobs-total'),
-    jobsOpen: document.getElementById('jobs-open'),
-    jobsFilled: document.getElementById('jobs-filled'),
-    agencyName: document.getElementById('agency-name-input'),
-    agencyEmail: document.getElementById('agency-email-input'),
-    agencyWhatsapp: document.getElementById('agency-whatsapp-input'),
-    applicationsRecentBody: document.getElementById('recent-apps-body'),
-    applicationsAllBody: document.getElementById('applications-body'),
-    paymentsBody: document.getElementById('payments-body'),
-    jobsBody: document.getElementById('jobs-body'),
-    usersBody: document.getElementById('users-body')
-  };
-
-  function escapeHtml(str) {
-    return String(str ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#39;');
-  }
-
-  function initials(name = '') {
-    const parts = String(name).trim().split(/\s+/).filter(Boolean);
-    if (!parts.length) return 'U';
-    return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
-  }
-
-  function moneyFormat(value) {
-    const n = Number(value);
-    if (!Number.isFinite(n)) return '₦0';
-    return '₦' + n.toLocaleString('en-NG');
-  }
-
-  function fmtDate(input) {
-    if (!input) return '—';
-    const d = new Date(input);
-    if (Number.isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  }
-
-  function normalizeStatus(value) {
-    const v = String(value || '').trim().toLowerCase();
-    if (['approved', 'paid', 'success', 'complete', 'completed'].includes(v)) return 'approved';
-    if (['processing', 'pending_verification', 'review'].includes(v)) return 'processing';
-    if (['rejected', 'failed', 'declined'].includes(v)) return 'rejected';
-    if (['pending'].includes(v)) return 'pending';
-    return v || 'pending';
-  }
-
-  function badgeClass(status) {
-    if (status === 'approved') return 'badge-approved';
-    if (status === 'processing') return 'badge-processing';
-    if (status === 'rejected') return 'badge-rejected';
-    if (status === 'paid') return 'badge-paid';
-    return 'badge-pending';
-  }
-
-  function renderEmptyRow(colspan, text) {
-    return `<tr><td colspan="${colspan}" style="padding:20px 16px;color:var(--text-muted);font-size:12px;">${escapeHtml(text)}</td></tr>`;
-  }
-
-  function renderUsers(users) {
-    if (!els.usersBody) return;
-    if (!users.length) {
-      els.usersBody.innerHTML = renderEmptyRow(6, 'No registered users yet.');
-      return;
-    }
-    els.usersBody.innerHTML = users.map(u => `
-      <tr>
-        <td>
-          <div class="candidate-info">
-            <div class="candidate-avatar">${escapeHtml(initials(u.name))}</div>
-            <div>
-              <div class="candidate-name">${escapeHtml(u.name)}</div>
-              <div class="candidate-email">${escapeHtml(u.email || 'No email')}</div>
-            </div>
-          </div>
-        </td>
-        <td>${escapeHtml(u.phone || '—')}</td>
-        <td>${escapeHtml(u.state || '—')}</td>
-        <td>${escapeHtml(fmtDate(u.createdAt))}</td>
-        <td><span class="badge ${badgeClass(u.applicationStatus)}">${escapeHtml((u.applicationStatus || 'pending').replace('_', ' '))}</span></td>
-        <td><button class="action-btn" type="button">View</button></td>
-      </tr>`).join('');
-  }
-
-  function renderApplications(users) {
-    const rows = users.filter(u => u.applicationStatus || u.jobTitle || u.position);
-    const target = els.applicationsAllBody;
-    const recentTarget = els.applicationsRecentBody;
-    const source = rows.length ? rows : users;
-    const recent = source.slice(0, 4);
-
-    const renderRow = (u) => `
-      <tr data-status="${escapeHtml(normalizeStatus(u.applicationStatus))}">
-        <td>
-          <div class="candidate-info">
-            <div class="candidate-avatar">${escapeHtml(initials(u.name))}</div>
-            <div>
-              <div class="candidate-name">${escapeHtml(u.name)}</div>
-              <div class="candidate-email">${escapeHtml(u.email || 'No email')}</div>
-            </div>
-          </div>
-        </td>
-        <td>${escapeHtml(u.phone || '—')}</td>
-        <td>${escapeHtml(u.position || u.jobTitle || u.interest || '—')}</td>
-        <td>${escapeHtml(u.duration || u.period || '—')}</td>
-        <td><span class="badge ${badgeClass(normalizeStatus(u.applicationStatus))}">${escapeHtml((u.applicationStatus || 'pending').replace('_', ' '))}</span></td>
-        <td>${escapeHtml(fmtDate(u.updatedAt || u.createdAt))}</td>
-        <td><button class="action-btn" type="button">View</button></td>
-      </tr>`;
-
-    if (target) {
-      target.innerHTML = source.length ? source.map(renderRow).join('') : renderEmptyRow(7, 'No applications yet.');
-    }
-    if (recentTarget) {
-      recentTarget.innerHTML = recent.length ? recent.map(u => `
-        <tr>
-          <td>
-            <div class="candidate-info">
-              <div class="candidate-avatar">${escapeHtml(initials(u.name))}</div>
-              <div>
-                <div class="candidate-name">${escapeHtml(u.name)}</div>
-                <div class="candidate-email">${escapeHtml(u.email || 'No email')}</div>
-              </div>
-            </div>
-          </td>
-          <td>${escapeHtml(u.position || u.jobTitle || u.interest || '—')}</td>
-          <td>${escapeHtml(u.duration || u.period || '—')}</td>
-          <td><span class="badge ${badgeClass(normalizeStatus(u.applicationStatus))}">${escapeHtml((u.applicationStatus || 'pending').replace('_', ' '))}</span></td>
-          <td>${escapeHtml(fmtDate(u.updatedAt || u.createdAt))}</td>
-        </tr>`).join('') : renderEmptyRow(5, 'No recent applications yet.');
-    }
-  }
-
-  function renderPayments(users) {
-    if (!els.paymentsBody) return;
-    const payments = users.filter(u => Number(u.paymentAmount || u.amountPaid || 0) > 0 || normalizeStatus(u.accountStatus) === 'approved' || normalizeStatus(u.paymentStatus) === 'approved');
-    if (!payments.length) {
-      els.paymentsBody.innerHTML = renderEmptyRow(6, 'No payment records yet.');
-      return;
-    }
-    els.paymentsBody.innerHTML = payments.slice(0, 8).map(u => `
-      <tr>
-        <td><div class="candidate-name">${escapeHtml(u.name)}</div></td>
-        <td>${escapeHtml(u.plan || u.duration || '—')}</td>
-        <td>${escapeHtml(moneyFormat(u.paymentAmount || u.amountPaid || 0))}</td>
-        <td>${escapeHtml(u.paymentMethod || u.method || '—')}</td>
-        <td><span class="badge badge-paid">Paid</span></td>
-        <td>${escapeHtml(fmtDate(u.paidAt || u.updatedAt || u.createdAt))}</td>
-      </tr>`).join('');
-  }
-
-  function renderJobs(jobs) {
-    if (!els.jobsBody) return;
-    const rows = Object.values(jobs || {});
-    if (!rows.length) {
-      els.jobsBody.innerHTML = renderEmptyRow(7, 'No job listings yet.');
-      return;
-    }
-    els.jobsBody.innerHTML = rows.map((j, idx) => {
-      const open = String(j.status || j.availability || '').toLowerCase() !== 'filled';
-      return `
-        <tr>
-          <td style="color:var(--text-muted)">${escapeHtml(j.id || String(idx + 1).padStart(3, '0'))}</td>
-          <td>${escapeHtml(j.title || j.name || 'Untitled Job')}</td>
-          <td>${escapeHtml(j.category || '—')}</td>
-          <td>${escapeHtml(j.location || '—')}</td>
-          <td>${escapeHtml(String(j.slots || j.vacancies || '—'))}</td>
-          <td><div class="job-pill"><div class="job-dot ${open ? 'open' : 'filled'}"></div>${open ? 'Open' : 'Filled'}</div></td>
-          <td><button class="action-btn" type="button">Edit</button></td>
-        </tr>`;
-    }).join('');
-  }
-
-  async function saveAgencySettings() {
-    const btn = document.getElementById('agency-save-btn');
-    const agencyName = els.agencyName?.value.trim() || '';
-    const agencyEmail = els.agencyEmail?.value.trim() || '';
-    const agencyWhatsapp = els.agencyWhatsapp?.value.trim() || '';
-
-    if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-    try {
-      await update(ref(database, 'settings/agencyInfo'), {
-        agencyName,
-        contactEmail: agencyEmail,
-        whatsappNumber: agencyWhatsapp,
-        updatedAt: new Date().toISOString()
-      });
-      alert('Agency settings saved.');
-    } catch (error) {
-      console.error(error);
-      alert('Save failed: ' + error.message);
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
-    }
-  }
-
-  window.saveAgencySettings = saveAgencySettings;
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = baseUrl + 'login.html';
-      return;
-    }
-
-    const email = (user.email || '').toLowerCase();
-    if (email !== ADMIN_EMAIL) {
-      window.location.href = baseUrl + 'dashboard.html';
-      return;
-    }
-
-    const adminRef = ref(database, 'users/' + user.uid);
-    const adminSnap = await get(adminRef);
-    const adminData = adminSnap.exists() ? adminSnap.val() : {};
-
-    if (els.avatar) els.avatar.textContent = initials(adminData.firstName || adminData.lastName ? `${adminData.firstName || ''} ${adminData.lastName || ''}`.trim() : 'Admin');
-    if (els.name) els.name.textContent = `${adminData.firstName || 'Admin'} ${adminData.lastName || ''}`.trim() || 'Admin';
-    if (els.role) els.role.textContent = adminData.role === 'admin' ? 'Admin • Verified' : 'Super Admin';
-
-    if (els.agencyName) els.agencyName.value = adminData.agencyName || 'BARICRYSTAL INTERNATIONAL';
-    if (els.agencyEmail) els.agencyEmail.value = adminData.contactEmail || adminData.email || 'info@baricrystalinternational.com';
-    if (els.agencyWhatsapp) els.agencyWhatsapp.value = adminData.whatsappNumber || adminData.whatsapp || '';
-
-    onValue(ref(database, 'users'), (snap) => {
-      const raw = snap.val() || {};
-      const users = Object.entries(raw).map(([uid, u]) => ({
-        uid,
-        name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.displayName || 'Unnamed User',
-        email: u.email || '',
-        phone: u.phone || '',
-        state: u.state || '',
-        createdAt: u.createdAt || u.registeredAt || '',
-        updatedAt: u.updatedAt || '',
-        applicationStatus: normalizeStatus(u.applicationStatus || u.status || u.accountStatus),
-        paymentStatus: normalizeStatus(u.paymentStatus || u.accountStatus),
-        paymentAmount: u.paymentAmount || u.amountPaid || 0,
-        paymentMethod: u.paymentMethod || u.method || '',
-        jobTitle: u.jobTitle || u.desiredJob || '',
-        position: u.position || u.jobTitle || '',
-        duration: u.duration || u.plan || '',
-        role: u.role || 'user',
-        plan: u.plan || '',
-      }));
-
-      const approved = users.filter(u => u.applicationStatus === 'approved').length;
-      const pending = users.filter(u => u.applicationStatus === 'pending' || !u.applicationStatus).length;
-      const collected = users.reduce((sum, u) => sum + (Number(u.paymentAmount) || 0), 0);
-      const paidUsers = users.filter(u => Number(u.paymentAmount) > 0 || u.paymentStatus === 'approved').length;
-
-      if (els.totalUsers) els.totalUsers.textContent = String(users.length);
-      if (els.approved) els.approved.textContent = String(approved);
-      if (els.pending) els.pending.textContent = String(pending);
-      if (els.collected) els.collected.textContent = moneyFormat(collected);
-      if (els.recentAppCount) els.recentAppCount.textContent = `(${Math.min(users.length, 4)})`;
-      if (els.allAppCount) els.allAppCount.textContent = `(${users.length})`;
-      if (els.usersCount) els.usersCount.textContent = `(${users.length})`;
-      if (els.paymentsTotal) els.paymentsTotal.textContent = moneyFormat(collected);
-      if (els.paymentsMonth) els.paymentsMonth.textContent = moneyFormat(collected);
-      if (els.paymentsPending) els.paymentsPending.textContent = String(Math.max(users.length - paidUsers, 0));
-
-      renderUsers(users);
-      renderApplications(users);
-      renderPayments(users);
-    }, (error) => {
-      console.error('users load failed', error);
-    });
-
-    onValue(ref(database, 'jobs'), (snap) => {
-      const jobs = snap.val() || {};
-      const list = Object.values(jobs);
-      const open = list.filter(j => String(j.status || j.availability || '').toLowerCase() !== 'filled').length;
-      const filled = Math.max(list.length - open, 0);
-      if (els.jobsTotal) els.jobsTotal.textContent = String(list.length);
-      if (els.jobsOpen) els.jobsOpen.textContent = String(open);
-      if (els.jobsFilled) els.jobsFilled.textContent = String(filled);
-      renderJobs(jobs);
-    }, () => {
-      renderJobs({});
-    });
-  });
 </script>
 
 </body>

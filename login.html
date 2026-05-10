@@ -98,6 +98,28 @@ body { display: flex; min-height: 100vh; }
 .field input:focus { border-color: var(--gold); }
 .field input.error { border-color: var(--error); }
 
+.password-field { position: relative; }
+.password-field input { padding-right: 48px; }
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 41px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.toggle-password:hover { color: var(--gold); }
+
+
 .field-row-inline {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 8px;
@@ -191,15 +213,16 @@ body { display: flex; min-height: 100vh; }
 
     <div class="field">
       <label>Email Address</label>
-      <input type="email" id="email" placeholder="john@email.com"/>
+      <input type="email" id="email" placeholder="john@email.com" autocomplete="email"/>
     </div>
 
-    <div class="field">
+    <div class="field password-field">
       <div class="field-row-inline">
         <label>Password</label>
         <a href="forgot_password.html" class="forgot-link">Forgot password?</a>
       </div>
-      <input type="password" id="password" placeholder="Enter your password"/>
+      <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password"/>
+      <button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('password', this)">👁</button>
     </div>
 
     <div class="error-msg" id="error-msg"></div>
@@ -212,6 +235,19 @@ body { display: flex; min-height: 100vh; }
 
   </div>
 </div>
+
+<script>
+window.togglePassword = function(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  if (btn) {
+    btn.textContent = isPassword ? '🙈' : '👁';
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+  }
+};
+</script>
 
 <script type="module" src="login.js"></script>
 
@@ -397,7 +433,7 @@ body { display: flex; min-height: 100vh; }
     </div>
     <div class="help-modal-section">
       <div class="help-section-title">Email Verification</div>
-      <div class="help-section-text">Check your email inbox (and spam folder) for a verification link after signing up. You must verify your email before accessing your dashboard.</div>
+      <div class="help-section-text">Use the same email you registered with. If your account is pending, follow the on-screen instructions to continue.</div>
     </div>
     <div class="help-modal-section">
       <div class="help-section-title">Still Need Help?</div>

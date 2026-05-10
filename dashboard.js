@@ -4,7 +4,6 @@ import { ref, get, update, remove } from "https://www.gstatic.com/firebasejs/12.
 
 let currentUser = null;
 let userData = null;
-const ADMIN_EMAIL = 'admin@baricrystal.com';
 
 // ============================================================================
 // AUTHENTICATION STATE
@@ -15,9 +14,7 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  const isAdmin = (user.email || '').toLowerCase() === ADMIN_EMAIL;
-
-  if (!isAdmin && !user.emailVerified) {
+  if (!user.emailVerified) {
     const content = document.querySelector('.content');
     if (content) {
       content.innerHTML = `
@@ -54,7 +51,10 @@ async function loadUserData(uid) {
       email: currentUser.email,
       phone: '',
       state: '',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      accountStatus: 'unpaid',
+      paymentStatus: 'unpaid',
+      planName: 'Unpaid Account'
     };
   } catch (error) {
     console.error('Error loading user data:', error);
@@ -79,6 +79,80 @@ function displayUserInfo() {
   if (userEmail) userEmail.textContent = userData.email || '';
 
   updateSettingsDisplay();
+  renderAccountBanner();
+  renderPlanDisplay();
+}
+
+function normalizeStatus(raw) {
+  return String(raw || '').toLowerCase().trim();
+}
+
+function isPaidAccount() {
+  const status = normalizeStatus(userData?.accountStatus || userData?.paymentStatus);
+  return ['paid', 'active', 'approved', 'subscribed'].includes(status);
+}
+
+function renderAccountBanner() {
+  const banner = document.getElementById('account-banner');
+  if (!banner) return;
+
+  if (isPaidAccount()) {
+    banner.innerHTML = '';
+    return;
+  }
+
+  const status = normalizeStatus(userData?.accountStatus || userData?.paymentStatus || 'unpaid');
+  const plan = userData?.planName || 'No active plan';
+
+  banner.innerHTML = `
+    <div style="margin-bottom: 24px; padding: 18px 20px; border: 1px solid rgba(200,155,60,0.35); background: rgba(200,155,60,0.08); color: var(--text); display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap;">
+      <div style="max-width: 760px;">
+        <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px;">Payment required</div>
+        <div style="font-size: 15px; line-height: 1.7;">
+          Your account is currently <strong>${status || 'unpaid'}</strong>. ${plan ? `Current plan: <strong>${plan}</strong>.` : ''}
+          Pay for a plan before continuing into jobs and applications.
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn-save" onclick="window.openPaymentPage()">Pay Now</button>
+        <button class="btn-save" onclick="window.openCvBuilder()" style="background: transparent; border: 1px solid var(--border); color: var(--text);">Open CV Page</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderPlanDisplay() {
+  const paid = isPaidAccount();
+  const planName = userData?.planName || (paid ? 'Active Plan' : 'Unpaid Account');
+  const amount = userData?.amountPaid ? `₦${Number(userData.amountPaid).toLocaleString()}` : (paid ? '—' : '₦0');
+  const renewal = userData?.renewalDate || (paid ? 'Set after payment' : 'Pay to unlock');
+  const statusLabel = paid ? 'Active' : 'Unpaid';
+
+  const fields = {
+    'current-plan-name': paid ? (userData?.planName || 'Active Plan') : 'Unpaid Account',
+    'current-plan-badge': paid ? 'Active' : 'Unpaid',
+    'current-plan-label': planName,
+    'current-plan-amount': amount,
+    'current-plan-renewal': renewal,
+    'current-plan-status': statusLabel
+  };
+
+  Object.entries(fields).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  });
+
+  const badge = document.getElementById('current-plan-badge');
+  if (badge) {
+    badge.style.background = paid ? 'rgba(45, 158, 107, 0.08)' : 'rgba(226, 75, 74, 0.08)';
+    badge.style.color = paid ? 'var(--success)' : 'var(--error)';
+    badge.style.borderColor = paid ? 'rgba(45, 158, 107, 0.2)' : 'rgba(226, 75, 74, 0.25)';
+  }
+
+  const statusEl = document.getElementById('current-plan-status');
+  if (statusEl) {
+    statusEl.style.color = paid ? 'var(--success)' : 'var(--error)';
+  }
 }
 
 // ============================================================================
@@ -305,6 +379,14 @@ window.closeSidebarOnMobile = function() {
 };
 
 window.switchTab = function(tabId, navEl) {
+  const blockedTabs = ['jobs', 'applications'];
+  if (blockedTabs.includes(tabId) && !isPaidAccount()) {
+    renderAccountBanner();
+    const banner = document.getElementById('account-banner');
+    if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
   document.querySelectorAll('.main > .content > .tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tabId)?.classList.add('active');
@@ -335,22 +417,24 @@ window.switchSubTab = function(tabId, btn) {
 // PLANS & JOBS
 // ============================================================================
 window.upgradePlan = function(planName, amount) {
-  alert('Redirecting to payment for ' + planName + ' plan (₦' + amount + ')');
+  const qs = new URLSearchParams({ plan: planName, amount });
+  window.location.href = baseUrl + 'payment.html?' + qs.toString();
+};
+
+window.openPaymentPage = function() {
+  window.location.href = baseUrl + 'payment.html';
+};
+
+window.openCvBuilder = function() {
+  window.location.href = baseUrl + 'cv-builder.html';
 };
 
 // ============================================================================
 // DOCUMENTS & PREFERENCES
 // ============================================================================
 window.uploadDocuments = function() {
-  const cv = document.getElementById('cv-upload')?.files[0];
-  const passport = document.getElementById('passport-upload')?.files[0];
-  const other = document.getElementById('other-upload')?.files[0];
-
-  if (!cv && !passport && !other) {
-    alert('Please select at least one document to upload.');
-    return;
-  }
-  alert('Documents uploaded successfully!');
+  alert('Use the CV page to create and manage CV files. Document uploads are handled there.');
+  window.openCvBuilder();
 };
 
 window.saveJobPreferences = function() {
@@ -372,16 +456,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // File input change feedback
-  [['cv-upload', 'cv-status'], ['passport-upload', 'passport-status'], ['other-upload', 'other-status']].forEach(([inputId, statusId]) => {
-    const input = document.getElementById(inputId);
-    const status = document.getElementById(statusId);
-    if (input && status) {
-      input.addEventListener('change', function() {
-        status.textContent = this.files[0] ? '✓ ' + this.files[0].name : '';
-      });
-    }
-  });
+  renderAccountBanner();
+  renderPlanDisplay();
 
   // Close modals on backdrop click
   ['delete-modal', 'change-password-modal'].forEach(id => {
