@@ -1,10 +1,26 @@
-import { auth, database, baseUrl, DEMO_ADMIN_EMAIL } from './firebase-config.js';
-import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { auth, database, baseUrl } from './firebase-config.js';
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { ref, get, update, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 const errorMsg = document.getElementById('error-msg');
 const submitBtn = document.getElementById('login-btn');
 
+// ============================================================================
+// AUTH STATE
+// FIX: Admin bypasses verification; normal users still require it
+// ============================================================================
+onAuthStateChanged(auth, (user) => {
+  if (!user) return;
+
+  const isAdmin = (user.email || '').toLowerCase() === 'admin@baricrystal.com';
+  if (user.emailVerified || isAdmin) {
+    window.location.href = baseUrl + (isAdmin ? 'admin.html' : 'dashboard.html');
+  }
+});
+
+// ============================================================================
+// SHOW MESSAGE HELPER
+// ============================================================================
 function showError(text) {
   errorMsg.textContent = text;
   errorMsg.style.background = 'rgba(226,75,74,0.08)';
@@ -13,54 +29,9 @@ function showError(text) {
   errorMsg.classList.add('show');
 }
 
-function normalizeRole(value) {
-  return String(value || '').toLowerCase().trim();
-}
-
-async function resolveRoute(user) {
-  const userRef = ref(database, 'users/' + user.uid);
-  const snapshot = await get(userRef);
-  const userData = snapshot.exists() ? snapshot.val() : {};
-  const role = normalizeRole(userData.role);
-  const isAdmin = user.email?.toLowerCase() === DEMO_ADMIN_EMAIL.toLowerCase() || role === 'admin';
-  const accountStatus = userData.accountStatus || userData.paymentStatus || 'unpaid';
-
-  if (!snapshot.exists() && isAdmin) {
-    await set(userRef, {
-      firstName: 'Admin',
-      lastName: 'User',
-      email: user.email,
-      role: 'admin',
-      createdAt: new Date().toISOString(),
-      emailVerified: true,
-      accountStatus: 'paid',
-      paymentStatus: 'paid',
-      planName: 'Administrator'
-    });
-  } else if (snapshot.exists()) {
-    await update(userRef, {
-      lastLogin: new Date().toISOString(),
-      emailVerified: true,
-      accountStatus,
-      paymentStatus: userData.paymentStatus || accountStatus,
-      planName: userData.planName || (accountStatus === 'paid' || accountStatus === 'active' ? 'Active Plan' : 'Unpaid Account')
-    });
-  }
-
-  window.location.href = isAdmin ? (baseUrl + 'admin.html') : (baseUrl + 'dashboard.html');
-}
-
-// Redirect verified users to the correct portal.
-onAuthStateChanged(auth, async (user) => {
-  if (!user || !user.emailVerified) return;
-  try {
-    await resolveRoute(user);
-  } catch (error) {
-    console.error('Auth routing error:', error);
-    window.location.href = baseUrl + 'dashboard.html';
-  }
-});
-
+// ============================================================================
+// LOGIN
+// ============================================================================
 async function firebaseLogin() {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
@@ -83,18 +54,56 @@ async function firebaseLogin() {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    if (!user.emailVerified) {
-      await auth.signOut();
+    const isAdmin = (user.email || '').toLowerCase() === 'admin@baricrystal.com';
+
+    // FIX: Block unverified users from logging in, except admin
+    if (!isAdmin && !user.emailVerified) {
+      await signOut(auth);
       showError('Please verify your email before logging in. Check your inbox for the verification link.');
       submitBtn.disabled = false;
       submitBtn.textContent = 'Sign In';
       return;
     }
 
-    await resolveRoute(user);
+    // Update last login + sync verified status to DB
+    const userRef = ref(database, 'users/' + user.uid);
+    const snapshot = await get(userRef);
+    const payload = {
+      lastLogin: new Date().toISOString(),
+      emailVerified: true
+    };
+
+    if (isAdmin) payload.role = 'admin';
+
+    if (snapshot.exists()) {
+      await update(userRef, payload);
+    } else {
+      await set(userRef, {
+        firstName: isAdmin ? 'Admin' : 'User',
+        lastName: '',
+        email: user.email,
+        phone: '',
+        state: '',
+        createdAt: new Date().toISOString(),
+        ...payload
+      });
+    }
+
+    // Redirect based on role / admin email
+    if (isAdmin) {
+      window.location.href = baseUrl + 'admin.html';
+    } else if (snapshot.exists()) {
+      const userData = snapshot.val();
+      window.location.href = baseUrl + (userData.role === 'admin' ? 'admin.html' : 'dashboard.html');
+    } else {
+      window.location.href = baseUrl + 'dashboard.html';
+    }
+
   } catch (error) {
     console.error('❌ Login error:', error.code, error.message);
 
+    // FIX: auth/user-not-found and auth/wrong-password are legacy codes —
+    // newer Firebase returns auth/invalid-credential for both
     const errorMessages = {
       'auth/invalid-credential': 'Incorrect email or password. Please try again.',
       'auth/user-not-found': 'No account found with this email.',
@@ -111,5 +120,8 @@ async function firebaseLogin() {
   }
 }
 
+// ============================================================================
+// INIT
+// ============================================================================
 document.getElementById('login-btn').addEventListener('click', firebaseLogin);
 document.addEventListener('keydown', (e) => { if (e.key === 'Enter') firebaseLogin(); });

@@ -24,12 +24,3 @@ export const database = getDatabase(app);
 // GitHub Pages compatible base URL
 // Handles: https://user.github.io/repo/ and custom domains
 export const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
-
-
-// ============================================================================
-// APP-LEVEL ACCESS CONSTANTS
-// ============================================================================
-export const DEMO_ADMIN_EMAIL = 'admin@baricrystal.com';
-export const DEMO_ADMIN_PASSWORD = 'BariCrystal@2026!';
-export const PAYMENT_SANDBOX_KEY = 'baricrystal_payment_sandbox_status';
-export const PAYMENT_SANDBOX_ACTIVE_KEY = 'baricrystal_payment_sandbox_active';

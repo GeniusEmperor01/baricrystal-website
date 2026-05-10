@@ -29,7 +29,6 @@ body {
   font-size: 14px; line-height: 1.6;
   display: flex; min-height: 100vh;
 }
-body.admin-loading { visibility: hidden; }
 
 /* SIDEBAR */
 .sidebar {
@@ -243,7 +242,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 }
 </style>
 </head>
-<body class="admin-loading">
+<body>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -299,7 +298,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="topbar-title" id="page-title">Overview</div>
     <div class="topbar-right">
       <div class="topbar-date" id="topbar-date"></div>
-      <a href="login.html" class="logout-btn" id="admin-logout">Logout</a>
+      <a href="index.html" class="logout-btn">Logout</a>
     </div>
   </div>
 
@@ -534,55 +533,6 @@ function filterStatus(status, btn) {
     row.style.display = status === 'all' || row.dataset.status === status ? '' : 'none';
   });
 }
-
-function saveAdminSettings() {
-  const payload = {
-    agencyName: document.getElementById('admin-agency-name')?.value || '',
-    contactEmail: document.getElementById('admin-contact-email')?.value || '',
-    whatsapp: document.getElementById('admin-whatsapp')?.value || ''
-  };
-  localStorage.setItem('baricrystal_admin_settings', JSON.stringify(payload));
-  alert('Admin settings saved locally. Firebase can be wired in later.');
-}
-
-function updateAdminPassword() {
-  const currentPassword = document.getElementById('admin-current-password')?.value || '';
-  const newPassword = document.getElementById('admin-new-password')?.value || '';
-  if (!currentPassword || !newPassword) {
-    alert('Fill in both password fields first.');
-    return;
-  }
-  alert('Password update is a placeholder for now. Wire this to Firebase Auth later.');
-}
-
-function handleActionButtonClick(btn) {
-  const row = btn.closest('tr');
-  const text = (btn.textContent || '').trim().toLowerCase();
-  const rowText = row ? row.textContent.replace(/\s+/g, ' ').trim() : '';
-
-  if (text === 'view') {
-    alert('Opening record: ' + rowText);
-    return;
-  }
-
-  if (text === 'edit') {
-    alert('Editing item: ' + rowText);
-    return;
-  }
-
-  if (text === 'save') {
-    saveAdminSettings();
-    return;
-  }
-
-  alert('Action clicked: ' + text);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.action-btn').forEach(btn => {
-    btn.addEventListener('click', () => handleActionButtonClick(btn));
-  });
-});
 </script>
 
 <!-- FLOATING HELP PILL -->
@@ -795,86 +745,21 @@ document.addEventListener('keydown', (e) => {
 
 
 <script type="module">
-import { auth, database, DEMO_ADMIN_EMAIL } from './firebase-config.js';
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { ref, get, update, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+  import { auth, baseUrl } from './firebase-config.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-function revealAdminUI() {
-  document.body.classList.remove('admin-loading');
-}
+  const ADMIN_EMAIL = 'admin@baricrystal.com';
 
-function normalizeRole(value) {
-  return String(value || '').toLowerCase().trim();
-}
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = baseUrl + 'login.html';
+      return;
+    }
 
-async function hydrateAdmin(user) {
-  const userRef = ref(database, 'users/' + user.uid);
-  const snapshot = await get(userRef);
-  const data = snapshot.exists() ? snapshot.val() : {};
-  const role = normalizeRole(data.role);
-  const isAdmin = user.email?.toLowerCase() === DEMO_ADMIN_EMAIL.toLowerCase() || role === 'admin';
-
-  if (!isAdmin) {
-    await signOut(auth);
-    window.location.href = 'dashboard.html';
-    return;
-  }
-
-  if (!snapshot.exists()) {
-    await set(userRef, {
-      firstName: 'Admin',
-      lastName: 'User',
-      email: user.email,
-      role: 'admin',
-      emailVerified: true,
-      accountStatus: 'paid',
-      paymentStatus: 'paid',
-      planName: 'Administrator',
-      createdAt: new Date().toISOString()
-    });
-  } else {
-    await update(userRef, {
-      role: 'admin',
-      emailVerified: true,
-      lastLogin: new Date().toISOString()
-    });
-  }
-
-  const adminName = document.querySelector('.admin-name');
-  const adminRole = document.querySelector('.admin-role');
-  const adminAvatar = document.querySelector('.admin-avatar');
-  const displayName = [data.firstName, data.lastName].filter(Boolean).join(' ').trim() || user.email || 'Admin';
-
-  if (adminName) adminName.textContent = displayName;
-  if (adminRole) adminRole.textContent = 'Super Admin';
-  if (adminAvatar) adminAvatar.textContent = (displayName[0] || 'A').toUpperCase();
-
-  revealAdminUI();
-}
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user || !user.emailVerified) {
-    window.location.href = 'login.html';
-    return;
-  }
-
-  try {
-    await hydrateAdmin(user);
-  } catch (error) {
-    console.error('Admin auth error:', error);
-    await signOut(auth).catch(() => {});
-    window.location.href = 'login.html';
-  }
-});
-
-const logoutBtn = document.getElementById('admin-logout');
-if (logoutBtn) {
-  logoutBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    await signOut(auth).catch(() => {});
-    window.location.href = 'login.html';
+    if ((user.email || '').toLowerCase() !== ADMIN_EMAIL) {
+      window.location.href = baseUrl + 'dashboard.html';
+    }
   });
-}
 </script>
 
 </body>

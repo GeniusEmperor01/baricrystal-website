@@ -61,8 +61,10 @@ function showMessage(text, type = 'error') {
 // FIX: Only redirect if user is verified — prevents leftover sessions
 // from booting users off the signup page before they can see the form
 // ============================================================================
+const ADMIN_EMAIL = 'admin@baricrystal.com';
+
 onAuthStateChanged(auth, (user) => {
-  if (user && user.emailVerified) {
+  if (user && user.emailVerified && (user.email || '').toLowerCase() !== ADMIN_EMAIL) {
     window.location.href = baseUrl + 'dashboard.html';
   }
 });
@@ -158,10 +160,7 @@ window.firebaseSignup = async function() {
       emailVerified: false,
       flaggedForReview: flagForReview,
       reviewReason: flagForReview ? 'Suspicious name pattern detected' : null,
-      role: 'user',
-      accountStatus: 'unpaid',
-      paymentStatus: 'unpaid',
-      planName: 'Unpaid Account'
+      accountStatus: 'pending_verification'
     });
 
     console.log('✅ User saved to DB:', user.uid);

@@ -520,9 +520,10 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { ref, set, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 let currentUser = null;
+const ADMIN_EMAIL = 'admin@baricrystal.com';
 
 onAuthStateChanged(auth, (user) => {
-  if (!user || !user.emailVerified) {
+  if (!user || (!user.emailVerified && (user.email || '').toLowerCase() !== ADMIN_EMAIL)) {
     window.location.href = baseUrl + 'login.html';
     return;
   }
