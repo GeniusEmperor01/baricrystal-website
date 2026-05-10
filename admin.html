@@ -533,6 +533,55 @@ function filterStatus(status, btn) {
     row.style.display = status === 'all' || row.dataset.status === status ? '' : 'none';
   });
 }
+
+function saveAdminSettings() {
+  const payload = {
+    agencyName: document.getElementById('admin-agency-name')?.value || '',
+    contactEmail: document.getElementById('admin-contact-email')?.value || '',
+    whatsapp: document.getElementById('admin-whatsapp')?.value || ''
+  };
+  localStorage.setItem('baricrystal_admin_settings', JSON.stringify(payload));
+  alert('Admin settings saved locally. Firebase can be wired in later.');
+}
+
+function updateAdminPassword() {
+  const currentPassword = document.getElementById('admin-current-password')?.value || '';
+  const newPassword = document.getElementById('admin-new-password')?.value || '';
+  if (!currentPassword || !newPassword) {
+    alert('Fill in both password fields first.');
+    return;
+  }
+  alert('Password update is a placeholder for now. Wire this to Firebase Auth later.');
+}
+
+function handleActionButtonClick(btn) {
+  const row = btn.closest('tr');
+  const text = (btn.textContent || '').trim().toLowerCase();
+  const rowText = row ? row.textContent.replace(/\s+/g, ' ').trim() : '';
+
+  if (text === 'view') {
+    alert('Opening record: ' + rowText);
+    return;
+  }
+
+  if (text === 'edit') {
+    alert('Editing item: ' + rowText);
+    return;
+  }
+
+  if (text === 'save') {
+    saveAdminSettings();
+    return;
+  }
+
+  alert('Action clicked: ' + text);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleActionButtonClick(btn));
+  });
+});
 </script>
 
 <!-- FLOATING HELP PILL -->
