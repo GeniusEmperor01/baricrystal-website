@@ -903,6 +903,37 @@ body {
     font-size: 9px;
   }
 }
+
+    .jobs-toolbar {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr .8fr .8fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .jobs-toolbar input, .jobs-toolbar select {
+      width: 100%;
+      background: var(--dark-2);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      outline: none;
+    }
+    .jobs-toolbar input::placeholder { color: var(--text-muted); }
+    .jobs-toolbar input:focus, .jobs-toolbar select:focus { border-color: var(--gold); }
+    .jobs-empty-state {
+      grid-column: 1 / -1;
+      padding: 30px 24px;
+      border: 1px dashed var(--border);
+      text-align: center;
+      background: rgba(255,255,255,0.01);
+    }
+    .jobs-empty-title { font-size: 18px; margin-bottom: 8px; }
+    .jobs-empty-sub { font-size: 13px; color: var(--text-muted); }
+    .job-card-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 20px; }
+    .job-badge { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(200,155,60,0.25); padding: 5px 10px; background: rgba(200,155,60,0.08); }
+    .job-card-featured { box-shadow: inset 0 0 0 1px rgba(200,155,60,0.22); }
 </style>
 </head>
 <body>
@@ -1062,66 +1093,29 @@ body {
 
     <!-- JOBS TAB -->
     <div class="tab-content" id="tab-jobs">
-      <div class="jobs-grid">
-        <div class="job-card">
-          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="16.5" cy="7.5" r="1"/><circle cx="7.5" cy="16.5" r="1"/><circle cx="16.5" cy="16.5" r="1"/><circle cx="7.5" cy="7.5" r="1"/></svg></div>
-          <div class="job-name">Factory & Production</div>
-          <div class="job-desc">Manufacturing and packaging roles with training provided. No experience required.</div>
-          <div class="job-footer">
-            <span>Poland · 10 Slots</span>
-            <button class="apply-btn">Apply Now</button>
-          </div>
-        </div>
+      <div class="jobs-toolbar" style="margin-bottom: 18px;">
+        <input data-jobs-search id="dashboard-job-search" placeholder="Search jobs..." />
+        <select data-jobs-status id="dashboard-job-status">
+          <option value="all">All Status</option>
+          <option value="open">Open</option>
+          <option value="featured">Featured</option>
+          <option value="filled">Filled</option>
+          <option value="paused">Paused</option>
+        </select>
+        <select data-jobs-category id="dashboard-job-category">
+          <option value="all">All Categories</option>
+        </select>
+        <select data-jobs-country id="dashboard-job-country">
+          <option value="all">All Countries</option>
+        </select>
+      </div>
 
-        <div class="job-card">
-          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="9" width="20" height="12" rx="1"/><rect x="2" y="4" width="20" height="5" rx="1"/></svg></div>
-          <div class="job-name">Construction Engineer</div>
-          <div class="job-desc">Skilled and unskilled construction work in Germany. Competitive pay.</div>
-          <div class="job-footer">
-            <span>Germany · 8 Slots</span>
-            <button class="apply-btn">Apply Now</button>
-          </div>
+      <div class="jobs-grid" data-jobs-view="dashboard">
+        <div data-jobs-grid class="job-card job-card-full">
+          <div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Getting data from Firebase...</div>
         </div>
-
-        <div class="job-card">
-          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7-7-7 7M3 9h18v11c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V9z"/><circle cx="9" cy="15" r="1"/><circle cx="15" cy="15" r="1"/></svg></div>
-          <div class="job-name">Auto-mobile Engineer</div>
-          <div class="job-desc">Automotive assembly and maintenance in UAE. Technical skills valued.</div>
-          <div class="job-footer">
-            <span>UAE · 5 Slots</span>
-            <button class="apply-btn">Apply Now</button>
-          </div>
-        </div>
-
-        <div class="job-card">
-          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2l3 3M13 2l-4 4M6 20h12M6 20l2-9h8l2 9"/></svg></div>
-          <div class="job-name">Electricians</div>
-          <div class="job-desc">Electrical installations and maintenance. Certifications valued.</div>
-          <div class="job-footer">
-            <span>UK · 6 Slots</span>
-            <button class="apply-btn">Apply Now</button>
-          </div>
-        </div>
-
-        <div class="job-card">
-          <div class="job-icon">🏢</div>
-          <div class="job-name">Architecture</div>
-          <div class="job-desc">Design and planning roles on international projects. Professional level.</div>
-          <div class="job-footer">
-            <span>Netherlands · 12 Slots</span>
-            <button class="apply-btn">Apply Now</button>
-          </div>
-        </div>
-
-        <div class="job-card">
-          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2c2 2 4 4 4 7 0 3-2 5-4 6-2-1-4-3-4-6 0-3 2-5 4-7z"/><path d="M8 20h8M10 22h4"/></svg></div>
-          <div class="job-name">Agricultural Work</div>
-          <div class="job-desc">Seasonal and long-term farming opportunities. Accommodation included.</div>
-          <div class="job-footer">
-            <span>Romania · 15 Slots</span>
-            <button class="apply-btn">Apply Now</button>
-          </div>
-        </div>
+        <div data-jobs-status style="display:none;"></div>
+        <div data-jobs-count style="display:none;"></div>
       </div>
     </div>
 
@@ -1295,6 +1289,7 @@ body {
   </div>
 </div>
 
+<script type="module" src="jobs-live.js"></script>
 <script type="module" src="dashboard.js"></script>
 
 <!-- FLOATING HELP PILL -->

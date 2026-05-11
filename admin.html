@@ -528,7 +528,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <div class="job-composer">
           <div class="job-panel-title">Post a New Job</div>
           <div class="job-panel-sub">Create the live template here. The job will save straight into Firebase and appear on the dashboard for users with access.</div>
-          <form id="job-form" class="job-form-grid">
+          <form id="job-form" class="job-form-grid" onsubmit="window.saveJobPosting(event); return false;">
             <input type="hidden" id="job-id" />
             <div class="job-field full">
               <div class="job-label">Job Title</div>
@@ -587,7 +587,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
               </select>
             </div>
             <div class="job-actions-row">
-              <button type="submit" class="job-save-btn">Save Job</button>
+              <button type="button" class="job-save-btn" id="post-job-btn" onclick="window.saveJobPosting(event)">Save Job</button>
               <button type="button" class="job-ghost-btn" onclick="resetJobForm()">Clear</button>
               <div class="job-form-note">Tip: use the preview card to see exactly how this job will look to users.</div>
             </div>
