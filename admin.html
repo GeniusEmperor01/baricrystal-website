@@ -527,13 +527,16 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   </div>
 </div>
 
+<script type="module">
+// Import Firebase admin module
+import('./admin.js').catch(err => {
+  console.error('Failed to load admin module:', err);
+  document.getElementById('admin-feedback')?.textContent = 'Failed to initialize admin dashboard.';
+});
+</script>
+
 <script>
-// Set date
-document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-
-const ADMIN_EMAIL = 'admin@baricrystal.com';
-const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
-
+// Utility functions for HTML templates
 window.togglePassword = function(inputId, btn) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -618,165 +621,50 @@ function statusLabel(status) {
 }
 
 function renderApplicationsTable() {
-  const tbody = document.getElementById('admin-applications-body');
-  const recent = document.getElementById('admin-recent-applications-body');
-  const data = safeParseArray('baricrystal_admin_applications');
-
-  const rows = data.map((item, idx) => {
-    const name = item.name || [item.firstName, item.lastName].filter(Boolean).join(' ') || 'Unnamed Applicant';
-    const email = item.email || '—';
-    const phone = item.phone || '—';
-    const job = item.jobCategory || item.category || item.jobTitle || '—';
-    const plan = item.plan || item.planName || '—';
-    const status = item.status || item.applicationStatus || 'pending';
-    const applied = formatDate(item.appliedAt || item.createdAt || item.date);
-    const avatar = initials(name);
-    return `<tr data-status="${escapeHtml(String(status).toLowerCase())}"><td><div class="candidate-info"><div class="candidate-avatar">${escapeHtml(avatar)}</div><div><div class="candidate-name">${escapeHtml(name)}</div><div class="candidate-email">${escapeHtml(email)}</div></div></div></td><td>${escapeHtml(phone)}</td><td>${escapeHtml(job)}</td><td>${escapeHtml(plan)}</td><td><span class="badge ${badgeForStatus(status)}">${escapeHtml(statusLabel(status))}</span></td><td>${escapeHtml(applied)}</td><td><button class="action-btn" data-action="view">View</button></td></tr>`;
-  }).join('');
-
-  const fallback = data.length ? rows : emptyRow(7, 'No applications yet. Once Firebase is connected, applications will show up here automatically.');
-  if (tbody) tbody.innerHTML = fallback;
-  if (recent) recent.innerHTML = data.length ? data.slice(0, 4).map((item) => {
-    const name = item.name || [item.firstName, item.lastName].filter(Boolean).join(' ') || 'Unnamed Applicant';
-    const email = item.email || '—';
-    const job = item.jobCategory || item.category || item.jobTitle || '—';
-    const status = item.status || item.applicationStatus || 'pending';
-    const date = formatDate(item.appliedAt || item.createdAt || item.date);
-    return `<tr><td><div class="candidate-info"><div class="candidate-avatar">${escapeHtml(initials(name))}</div><div><div class="candidate-name">${escapeHtml(name)}</div><div class="candidate-email">${escapeHtml(email)}</div></div></div></td><td>${escapeHtml(job)}</td><td>${escapeHtml(item.plan || item.planName || '—')}</td><td><span class="badge ${badgeForStatus(status)}">${escapeHtml(statusLabel(status))}</span></td><td>${escapeHtml(date)}</td></tr>`;
-  }).join('') : emptyRow(5, 'No recent applications yet.');
+  // Handled by admin.js with Firebase data
 }
 
 function renderPaymentsTable() {
-  const tbody = document.getElementById('admin-payments-body');
-  const data = safeParseArray('baricrystal_admin_payments');
-  const rows = data.map((item) => {
-    const name = item.name || item.candidate || 'Unnamed Client';
-    const plan = item.plan || item.planName || '—';
-    const amount = item.amount || '—';
-    const method = item.method || item.paymentMethod || '—';
-    const status = item.status || item.paymentStatus || 'pending';
-    const date = formatDate(item.date || item.createdAt || item.paidAt);
-    return `<tr><td><div class="candidate-name">${escapeHtml(name)}</div><div class="candidate-email">${escapeHtml(item.email || '')}</div></td><td>${escapeHtml(plan)}</td><td>${escapeHtml(amount)}</td><td>${escapeHtml(method)}</td><td><span class="badge ${badgeForStatus(status)}">${escapeHtml(statusLabel(status))}</span></td><td>${escapeHtml(date)}</td></tr>`;
-  }).join('');
-  if (tbody) tbody.innerHTML = data.length ? rows : emptyRow(6, 'No payment records yet. Payments will appear here once your gateway or Firebase writes them.');
+  // Handled by admin.js with Firebase data
 }
 
 function renderJobsTable() {
-  const tbody = document.getElementById('admin-jobs-body');
-  const data = safeParseArray('baricrystal_admin_jobs');
-  const rows = data.map((item, idx) => {
-    const id = item.id || String(idx + 1).padStart(3, '0');
-    const title = item.title || item.jobTitle || 'Untitled Job';
-    const category = item.category || item.jobCategory || '—';
-    const country = item.country || '—';
-    const slots = item.slots ?? item.openings ?? '—';
-    const status = item.status || item.state || 'open';
-    const pill = String(status).toLowerCase() === 'filled' ? 'filled' : 'open';
-    return `<tr><td style="color:var(--text-muted)">${escapeHtml(id)}</td><td>${escapeHtml(title)}</td><td>${escapeHtml(category)}</td><td>${escapeHtml(country)}</td><td>${escapeHtml(slots)}</td><td><div class="job-pill"><div class="job-dot ${pill}"></div>${escapeHtml(statusLabel(status))}</div></td><td><button class="action-btn" data-action="edit">Edit</button></td></tr>`;
-  }).join('');
-  if (tbody) tbody.innerHTML = data.length ? rows : emptyRow(7, 'No job listings yet. Add jobs from Firebase or local storage and they will render here.');
+  // Handled by admin.js with Firebase data
 }
 
 function renderUsersTable() {
-  const tbody = document.getElementById('admin-users-body');
-  const data = safeParseArray('baricrystal_admin_users');
-  const rows = data.map((item) => {
-    const name = item.name || [item.firstName, item.lastName].filter(Boolean).join(' ') || 'Unnamed User';
-    const email = item.email || '—';
-    const phone = item.phone || '—';
-    const state = item.state || item.location || '—';
-    const registered = formatDate(item.registeredAt || item.createdAt);
-    const app = item.applicationStatus || item.status || 'pending';
-    return `<tr><td><div class="candidate-info"><div class="candidate-avatar">${escapeHtml(initials(name))}</div><div><div class="candidate-name">${escapeHtml(name)}</div><div class="candidate-email">${escapeHtml(email)}</div></div></div></td><td>${escapeHtml(phone)}</td><td>${escapeHtml(state)}</td><td>${escapeHtml(registered)}</td><td><span class="badge ${badgeForStatus(app)}">${escapeHtml(statusLabel(app))}</span></td><td><button class="action-btn" data-action="view">View</button></td></tr>`;
-  }).join('');
-  if (tbody) tbody.innerHTML = data.length ? rows : emptyRow(6, 'No users yet. When Firebase data arrives, this table will populate automatically.');
+  // Handled by admin.js with Firebase data
 }
 
 function renderOverview() {
-  const applications = safeParseArray('baricrystal_admin_applications');
-  const payments = safeParseArray('baricrystal_admin_payments');
-  const approved = applications.filter(a => ['approved', 'paid', 'active', 'completed'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
-  const pending = applications.filter(a => ['pending', 'processing', 'review'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
-  const revenue = payments.reduce((sum, p) => sum + (Number(String(p.amount).replace(/[^\d.]/g, '')) || 0), 0);
-  const stats = document.querySelectorAll('.stats-row .stat-card-num');
-  if (stats[0]) stats[0].textContent = String(applications.length || 0);
-  if (stats[1]) stats[1].textContent = String(approved || 0);
-  if (stats[2]) stats[2].textContent = String(pending || 0);
-  if (stats[3]) stats[3].textContent = revenue ? `₦${revenue.toLocaleString('en-NG')}` : '₦0';
-  showAdminFeedback(applications.length || payments.length ? 'Live admin data loaded from storage. Replace the local arrays with Firebase collections when ready.' : 'No live records yet. The tables are showing empty states instead of fake demo data.', applications.length || payments.length ? 'success' : 'warning');
+  // Handled by admin.js with Firebase data
 }
 
 function filterTable(val) {
-  const rows = document.querySelectorAll('#admin-applications-body tr');
-  const q = val.toLowerCase();
-  rows.forEach(row => {
-    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
+  // Handled by admin.js
 }
 
 function filterStatus(status, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  const rows = document.querySelectorAll('#admin-applications-body tr');
-  rows.forEach(row => {
-    row.style.display = status === 'all' || row.dataset.status === status ? '' : 'none';
-  });
+  // Handled by admin.js
 }
 
 function saveAdminSettings() {
-  const payload = {
-    agencyName: document.getElementById('admin-agency-name')?.value || '',
-    contactEmail: document.getElementById('admin-contact-email')?.value || '',
-    whatsapp: document.getElementById('admin-whatsapp')?.value || ''
-  };
-  localStorage.setItem('baricrystal_admin_settings', JSON.stringify(payload));
-  showAdminFeedback('Settings saved locally. Wire Firebase later to make these values persistent for the whole team.', 'success');
+  // Handled by admin.js
 }
 
 function updateAdminPassword() {
-  const currentPassword = document.getElementById('admin-current-password')?.value || '';
-  const newPassword = document.getElementById('admin-new-password')?.value || '';
-  if (!currentPassword || !newPassword) {
-    showAdminFeedback('Fill in both password fields first.', 'warning');
-    return;
-  }
-  showAdminFeedback('Password update is still a placeholder. Wire this to Firebase Auth later.', 'info');
+  // Handled by admin.js
 }
 
 function handleActionButtonClick(btn) {
-  const row = btn.closest('tr');
-  const text = (btn.dataset.action || btn.textContent || '').trim().toLowerCase();
-  const rowText = row ? row.textContent.replace(/\s+/g, ' ').trim() : '';
-
-  if (text === 'view') {
-    showAdminFeedback(`Viewing record: ${rowText}`, 'info');
-    return;
-  }
-
-  if (text === 'edit') {
-    showAdminFeedback(`Editing item: ${rowText}`, 'info');
-    return;
-  }
-
-  if (text === 'save') {
-    saveAdminSettings();
-    return;
-  }
-
-  showAdminFeedback(`Action clicked: ${text}`, 'info');
+  // Handled by admin.js
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderApplicationsTable();
-  renderPaymentsTable();
-  renderJobsTable();
-  renderUsersTable();
-  renderOverview();
-
-  document.querySelectorAll('.action-btn').forEach(btn => {
-    btn.addEventListener('click', () => handleActionButtonClick(btn));
-  });
+  // admin.js module handles initialization and data fetching from Firebase
+  console.log('Admin dashboard loading with Firebase data...');
 });
+</script>
 </script>
 
 </script>
