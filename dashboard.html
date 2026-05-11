@@ -250,6 +250,15 @@ body {
   display: block;
 }
 
+.message-item { padding:12px 14px; border:1px solid var(--border-subtle); background:var(--dark-3); border-radius:14px; }
+.message-item.mine { border-color: rgba(200,155,60,0.28); background: rgba(200,155,60,0.08); margin-left:auto; }
+.message-item .meta { margin-top:6px; font-size:10px; color:var(--text-muted); }
+.inbox-thread { padding:12px 14px; border:1px solid var(--border-subtle); background:var(--dark-3); cursor:pointer; text-align:left; }
+.inbox-thread.active { border-color: var(--gold); }
+.inbox-thread .title { font-size:13px; font-weight:500; }
+.inbox-thread .sub { font-size:11px; color:var(--text-muted); margin-top:4px; }
+.empty-state { padding:24px; text-align:center; color:var(--text-muted); border:1px dashed var(--border-subtle); background:rgba(255,255,255,0.01); border-radius:12px; }
+
 /* PLAN SECTION */
 .plan-section {
   display: grid;
@@ -938,6 +947,10 @@ body {
       <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
       Payment
     </a>
+    <a class="nav-item" onclick="switchTab('messages', this)">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      Inbox
+    </a>
     <a class="nav-item" onclick="switchTab('settings', this)">
       <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6m-1.78 7.78l-4.24-4.24m-2.12-2.12l-4.24-4.24"/></svg></span>
       Settings
@@ -1128,6 +1141,29 @@ body {
     <!-- APPLICATIONS TAB -->
     <div class="tab-content" id="tab-applications">
       <p style="color: var(--text-muted); font-size: 14px;">You haven't applied to any jobs yet. Browse available opportunities and submit your applications.</p>
+    </div>
+
+    <!-- MESSAGES TAB -->
+    <div class="tab-content" id="tab-messages">
+      <div id="inbox-status" class="empty-state" style="display:none;margin-bottom:16px;">Getting data...</div>
+      <div style="display:grid;grid-template-columns:360px 1fr;gap:16px;min-height:520px;">
+        <div class="settings-section" style="margin:0;">
+          <div class="settings-title">Inbox</div>
+          <div id="user-inbox-list" style="display:flex;flex-direction:column;gap:10px;">
+            <div class="empty-state">Getting data from Firebase...</div>
+          </div>
+        </div>
+        <div class="settings-section" style="margin:0;display:flex;flex-direction:column;min-height:520px;">
+          <div class="settings-title">Conversation</div>
+          <div id="user-message-thread" style="flex:1;display:flex;flex-direction:column;gap:12px;overflow:auto;padding-right:4px;">
+            <div class="empty-state">Select a thread to view messages.</div>
+          </div>
+          <div style="margin-top:16px;border-top:1px solid var(--border-subtle);padding-top:16px;display:grid;gap:10px;">
+            <textarea id="user-message-input" placeholder="Type a message to admin..." style="width:100%;min-height:92px;background:var(--dark-3);border:1px solid var(--border-subtle);padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;"></textarea>
+            <button class="btn-save" onclick="sendUserMessage()" style="width:max-content;">Send Message</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- SETTINGS TAB -->

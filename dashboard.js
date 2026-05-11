@@ -1,12 +1,16 @@
 import { auth, database, baseUrl } from './firebase-config.js';
 import { onAuthStateChanged, signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { ref, get, update, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+import { ref, get, update, remove, onValue, push, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 const ADMIN_EMAIL = 'admin@baricrystal.com';
 const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
 
 let currentUser = null;
 let userData = null;
+let inboxThreadId = null;
+let inboxMessages = [];
+let inboxMeta = null;
+let inboxListenerStarted = false;
 
 // ============================================================================
 // AUTHENTICATION STATE
@@ -84,6 +88,7 @@ function displayUserInfo() {
   updateSettingsDisplay();
   renderAccountBanner();
   renderPlanDisplay();
+  loadInbox();
 }
 
 function normalizeStatus(raw) {
@@ -161,6 +166,124 @@ function renderPlanDisplay() {
 // ============================================================================
 // SETTINGS DISPLAY
 // ============================================================================
+
+function getThreadId() {
+  return `baricrystal_${String(currentUser?.uid || '').trim()}`;
+}
+
+function formatMessageDate(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function setInboxStatus(message, tone = 'info') {
+  const box = document.getElementById('inbox-status');
+  if (!box) return;
+  const colors = {
+    success: ['rgba(45,158,107,0.12)', '#2D9E6B'],
+    warning: ['rgba(232,168,56,0.12)', '#E8A838'],
+    error: ['rgba(226,75,74,0.10)', '#E24B4A'],
+    info: ['rgba(58,138,196,0.10)', 'var(--text-muted)'],
+  };
+  const [bg, color] = colors[tone] || colors.info;
+  box.style.display = 'block';
+  box.style.background = bg;
+  box.style.color = color;
+  box.textContent = message;
+}
+
+async function loadInbox() {
+  inboxThreadId = getThreadId();
+  try {
+    const convoSnap = await get(ref(database, `conversations/${inboxThreadId}`));
+    inboxMeta = convoSnap.exists() ? convoSnap.val() : { threadId: inboxThreadId, userUid: currentUser.uid, userEmail: currentUser.email, userName: `${userData?.firstName || 'User'} ${userData?.lastName || ''}`.trim() };
+    if (!inboxListenerStarted) {
+      inboxListenerStarted = true;
+      onValue(ref(database, `conversationMessages/${inboxThreadId}`), (snap) => {
+        inboxMessages = snap.exists() ? Object.entries(snap.val() || {}).map(([id, item]) => ({ id, ...(item || {}) })) : [];
+        inboxMessages.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        renderInbox();
+      }, () => setInboxStatus('Unable to get data for inbox.', 'error'));
+    }
+    const msgSnap = await get(ref(database, `conversationMessages/${inboxThreadId}`));
+    inboxMessages = msgSnap.exists() ? Object.entries(msgSnap.val() || {}).map(([id, item]) => ({ id, ...(item || {}) })) : [];
+    inboxMessages.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    renderInbox();
+  } catch (error) {
+    console.error(error);
+    setInboxStatus('Unable to get data for inbox.', 'error');
+  }
+}
+
+window.loadInbox = loadInbox;
+
+function renderInbox() {
+  const list = document.getElementById('user-inbox-list');
+  const thread = document.getElementById('user-message-thread');
+  if (list) {
+    list.innerHTML = inboxMeta ? `
+      <button class="inbox-thread active" onclick="loadInbox()">
+        <div class="title">BARICRYSTAL Support</div>
+        <div class="sub">${inboxMeta.lastMessage ? inboxMeta.lastMessage : 'No messages yet'}</div>
+      </button>
+    ` : '<div class="empty-state">Getting data from Firebase...</div>';
+  }
+  if (thread) {
+    if (!inboxMessages.length) {
+      thread.innerHTML = '<div class="empty-state">Data confirmed, but no messages yet.</div>';
+    } else {
+      thread.innerHTML = inboxMessages.map((m) => {
+        const mine = String(m.senderType || '').toLowerCase() === 'user';
+        return `<div class="message-item ${mine ? 'mine' : ''}">
+          <div>${String(m.text || '').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>
+          <div class="meta">${String(mine ? 'You' : 'Support')} • ${formatMessageDate(m.createdAt)}</div>
+        </div>`;
+      }).join('');
+      thread.scrollTop = thread.scrollHeight;
+    }
+  }
+}
+
+window.sendUserMessage = async function sendUserMessage() {
+  const input = document.getElementById('user-message-input');
+  const text = String(input?.value || '').trim();
+  if (!text) {
+    setInboxStatus('Type a message before sending.', 'warning');
+    return;
+  }
+  const threadId = getThreadId();
+  try {
+    const msgRef = push(ref(database, `conversationMessages/${threadId}`));
+    await set(msgRef, {
+      text,
+      senderType: 'user',
+      senderUid: currentUser.uid,
+      senderEmail: currentUser.email || '',
+      createdAt: new Date().toISOString(),
+    });
+    await update(ref(database, `conversations/${threadId}`), {
+      threadId,
+      userUid: currentUser.uid,
+      userEmail: currentUser.email || '',
+      userName: `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim(),
+      lastMessage: text,
+      lastMessageAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      unreadByAdmin: true,
+      unreadByUser: false,
+    });
+    if (input) input.value = '';
+    await loadInbox();
+    setInboxStatus('Message sent.', 'success');
+  } catch (error) {
+    console.error(error);
+    setInboxStatus('Unable to send message.', 'error');
+  }
+};
+
+
 function updateSettingsDisplay() {
   if (!userData) return;
 
@@ -399,6 +522,7 @@ window.switchTab = function(tabId, navEl) {
     overview: 'Overview',
     jobs: 'Available Jobs',
     applications: 'My Applications',
+    messages: 'Inbox',
     settings: 'Account Settings'
   };
   document.getElementById('page-title').textContent = titles[tabId] || tabId;

@@ -12,7 +12,9 @@ import {
   get,
   set,
   update,
+  push,
 } from 'https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js';
+
 
 const ADMIN_EMAIL = 'admin@baricrystal.com';
 const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
@@ -22,10 +24,15 @@ const state = {
   applications: [],
   payments: [],
   jobs: [],
+  conversations: [],
+  cvs: {},
   settings: {},
   currentUser: null,
   appSearch: '',
   appStatus: 'all',
+  selectedUserId: null,
+  selectedThreadId: null,
+  selectedMessages: [],
 };
 
 const titles = {
@@ -70,12 +77,10 @@ function normalizeUsers(node) {
   return toArray(node, 'uid').map((u) => {
     const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim() || u.displayName || u.fullName || u.name || u.email?.split('@')?.[0] || 'Unnamed User';
     const status = String(u.accountStatus || u.paymentStatus || u.status || 'unpaid').toLowerCase();
-    const role = String(u.role || u.userRole || (isAdminEmail(u.email) ? 'admin' : 'user')).toLowerCase();
     return {
       ...u,
       name,
       status,
-      role,
       registeredAt: u.createdAt || u.registeredAt || u.lastLogin || '',
     };
   });
@@ -99,17 +104,46 @@ function moneyFromPayment(value) {
   return Number.isFinite(num) ? num : 0;
 }
 
-function formatMoney(value) {
-  const num = Number(value || 0);
-  if (!Number.isFinite(num)) return '₦0';
-  return `₦${num.toLocaleString('en-NG')}`;
+function getThreadId(userUid) {
+  return `baricrystal_${String(userUid || '').trim()}`;
 }
 
-function paymentStatusCategory(status) {
-  const s = String(status || '').toLowerCase();
-  if (['paid', 'confirmed', 'confirmed payment', 'approved', 'successful', 'success', 'completed'].includes(s)) return 'confirmed';
-  if (['pending', 'processing', 'review', 'pending review', 'awaiting', 'awaiting confirmation', 'unverified'].includes(s)) return 'pending';
-  return 'unknown';
+function formatDateTime(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function getCvData(uid) {
+  return state.cvs?.[uid] || null;
+}
+
+function buildCvSections(cv) {
+  if (!cv) return [];
+  const sections = [];
+  const education = cv.sections?.education || cv.education || [];
+  const experience = cv.sections?.experience || cv.experience || [];
+  const languages = cv.sections?.languages || cv.languages || [];
+  const skills = cv.sections?.skills || cv.skills || [];
+  if (education?.length) sections.push({ title: 'Education', items: education.map((r) => `${r.school || r.institution || ''} • ${r.qualification || ''} • ${r.year || ''}`.trim()) });
+  if (experience?.length) sections.push({ title: 'Experience', items: experience.map((r) => `${r.company || ''} • ${r.position || ''} • ${r.duration || ''}`.trim()) });
+  if (languages?.length) sections.push({ title: 'Languages', items: languages.map((r) => `${r.language || ''} • Speak: ${r.speak || ''} • Read: ${r.read || ''} • Write: ${r.write || ''}`.trim()) });
+  if (skills?.length) sections.push({ title: 'Skills', items: skills.map((r) => r.skill || '').filter(Boolean) });
+  return sections;
+}
+
+async function loadSelectedMessages(threadId) {
+  if (!threadId) return [];
+  const snap = await get(ref(database, `conversationMessages/${threadId}`));
+  if (!snap.exists()) return [];
+  return Object.entries(snap.val() || {}).map(([id, item]) => ({ id, ...(item || {}) })).sort((a, b) => parseDate(a.createdAt) - parseDate(b.createdAt));
+}
+
+function resetSelectedUserState() {
+  state.selectedUserId = null;
+  state.selectedThreadId = null;
+  state.selectedMessages = [];
 }
 
 function emptyRow(cols, message) {
@@ -160,21 +194,13 @@ function renderOverview() {
 
   const approved = applications.filter((a) => ['approved', 'paid', 'active', 'completed'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
   const pending = applications.filter((a) => ['pending', 'processing', 'review', 'pending review'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
-
-  const confirmedPayments = payments.filter((p) => paymentStatusCategory(p.status || p.paymentStatus) === 'confirmed');
-  const pendingPayments = payments.filter((p) => paymentStatusCategory(p.status || p.paymentStatus) === 'pending');
-  const unknownPayments = payments.filter((p) => paymentStatusCategory(p.status || p.paymentStatus) === 'unknown');
-
   const revenue = payments.reduce((sum, p) => sum + moneyFromPayment(p.amount), 0);
-  const confirmedRevenue = confirmedPayments.reduce((sum, p) => sum + moneyFromPayment(p.amount), 0);
-  const pendingRevenue = pendingPayments.reduce((sum, p) => sum + moneyFromPayment(p.amount), 0);
-  const unknownRevenue = unknownPayments.reduce((sum, p) => sum + moneyFromPayment(p.amount), 0);
 
   const statNums = document.querySelectorAll('.stats-row .stat-card-num');
   if (statNums[0]) statNums[0].textContent = String(applications.length);
   if (statNums[1]) statNums[1].textContent = String(approved);
   if (statNums[2]) statNums[2].textContent = String(pending);
-  if (statNums[3]) statNums[3].textContent = formatMoney(revenue);
+  if (statNums[3]) statNums[3].textContent = revenue ? `₦${revenue.toLocaleString('en-NG')}` : '₦0';
 
   const weekCounts = [0, 0, 0, 0, 0];
   const now = new Date();
@@ -195,34 +221,11 @@ function renderOverview() {
   const sub = document.querySelector('.chart-card-sub');
   if (sub) sub.textContent = `Realtime from Firebase — ${now.toLocaleString('en-GB', { month: 'long', year: 'numeric' })}`;
 
-  const totalCollected = document.getElementById('payments-total-collected');
-  const source = document.getElementById('payments-source');
-  const confirmedTotal = document.getElementById('payments-confirmed-total');
-  const confirmedNote = document.getElementById('payments-confirmed-note');
-  const pendingTotal = document.getElementById('payments-pending-total');
-  const pendingNote = document.getElementById('payments-pending-note');
-  const fundsConfirmed = document.getElementById('funds-confirmed');
-  const fundsPending = document.getElementById('funds-pending');
-  const fundsUnknown = document.getElementById('funds-unknown');
-  const fundsSource = document.getElementById('funds-source');
-  const fundsSourceNote = document.getElementById('funds-source-note');
-  if (totalCollected) totalCollected.textContent = formatMoney(revenue);
-  if (source) source.textContent = payments.length ? 'Data confirmed' : 'Getting data';
-  if (confirmedTotal) confirmedTotal.textContent = formatMoney(confirmedRevenue);
-  if (confirmedNote) confirmedNote.textContent = payments.length ? 'Data confirmed' : 'Getting data';
-  if (pendingTotal) pendingTotal.textContent = formatMoney(pendingRevenue + unknownRevenue);
-  if (pendingNote) pendingNote.textContent = payments.length ? 'Data confirmed' : 'Getting data';
-  if (fundsConfirmed) fundsConfirmed.textContent = formatMoney(confirmedRevenue);
-  if (fundsPending) fundsPending.textContent = formatMoney(pendingRevenue);
-  if (fundsUnknown) fundsUnknown.textContent = formatMoney(unknownRevenue);
-  if (fundsSource) fundsSource.textContent = payments.length ? 'Firebase' : '—';
-  if (fundsSourceNote) fundsSourceNote.textContent = payments.length ? 'Realtime Database: /payments' : 'Getting data';
-
   renderActivity();
   showAdminFeedback(
     users.length || applications.length || payments.length || state.jobs.length
-      ? 'Data confirmed.'
-      : 'Getting data...',
+      ? 'Live Firebase data loaded successfully.'
+      : 'No records found yet. Empty states are showing instead of fake demo data.',
     users.length || applications.length || payments.length || state.jobs.length ? 'success' : 'warning'
   );
 }
@@ -272,7 +275,7 @@ function renderActivity() {
       <div class="activity-dot" style="background:${item.color}"></div>
       <div><div class="activity-text">${item.text}</div><div class="activity-time">${esc(item.time)}</div></div>
     </div>
-  `).join('') : '<div class="activity-item"><div class="activity-dot" style="background:var(--warning)"></div><div><div class="activity-text">Data confirmed. No recent activity yet.</div><div class="activity-time">Getting data from Firebase now.</div></div></div>'}`;
+  `).join('') : '<div class="activity-item"><div class="activity-dot" style="background:var(--warning)"></div><div><div class="activity-text">No activity yet.</div><div class="activity-time">Once Firebase has records, this panel will update automatically.</div></div></div>'}`;
 }
 
 function matchesAppFilter(item) {
@@ -375,58 +378,25 @@ function renderUsersTable() {
     const stateName = item.state || item.location || '—';
     const registered = formatDate(item.registeredAt || item.createdAt || item.lastLogin);
     const appStatus = item.applicationStatus || item.status || item.accountStatus || 'pending';
-    const role = String(item.role || 'user').toLowerCase();
-    const nextRole = role === 'admin' ? 'user' : 'admin';
-    const roleLabel = role === 'admin' ? 'Admin' : 'User';
-    const roleBtnLabel = role === 'admin' ? 'Remove Admin' : 'Make Admin';
-    const roleBtnClass = role === 'admin' ? 'admin' : 'user';
-    return `<tr data-uid="${esc(item.uid)}"><td><div class="candidate-info"><div class="candidate-avatar">${esc(initials(name))}</div><div><div class="candidate-name">${esc(name)}</div><div class="candidate-email">${esc(email)}</div></div></div></td><td>${esc(phone)}</td><td>${esc(stateName)}</td><td>${esc(registered)}</td><td><span class="badge ${badgeClass(role)}">${esc(roleLabel)}</span></td><td><span class="badge ${badgeClass(appStatus)}">${esc(statusLabel(appStatus))}</span></td><td><button class="action-btn user-role-btn role-toggle ${roleBtnClass}" data-uid="${esc(item.uid)}" data-next-role="${esc(nextRole)}">${esc(roleBtnLabel)}</button></td></tr>`;
+    const role = String(item.role || '').toLowerCase();
+    return `<tr>
+      <td><div class="candidate-info"><div class="candidate-avatar">${esc(initials(name))}</div><div><div class="candidate-name">${esc(name)}</div><div class="candidate-email">${esc(email)}</div></div></div></td>
+      <td>${esc(phone)}</td>
+      <td>${esc(stateName)}</td>
+      <td>${esc(registered)}</td>
+      <td><span class="badge ${badgeClass(appStatus)}">${esc(statusLabel(appStatus))}</span></td>
+      <td>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="action-btn" data-action="view-user" data-user-id="${esc(item.uid)}">View</button>
+          <button class="action-btn" data-action="toggle-role" data-user-id="${esc(item.uid)}">${role === 'admin' ? 'Remove Admin' : 'Make Admin'}</button>
+        </div>
+      </td>
+    </tr>`;
   }).join('');
-  if (tbody) tbody.innerHTML = rows || emptyRow(7, 'Data confirmed. No users yet.');
+  if (tbody) tbody.innerHTML = rows || emptyRow(6, 'Getting data from Firebase...');
 
   const userCount = document.getElementById('admin-user-count');
   if (userCount) userCount.textContent = `(${state.users.length})`;
-}
-
-async function updateUserRole() {
-  const uid = String(document.getElementById('admin-role-uid')?.value || '').trim();
-  const role = String(document.getElementById('admin-role-value')?.value || 'user').toLowerCase();
-  if (!uid) {
-    showAdminFeedback('Paste a user UID first.', 'warning');
-    return;
-  }
-  try {
-    await update(ref(database, `users/${uid}`), {
-      role,
-      updatedAt: new Date().toISOString(),
-      updatedBy: state.currentUser?.email || 'admin',
-    });
-    showAdminFeedback(role === 'admin' ? 'User promoted to admin.' : 'Admin role removed from user.', 'success');
-  } catch (error) {
-    console.error(error);
-    showAdminFeedback('Unable to update user role.', 'error');
-  }
-}
-
-async function toggleUserRole(uid, nextRole) {
-  const targetUid = String(uid || '').trim();
-  const role = String(nextRole || 'user').toLowerCase();
-  if (!targetUid) return;
-  if (auth.currentUser?.uid && targetUid === auth.currentUser.uid && role !== 'admin') {
-    showAdminFeedback('You cannot remove your own admin access from here.', 'warning');
-    return;
-  }
-  try {
-    await update(ref(database, `users/${targetUid}`), {
-      role,
-      updatedAt: new Date().toISOString(),
-      updatedBy: state.currentUser?.email || 'admin',
-    });
-    showAdminFeedback(role === 'admin' ? 'User promoted to admin.' : 'Admin role removed from user.', 'success');
-  } catch (error) {
-    console.error(error);
-    showAdminFeedback('Unable to update user role.', 'error');
-  }
 }
 
 function saveAdminSettings() {
@@ -452,7 +422,7 @@ async function updateAdminPassword() {
   const currentPassword = document.getElementById('admin-current-password')?.value || '';
   const newPassword = document.getElementById('admin-new-password')?.value || '';
   if (!currentPassword || !newPassword) {
-    showAdminFeedback('Enter your current and new password first.', 'warning');
+    showAdminFeedback('Fill in both password fields first.', 'warning');
     return;
   }
   const user = auth.currentUser;
@@ -466,7 +436,7 @@ async function updateAdminPassword() {
     await updatePassword(user, newPassword);
     document.getElementById('admin-current-password').value = '';
     document.getElementById('admin-new-password').value = '';
-    showAdminFeedback('Password updated successfully.', 'success');
+    showAdminFeedback('Admin password updated successfully.', 'success');
   } catch (error) {
     console.error(error);
     showAdminFeedback(error?.code === 'auth/wrong-password' ? 'Current password is incorrect.' : 'Password update failed.', 'error');
@@ -474,13 +444,304 @@ async function updateAdminPassword() {
 }
 
 function handleActionButtonClick(btn) {
-  const row = btn.closest('tr');
   const action = String(btn.dataset.action || btn.textContent || '').trim().toLowerCase();
-  const rowText = row ? row.textContent.replace(/\s+/g, ' ').trim() : '';
-  if (action === 'view') return showAdminFeedback(`Viewing record: ${rowText}`, 'info');
-  if (action === 'edit') return showAdminFeedback(`Editing item: ${rowText}`, 'info');
+  const uid = String(btn.dataset.userId || '').trim();
+  if (action === 'view-user') return openUserModal(uid);
+  if (action === 'toggle-role') return toggleUserRole(uid);
   showAdminFeedback(`Action clicked: ${action}`, 'info');
 }
+
+async function toggleUserRole(uid) {
+  const user = state.users.find((u) => String(u.uid) === String(uid));
+  if (!user) {
+    showAdminFeedback('User record not found.', 'warning');
+    return;
+  }
+  const nextRole = String(user.role || '').toLowerCase() === 'admin' ? '' : 'admin';
+  try {
+    await update(ref(database, `users/${uid}`), { role: nextRole || null, updatedAt: new Date().toISOString() });
+    showAdminFeedback(nextRole === 'admin' ? 'User promoted to admin.' : 'Admin access removed.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to update user role.', 'error');
+  }
+}
+
+window.toggleUserRole = toggleUserRole;
+
+function renderConversationList() {
+  const list = document.getElementById('admin-conversation-list');
+  const selected = state.selectedThreadId;
+  if (!list) return;
+  const conversations = state.conversations.slice().sort((a, b) => parseDate(b.lastMessageAt || b.updatedAt || b.createdAt) - parseDate(a.lastMessageAt || a.updatedAt || a.createdAt));
+  list.innerHTML = conversations.length ? conversations.map((c) => {
+    const threadId = c.threadId || c.id;
+    const name = c.userName || c.name || c.userEmail || 'Unnamed User';
+    const preview = c.lastMessage || 'No messages yet';
+    const active = String(threadId) === String(selected) ? 'active' : '';
+    return `<button class="conversation-item ${active}" data-thread-id="${esc(threadId)}" onclick="openConversation('${esc(threadId)}')">
+      <div class="conversation-item-name">${esc(name)}</div>
+      <div class="conversation-item-meta">${esc(c.userEmail || '')}</div>
+      <div class="conversation-item-preview">${esc(preview)}</div>
+    </button>`;
+  }).join('') : '<div class="empty-state">Getting data from Firebase...</div>';
+}
+
+function renderConversationThread() {
+  const box = document.getElementById('admin-message-thread');
+  if (!box) return;
+  if (!state.selectedThreadId) {
+    box.innerHTML = '<div class="empty-state">Select a user conversation to view messages.</div>';
+    return;
+  }
+  const msgs = state.selectedMessages || [];
+  if (!msgs.length) {
+    box.innerHTML = '<div class="empty-state">Data confirmed, but no messages yet.</div>';
+    return;
+  }
+  box.innerHTML = msgs.map((m) => {
+    const mine = String(m.senderType || '').toLowerCase() === 'admin';
+    return `<div class="message-bubble ${mine ? 'mine' : 'theirs'}">
+      <div>${esc(m.text || '')}</div>
+      <small>${esc(formatDateTime(m.createdAt))}</small>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function openConversation(threadId) {
+  state.selectedThreadId = threadId;
+  renderConversationList();
+  try {
+    state.selectedMessages = await loadSelectedMessages(threadId);
+    renderConversationThread();
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to get data for this conversation.', 'error');
+  }
+}
+
+async function sendAdminReply() {
+  const threadId = state.selectedThreadId;
+  const input = document.getElementById('admin-message-input');
+  if (!threadId || !input) {
+    showAdminFeedback('Select a conversation first.', 'warning');
+    return;
+  }
+  const text = String(input.value || '').trim();
+  if (!text) {
+    showAdminFeedback('Type a message before sending.', 'warning');
+    return;
+  }
+  const convo = state.conversations.find((c) => String(c.threadId || c.id) === String(threadId)) || {};
+  state.selectedUserId = convo.userUid || state.selectedUserId;
+  const msgRef = push(ref(database, `conversationMessages/${threadId}`));
+  const userUid = convo.userUid || state.selectedUserId || '';
+  try {
+    await set(msgRef, {
+      text,
+      senderType: 'admin',
+      senderUid: state.currentUser?.uid || 'admin',
+      senderEmail: state.currentUser?.email || 'admin',
+      createdAt: new Date().toISOString(),
+    });
+    await update(ref(database, `conversations/${threadId}`), {
+      threadId,
+      userUid,
+      userEmail: convo.userEmail || '',
+      userName: convo.userName || '',
+      adminEmail: state.currentUser?.email || '',
+      lastMessage: text,
+      lastMessageAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      unreadByUser: true,
+      unreadByAdmin: false,
+    });
+    input.value = '';
+    state.selectedMessages = await loadSelectedMessages(threadId);
+    renderConversationThread();
+    renderConversationList();
+    showAdminFeedback('Message sent to user.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to send message.', 'error');
+  }
+}
+
+function renderSelectedUserModal() {
+  const user = state.users.find((u) => String(u.uid) === String(state.selectedUserId));
+  const modal = document.getElementById('user-detail-modal');
+  if (!modal || !user) return;
+  modal.dataset.uid = user.uid;
+  const cv = getCvData(user.uid);
+  const role = String(user.role || '').toLowerCase();
+  const threadId = getThreadId(user.uid);
+  const cvSections = buildCvSections(cv);
+  const joined = formatDate(user.createdAt || user.registeredAt || user.lastLogin);
+  const sendBtn = document.getElementById('admin-send-user-message');
+  const roleBtn = document.getElementById('admin-role-toggle-btn');
+  const emailLink = document.getElementById('admin-user-email-link');
+  const cvDownloadBtn = document.getElementById('admin-download-cv-btn');
+  const cvBox = document.getElementById('admin-user-cv-body');
+  const info = {
+    'admin-user-name': user.name || 'Unnamed User',
+    'admin-user-email': user.email || '—',
+    'admin-user-phone': user.phone || '—',
+    'admin-user-state': user.state || '—',
+    'admin-user-joined': joined,
+    'admin-user-status': user.accountStatus || user.paymentStatus || user.status || 'pending',
+    'admin-user-role': role === 'admin' ? 'Admin' : 'User',
+  };
+  Object.entries(info).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  });
+  if (emailLink) emailLink.href = `mailto:${encodeURIComponent(user.email || '')}?subject=${encodeURIComponent('BARICRYSTAL Support')}`;
+  if (roleBtn) roleBtn.textContent = role === 'admin' ? 'Remove Admin' : 'Make Admin';
+  if (sendBtn) sendBtn.dataset.threadId = threadId;
+  if (cvDownloadBtn) cvDownloadBtn.dataset.userId = user.uid;
+  if (cvBox) {
+    if (!cv) {
+      cvBox.innerHTML = '<div class="empty-state">Unable to get data. No CV saved for this user.</div>';
+    } else {
+      const sectionsHtml = cvSections.length ? cvSections.map((section) => `
+        <div class="cv-section">
+          <h4>${esc(section.title)}</h4>
+          <ul>${section.items.map((item) => `<li>${esc(item || '—')}</li>`).join('')}</ul>
+        </div>`).join('') : '<div class="empty-state">Data confirmed, but CV sections are empty.</div>';
+      cvBox.innerHTML = `
+        <div class="cv-mini-grid">
+          <div><span>Full Name</span><strong>${esc(cv.fullName || user.name || '—')}</strong></div>
+          <div><span>Email</span><strong>${esc(cv.email || user.email || '—')}</strong></div>
+          <div><span>Phone</span><strong>${esc(cv.phone || user.phone || '—')}</strong></div>
+          <div><span>Passport Number</span><strong>${esc(cv.passportNumber || '—')}</strong></div>
+        </div>
+        ${sectionsHtml}
+      `;
+    }
+  }
+  modal.classList.add('show');
+  state.selectedMessages = [];
+  state.selectedThreadId = threadId;
+  openConversation(threadId);
+}
+
+window.openUserModal = function openUserModal(uid) {
+  state.selectedUserId = uid;
+  renderSelectedUserModal();
+};
+
+window.closeUserModal = function closeUserModal() {
+  const modal = document.getElementById('user-detail-modal');
+  if (modal) modal.classList.remove('show');
+  resetSelectedUserState();
+};
+
+window.downloadSelectedUserCv = async function downloadSelectedUserCv() {
+  const user = state.users.find((u) => String(u.uid) === String(state.selectedUserId));
+  if (!user) return showAdminFeedback('Select a user first.', 'warning');
+  const cv = getCvData(user.uid);
+  if (!cv) return showAdminFeedback('Unable to get data. No CV found for this user.', 'warning');
+  try {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('https://cdn.jsdelivr.net/npm/docx@8.5.0/+esm');
+    const sections = [];
+    const addPair = (label, value) => {
+      sections.push(new Paragraph({ children: [new TextRun({ text: `${label}: `, bold: true }), new TextRun(String(value || '—'))] }));
+    };
+    sections.push(new Paragraph({ text: cv.fullName || user.name || 'CV', heading: HeadingLevel.TITLE }));
+    sections.push(new Paragraph({ text: 'Personal Details', heading: HeadingLevel.HEADING_1 }));
+    addPair('Email', cv.email || user.email);
+    addPair('Phone', cv.phone || user.phone);
+    addPair('Address', cv.address);
+    addPair('Nationality', cv.nationality);
+    addPair('Passport Number', cv.passportNumber);
+    addPair('Passport Expiry', cv.passportExpiry);
+    const addListSection = (title, rows, mapper) => {
+      if (!rows || !rows.length) return;
+      sections.push(new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }));
+      rows.forEach((row) => {
+        sections.push(new Paragraph({ children: [new TextRun(`• ${mapper(row)}`)] }));
+      });
+    };
+    const edu = cv.sections?.education || cv.education || [];
+    const exp = cv.sections?.experience || cv.experience || [];
+    const langs = cv.sections?.languages || cv.languages || [];
+    const skills = cv.sections?.skills || cv.skills || [];
+    addListSection('Education', edu, (r) => `${r.school || r.institution || ''} ${r.qualification || ''} ${r.year || ''}`.trim());
+    addListSection('Experience', exp, (r) => `${r.company || ''} ${r.position || ''} ${r.duration || ''}`.trim());
+    addListSection('Languages', langs, (r) => `${r.language || ''} speak:${r.speak || ''} read:${r.read || ''} write:${r.write || ''}`.trim());
+    addListSection('Skills', skills, (r) => r.skill || '');
+    const doc = new Document({ sections: [{ properties: {}, children: sections }] });
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(cv.fullName || user.name || 'cv').replace(/[^a-z0-9]+/gi, '_').toLowerCase()}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showAdminFeedback('CV DOCX download started.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to export DOCX right now.', 'error');
+  }
+};
+
+window.sendAdminMessageFromModal = async function sendAdminMessageFromModal() {
+  const input = document.getElementById('admin-user-message') || document.getElementById('admin-message-input');
+  const threadId = state.selectedThreadId || getThreadId(state.selectedUserId);
+  if (!threadId) return showAdminFeedback('Select a user first.', 'warning');
+  const text = String(input?.value || '').trim();
+  if (!text) return showAdminFeedback('Type a message before sending.', 'warning');
+  const targetUid = state.selectedUserId || state.conversations.find((c) => String(c.threadId || c.id) === String(threadId))?.userUid || '';
+  try {
+    const msgRef = push(ref(database, `conversationMessages/${threadId}`));
+    await set(msgRef, {
+      text,
+      senderType: 'admin',
+      senderUid: state.currentUser?.uid || 'admin',
+      senderEmail: state.currentUser?.email || '',
+      createdAt: new Date().toISOString(),
+    });
+    const user = state.users.find((u) => String(u.uid) === String(targetUid || state.selectedUserId)) || {};
+    await update(ref(database, `conversations/${threadId}`), {
+      threadId,
+      userUid: targetUid || state.selectedUserId,
+      userEmail: user.email || '',
+      userName: user.name || '',
+      lastMessage: text,
+      lastMessageAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      unreadByUser: true,
+      unreadByAdmin: false,
+    });
+    if (input) input.value = '';
+    showAdminFeedback('Message sent.', 'success');
+    if (state.selectedThreadId === threadId) {
+      state.selectedMessages = await loadSelectedMessages(threadId);
+      renderConversationThread();
+      renderConversationList();
+      renderSelectedUserModal();
+    }
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to send message.', 'error');
+  }
+};
+
+window.openConversation = async function openConversation(threadId) {
+  state.selectedThreadId = threadId;
+  try {
+    state.selectedMessages = await loadSelectedMessages(threadId);
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to get data for this conversation.', 'error');
+    state.selectedMessages = [];
+  }
+  renderConversationList();
+  renderConversationThread();
+};
 
 window.togglePassword = function togglePassword(inputId, btn) {
   const input = document.getElementById(inputId);
@@ -510,8 +771,6 @@ window.filterStatus = function filterStatus(status, btn) {
 };
 
 window.saveAdminSettings = saveAdminSettings;
-window.updateUserRole = updateUserRole;
-window.toggleUserRole = toggleUserRole;
 window.updateAdminPassword = updateAdminPassword;
 window.logoutAdmin = async function logoutAdmin() {
   try {
@@ -528,6 +787,9 @@ function renderAll() {
   renderPaymentsTable();
   renderJobsTable();
   renderOverview();
+  renderConversationList();
+  if (state.selectedThreadId) renderConversationThread();
+  if (state.selectedUserId) renderSelectedUserModal();
   applyActionHandlers();
 }
 
@@ -537,11 +799,6 @@ function applyActionHandlers() {
     btn.dataset.bound = '1';
     btn.addEventListener('click', () => handleActionButtonClick(btn));
   });
-  document.querySelectorAll('.user-role-btn').forEach((btn) => {
-    if (btn.dataset.roleBound === '1') return;
-    btn.dataset.roleBound = '1';
-    btn.addEventListener('click', () => toggleUserRole(btn.dataset.uid, btn.dataset.nextRole));
-  });
 }
 
 function loadSettingsIntoForm() {
@@ -549,61 +806,43 @@ function loadSettingsIntoForm() {
   if (document.getElementById('admin-agency-name')) document.getElementById('admin-agency-name').value = s.agencyName || 'BARICRYSTAL INTERNATIONAL';
   if (document.getElementById('admin-contact-email')) document.getElementById('admin-contact-email').value = s.contactEmail || 'info@baricrystalinternational.com';
   if (document.getElementById('admin-whatsapp')) document.getElementById('admin-whatsapp').value = s.whatsapp || '';
-  if (document.getElementById('admin-role-value') && s.defaultRole) document.getElementById('admin-role-value').value = s.defaultRole;
 }
 
 function watchFirebase() {
   onValue(ref(database, 'users'), (snap) => {
     state.users = normalizeUsers(snap.val());
     renderAll();
-    showAdminFeedback('Data confirmed.', 'success');
-  }, (error) => {
-    console.error(error);
-    state.users = [];
-    renderAll();
-    showAdminFeedback('Unable to get data.', 'error');
   });
 
   onValue(ref(database, 'applications'), (snap) => {
     state.applications = toArray(snap.val(), 'id');
     renderAll();
-    showAdminFeedback('Data confirmed.', 'success');
-  }, (error) => {
-    console.error(error);
-    state.applications = [];
-    renderAll();
-    showAdminFeedback('Unable to get data.', 'error');
   });
 
   onValue(ref(database, 'payments'), (snap) => {
     state.payments = toArray(snap.val(), 'id');
     renderAll();
-    showAdminFeedback('Data confirmed.', 'success');
-  }, (error) => {
-    console.error(error);
-    state.payments = [];
-    renderAll();
-    showAdminFeedback('Unable to get data.', 'error');
   });
 
   onValue(ref(database, 'jobs'), (snap) => {
     state.jobs = toArray(snap.val(), 'id');
     renderAll();
-    showAdminFeedback('Data confirmed.', 'success');
-  }, (error) => {
-    console.error(error);
-    state.jobs = [];
-    renderAll();
-    showAdminFeedback('Unable to get data.', 'error');
   });
 
   onValue(ref(database, 'adminSettings'), (snap) => {
     state.settings = snap.val() || {};
     loadSettingsIntoForm();
     renderOverview();
-  }, (error) => {
-    console.error(error);
-    showAdminFeedback('Unable to get data.', 'error');
+  });
+
+  onValue(ref(database, 'cvs'), (snap) => {
+    state.cvs = snap.val() || {};
+    if (state.selectedUserId) renderSelectedUserModal();
+  });
+
+  onValue(ref(database, 'conversations'), (snap) => {
+    state.conversations = toArray(snap.val(), 'id').map((c) => ({ ...c, threadId: c.threadId || c.id }));
+    renderConversationList();
   });
 }
 

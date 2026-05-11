@@ -195,33 +195,35 @@ window.firebaseSignup = async function() {
       return;
     }
 
-    // 3. Send verification email
-    await sendEmailVerification(user, {
-      url: baseUrl + 'dashboard.html',
-      handleCodeInApp: true
-    });
+    // 3. Save CV-ready profile and only send verification for normal users
+    if (!isAdminEmail(email)) {
+      await sendEmailVerification(user, {
+        url: baseUrl + 'dashboard.html',
+        handleCodeInApp: true
+      });
 
-    console.log('✅ Verification email sent to:', email);
-    console.log('✅ Redirect URL:', baseUrl + 'dashboard.html');
+      console.log('✅ Verification email sent to:', email);
+      console.log('✅ Redirect URL:', baseUrl + 'dashboard.html');
 
-    // 4. Sign out after signup so the unverified session doesn't
-    // cause unexpected behaviour elsewhere in the app
-    await signOut(auth);
+      // 4. Sign out after signup so the unverified session doesn't
+      // cause unexpected behaviour elsewhere in the app
+      await signOut(auth);
 
-    // 5. Show success + resend option
-    const errorMsg = document.getElementById('error-msg');
-    errorMsg.innerHTML = `
-      ✓ Account created! A verification email was sent to <strong>${email}</strong>.<br>
-      Didn't get it? Check your spam folder or
-      <a href="#" onclick="resendVerificationEmail(); return false;"
-         style="color: #2D9E6B; font-weight: 600;">click here to resend</a>.
-    `;
-    errorMsg.style.background = 'rgba(45, 158, 107, 0.08)';
-    errorMsg.style.borderColor = 'rgba(45, 158, 107, 0.2)';
-    errorMsg.style.color = '#2D9E6B';
-    errorMsg.classList.add('show');
+      // 5. Show success + resend option
+      const errorMsg = document.getElementById('error-msg');
+      errorMsg.innerHTML = `
+        ✓ Account created! A verification email was sent to <strong>${email}</strong>.<br>
+        Didn't get it? Check your spam folder or
+        <a href="#" onclick="resendVerificationEmail(); return false;"
+           style="color: #2D9E6B; font-weight: 600;">click here to resend</a>.
+      `;
+      errorMsg.style.background = 'rgba(45, 158, 107, 0.08)';
+      errorMsg.style.borderColor = 'rgba(45, 158, 107, 0.2)';
+      errorMsg.style.color = '#2D9E6B';
+      errorMsg.classList.add('show');
 
-    btn.textContent = 'Check your email';
+      btn.textContent = 'Check your email';
+    }
 
   } catch (error) {
     console.error('❌ Signup error:', error.code, error.message);
