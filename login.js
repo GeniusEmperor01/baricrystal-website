@@ -1,9 +1,17 @@
 import { auth, database, baseUrl } from './firebase-config.js';
-import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { ref, get, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  fetchSignInMethodsForEmail,
+  EmailAuthProvider,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 const errorMsg = document.getElementById('error-msg');
 const submitBtn = document.getElementById('login-btn');
+const googleBtn = document.getElementById('google-login-btn');
 
 // ============================================================================
 // AUTH STATE
@@ -24,6 +32,89 @@ function showError(text) {
   errorMsg.style.borderColor = 'rgba(226,75,74,0.2)';
   errorMsg.style.color = 'var(--error)';
   errorMsg.classList.add('show');
+}
+
+async function syncUserToDatabase(user) {
+  const userRef = ref(database, 'users/' + user.uid);
+  const snapshot = await get(userRef);
+  const nameParts = (user.displayName || '').split(' ');
+  const defaultData = {
+    email: user.email || '',
+    displayName: user.displayName || '',
+    photoURL: user.photoURL || '',
+    emailVerified: !!user.emailVerified,
+    lastLogin: new Date().toISOString()
+  };
+
+  if (snapshot.exists()) {
+    const existing = snapshot.val();
+    const updateData = {
+      ...defaultData,
+      firstName: existing.firstName || nameParts[0] || '',
+      lastName: existing.lastName || nameParts.slice(1).join(' ') || '',
+      role: existing.role || 'candidate',
+      accountStatus: existing.accountStatus || 'active'
+    };
+    await update(userRef, updateData);
+    return updateData;
+  }
+
+  await set(userRef, {
+    firstName: nameParts[0] || '',
+    lastName: nameParts.slice(1).join(' ') || '',
+    email: user.email || '',
+    createdAt: new Date().toISOString(),
+    emailVerified: !!user.emailVerified,
+    lastLogin: new Date().toISOString(),
+    role: 'candidate',
+    accountStatus: 'active'
+  });
+
+  return { role: 'candidate' };
+}
+
+function getRedirectUrl(userData) {
+  return baseUrl + (userData?.role === 'admin' ? 'admin.html' : 'dashboard.html');
+}
+
+async function firebaseGoogleLogin() {
+  errorMsg.classList.remove('show');
+  submitBtn.disabled = true;
+  if (googleBtn) googleBtn.disabled = true;
+  submitBtn.textContent = 'Signing in...';
+
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    const userData = await syncUserToDatabase(user);
+    window.location.href = getRedirectUrl(userData);
+  } catch (error) {
+    console.error('❌ Google login error:', error.code, error.message);
+
+    if (error.code === 'auth/account-exists-with-different-credential') {
+      const email = error.customData?.email || error.email;
+      if (email) {
+        const methods = await fetchSignInMethodsForEmail(auth, email);
+        const firstMethod = methods.includes('password') ? 'Password' : methods.map(m => m.replace('.com', '')).join(', ');
+        showError(
+          `An account already exists with this email using ${firstMethod}. Please sign in with that method first and then link Google in your account settings.`
+        );
+      } else {
+        showError('An account already exists with this email. Please sign in using the original method.');
+      }
+    } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+      showError('Google sign-in was canceled. Please try again.');
+    } else {
+      showError(error.message || 'Unable to sign in with Google. Please try again.');
+    }
+  } finally {
+    submitBtn.disabled = false;
+    if (googleBtn) googleBtn.disabled = false;
+    submitBtn.textContent = 'Sign In';
+  }
 }
 
 // ============================================================================
@@ -101,4 +192,5 @@ async function firebaseLogin() {
 // INIT
 // ============================================================================
 document.getElementById('login-btn').addEventListener('click', firebaseLogin);
+if (googleBtn) googleBtn.addEventListener('click', firebaseGoogleLogin);
 document.addEventListener('keydown', (e) => { if (e.key === 'Enter') firebaseLogin(); });

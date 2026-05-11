@@ -126,6 +126,19 @@ body { display: flex; min-height: 100vh; }
 .submit-btn:hover { opacity: 0.85; }
 .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.google-btn {
+  width: 100%; padding: 14px;
+  background: #fff; color: #202124;
+  border: 1px solid rgba(0,0,0,0.08);
+  margin-top: 12px;
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.google-btn:hover { background: #f7f7f7; border-color: rgba(0,0,0,0.12); }
+.google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .signup-link {
   text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 24px;
 }
@@ -205,6 +218,7 @@ body { display: flex; min-height: 100vh; }
     <div class="error-msg" id="error-msg"></div>
 
     <button class="submit-btn" type="button" id="login-btn">Sign In</button>
+    <button class="google-btn" type="button" id="google-login-btn">Sign in with Google</button>
 
     <div class="signup-link">
       New here? <a href="signup.html">Create an account</a>
