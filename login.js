@@ -15,11 +15,14 @@ const googleBtn = document.getElementById('google-login-btn');
 
 // ============================================================================
 // AUTH STATE
-// FIX: Only redirect verified users — unverified sessions are ignored
+// FIX: Only redirect verified users — admins bypass verification
 // ============================================================================
 onAuthStateChanged(auth, (user) => {
   if (user && user.emailVerified) {
     window.location.href = baseUrl + 'dashboard.html';
+  }
+  if (user && user.email && String(user.email).trim().toLowerCase() === 'admin@baricrystal.com') {
+    window.location.href = baseUrl + 'admin.html';
   }
 });
 
@@ -142,8 +145,9 @@ async function firebaseLogin() {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // FIX: Block unverified users from logging in
-    if (!user.emailVerified) {
+    // FIX: Block unverified users from logging in (except admins)
+    const isAdmin = user.email && String(user.email).trim().toLowerCase() === 'admin@baricrystal.com';
+    if (!user.emailVerified && !isAdmin) {
       await auth.signOut();
       showError('Please verify your email before logging in. Check your inbox for the verification link.');
       submitBtn.disabled = false;
