@@ -167,6 +167,43 @@ body { display: flex; min-height: 100vh; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 .form-wrap { animation: fadeUp 0.5s ease both; }
 
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+.google-btn {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border);
+  background: var(--dark-2);
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: border-color 0.2s, color 0.2s, transform 0.2s;
+  margin-top: 12px;
+}
+.google-btn:hover { border-color: var(--gold); color: var(--gold); }
+.google-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+
 @media (max-width: 800px) {
   body { flex-direction: column; }
   .left-panel { width: 100%; padding: 32px 24px; border-right: none; border-bottom: 1px solid var(--border); }
@@ -228,6 +265,10 @@ body { display: flex; min-height: 100vh; }
     <div class="error-msg" id="error-msg"></div>
 
     <button class="submit-btn" type="button" id="login-btn">Sign In</button>
+
+    <div class="auth-divider">or</div>
+
+    <button class="google-btn" type="button" id="google-login-btn">Continue with Google</button>
 
     <div class="signup-link">
       New here? <a href="signup.html">Create an account</a>

@@ -584,66 +584,6 @@ window.addSkillRow = function() {
 };
 
 // Save CV to Firebase
-
-function collectTableRows(containerId, keys) {
-  const container = document.getElementById(containerId);
-  if (!container) return [];
-  return Array.from(container.querySelectorAll('.table-row')).map((row) => {
-    const inputs = row.querySelectorAll('input');
-    const obj = {};
-    keys.forEach((key, idx) => { obj[key] = inputs[idx]?.value?.trim() || ''; });
-    return obj;
-  }).filter((row) => Object.values(row).some(Boolean));
-}
-
-function renderRows(containerId, rows, builder) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = '';
-  if (!rows || !rows.length) {
-    container.innerHTML = builder();
-    return;
-  }
-  rows.forEach((row) => { container.innerHTML += builder(row); });
-}
-
-function educationRowHtml(row = {}) {
-  return `
-    <div class="table-row">
-      <div class="field"><input type="text" placeholder="School/Institution" value="${String(row.school || row.institution || '').replace(/"/g,'&quot;')}"/></div>
-      <div class="field"><input type="text" placeholder="Qualification" value="${String(row.qualification || '').replace(/"/g,'&quot;')}"/></div>
-      <div class="field"><input type="text" placeholder="Year" value="${String(row.year || '').replace(/"/g,'&quot;')}"/></div>
-    </div>
-  `;
-}
-function experienceRowHtml(row = {}) {
-  return `
-    <div class="table-row">
-      <div class="field"><input type="text" placeholder="Company Name" value="${String(row.company || '').replace(/"/g,'&quot;')}"/></div>
-      <div class="field"><input type="text" placeholder="Position" value="${String(row.position || '').replace(/"/g,'&quot;')}"/></div>
-      <div class="field"><input type="text" placeholder="Duration" value="${String(row.duration || '').replace(/"/g,'&quot;')}"/></div>
-      <div class="field"><input type="text" placeholder="Responsibilities" value="${String(row.responsibilities || '').replace(/"/g,'&quot;')}"/></div>
-    </div>
-  `;
-}
-function languageRowHtml(row = {}) {
-  return `
-    <div class="table-row">
-      <div class="field"><input type="text" placeholder="Language" value="${String(row.language || '').replace(/"/g,'&quot;')}"/></div>
-      <div class="field"><input type="text" placeholder="Speak (Yes/No)" value="${String(row.speak || '').replace(/"/g,'&quot;')}"/></div>
-      <div class="field"><input type="text" placeholder="Read (Yes/No)" value="${String(row.read || '').replace(/"/g,'&quot;')}"/></div>
-      <div class="field"><input type="text" placeholder="Write (Yes/No)" value="${String(row.write || '').replace(/"/g,'&quot;')}"/></div>
-    </div>
-  `;
-}
-function skillRowHtml(row = {}) {
-  return `
-    <div class="table-row full">
-      <div class="field"><input type="text" placeholder="Skill" value="${String(row.skill || '').replace(/"/g,'&quot;')}"/></div>
-    </div>
-  `;
-}
-
 window.saveCV = async function() {
   if (!document.getElementById('declaration-check').checked) {
     showError('Please accept the declaration to continue.');
@@ -672,10 +612,6 @@ window.saveCV = async function() {
       disability: document.getElementById('disability').value,
       smoking: document.getElementById('smoking').value
     },
-    education: collectTableRows('educationTable', ['school', 'qualification', 'year']),
-    experience: collectTableRows('experienceTable', ['company', 'position', 'duration', 'responsibilities']),
-    languages: collectTableRows('languageTable', ['language', 'speak', 'read', 'write']),
-    skills: collectTableRows('skillsTable', ['skill']),
     documents: {
       passport: document.getElementById('doc-passport').checked,
       passportData: document.getElementById('doc-passport-data').checked,
@@ -711,30 +647,20 @@ async function loadCV(uid) {
       document.getElementById('phone').value = data.phone || '';
       document.getElementById('email').value = data.email || '';
       document.getElementById('address').value = data.address || '';
-
+      
       if (data.nextOfKin) {
         document.getElementById('kinName').value = data.nextOfKin.name || '';
         document.getElementById('kinRelationship').value = data.nextOfKin.relationship || '';
         document.getElementById('kinPhone').value = data.nextOfKin.phone || '';
         document.getElementById('kinAddress').value = data.nextOfKin.address || '';
       }
-
+      
       if (data.health) {
         document.getElementById('medical').value = data.health.medical || '';
         document.getElementById('allergies').value = data.health.allergies || '';
         document.getElementById('disability').value = data.health.disability || '';
         document.getElementById('smoking').value = data.health.smoking || '';
       }
-
-      renderRows('educationTable', data.education || data.sections?.education || [], educationRowHtml);
-      renderRows('experienceTable', data.experience || data.sections?.experience || [], experienceRowHtml);
-      renderRows('languageTable', data.languages || data.sections?.languages || [], languageRowHtml);
-      renderRows('skillsTable', data.skills || data.sections?.skills || [], skillRowHtml);
-    } else {
-      renderRows('educationTable', [], educationRowHtml);
-      renderRows('experienceTable', [], experienceRowHtml);
-      renderRows('languageTable', [], languageRowHtml);
-      renderRows('skillsTable', [], skillRowHtml);
     }
   } catch (error) {
     console.error('Error loading CV:', error);

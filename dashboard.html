@@ -250,15 +250,6 @@ body {
   display: block;
 }
 
-.message-item { padding:12px 14px; border:1px solid var(--border-subtle); background:var(--dark-3); border-radius:14px; }
-.message-item.mine { border-color: rgba(200,155,60,0.28); background: rgba(200,155,60,0.08); margin-left:auto; }
-.message-item .meta { margin-top:6px; font-size:10px; color:var(--text-muted); }
-.inbox-thread { padding:12px 14px; border:1px solid var(--border-subtle); background:var(--dark-3); cursor:pointer; text-align:left; }
-.inbox-thread.active { border-color: var(--gold); }
-.inbox-thread .title { font-size:13px; font-weight:500; }
-.inbox-thread .sub { font-size:11px; color:var(--text-muted); margin-top:4px; }
-.empty-state { padding:24px; text-align:center; color:var(--text-muted); border:1px dashed var(--border-subtle); background:rgba(255,255,255,0.01); border-radius:12px; }
-
 /* PLAN SECTION */
 .plan-section {
   display: grid;
@@ -947,10 +938,6 @@ body {
       <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
       Payment
     </a>
-    <a class="nav-item" onclick="switchTab('messages', this)">
-      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-      Inbox
-    </a>
     <a class="nav-item" onclick="switchTab('settings', this)">
       <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6m-1.78 7.78l-4.24-4.24m-2.12-2.12l-4.24-4.24"/></svg></span>
       Settings
@@ -1075,63 +1062,72 @@ body {
 
     <!-- JOBS TAB -->
     <div class="tab-content" id="tab-jobs">
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px;">
-        <div>
-          <div class="section-title">Available Jobs</div>
-          <div class="section-sub">Live jobs are pulled from Firebase. Use the filters to narrow the list.</div>
+      <div class="jobs-grid">
+        <div class="job-card">
+          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="16.5" cy="7.5" r="1"/><circle cx="7.5" cy="16.5" r="1"/><circle cx="16.5" cy="16.5" r="1"/><circle cx="7.5" cy="7.5" r="1"/></svg></div>
+          <div class="job-name">Factory & Production</div>
+          <div class="job-desc">Manufacturing and packaging roles with training provided. No experience required.</div>
+          <div class="job-footer">
+            <span>Poland · 10 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <input id="dashboard-job-search" oninput="filterDashboardJobs(this.value)" placeholder="Search jobs..." style="background:var(--dark-3);border:1px solid var(--border-subtle);padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;min-width:220px;"/>
-          <select id="dashboard-job-category" onchange="filterDashboardJobs()" style="background:var(--dark-3);border:1px solid var(--border-subtle);padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-            <option value="all">All Categories</option>
-          </select>
-          <select id="dashboard-job-country" onchange="filterDashboardJobs()" style="background:var(--dark-3);border:1px solid var(--border-subtle);padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-            <option value="all">All Countries</option>
-          </select>
-          <select id="dashboard-job-status" onchange="filterDashboardJobs()" style="background:var(--dark-3);border:1px solid var(--border-subtle);padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-            <option value="all">All Status</option>
-            <option value="open">Open</option>
-            <option value="featured">Featured</option>
-            <option value="filled">Filled</option>
-            <option value="paused">Paused</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="jobs-grid" id="live-jobs-grid">
-        <div class="job-card job-card-full" style="grid-column:1/-1;">
-          <div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Getting data from Firebase...</div>
+        <div class="job-card">
+          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="9" width="20" height="12" rx="1"/><rect x="2" y="4" width="20" height="5" rx="1"/></svg></div>
+          <div class="job-name">Construction Engineer</div>
+          <div class="job-desc">Skilled and unskilled construction work in Germany. Competitive pay.</div>
+          <div class="job-footer">
+            <span>Germany · 8 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7-7-7 7M3 9h18v11c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V9z"/><circle cx="9" cy="15" r="1"/><circle cx="15" cy="15" r="1"/></svg></div>
+          <div class="job-name">Auto-mobile Engineer</div>
+          <div class="job-desc">Automotive assembly and maintenance in UAE. Technical skills valued.</div>
+          <div class="job-footer">
+            <span>UAE · 5 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2l3 3M13 2l-4 4M6 20h12M6 20l2-9h8l2 9"/></svg></div>
+          <div class="job-name">Electricians</div>
+          <div class="job-desc">Electrical installations and maintenance. Certifications valued.</div>
+          <div class="job-footer">
+            <span>UK · 6 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon">🏢</div>
+          <div class="job-name">Architecture</div>
+          <div class="job-desc">Design and planning roles on international projects. Professional level.</div>
+          <div class="job-footer">
+            <span>Netherlands · 12 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2c2 2 4 4 4 7 0 3-2 5-4 6-2-1-4-3-4-6 0-3 2-5 4-7z"/><path d="M8 20h8M10 22h4"/></svg></div>
+          <div class="job-name">Agricultural Work</div>
+          <div class="job-desc">Seasonal and long-term farming opportunities. Accommodation included.</div>
+          <div class="job-footer">
+            <span>Romania · 15 Slots</span>
+            <button class="apply-btn">Apply Now</button>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- APPLICATIONS TAB -->
-
     <div class="tab-content" id="tab-applications">
       <p style="color: var(--text-muted); font-size: 14px;">You haven't applied to any jobs yet. Browse available opportunities and submit your applications.</p>
-    </div>
-
-    <!-- MESSAGES TAB -->
-    <div class="tab-content" id="tab-messages">
-      <div id="inbox-status" class="empty-state" style="display:none;margin-bottom:16px;">Getting data...</div>
-      <div style="display:grid;grid-template-columns:360px 1fr;gap:16px;min-height:520px;">
-        <div class="settings-section" style="margin:0;">
-          <div class="settings-title">Inbox</div>
-          <div id="user-inbox-list" style="display:flex;flex-direction:column;gap:10px;">
-            <div class="empty-state">Getting data from Firebase...</div>
-          </div>
-        </div>
-        <div class="settings-section" style="margin:0;display:flex;flex-direction:column;min-height:520px;">
-          <div class="settings-title">Conversation</div>
-          <div id="user-message-thread" style="flex:1;display:flex;flex-direction:column;gap:12px;overflow:auto;padding-right:4px;">
-            <div class="empty-state">Select a thread to view messages.</div>
-          </div>
-          <div style="margin-top:16px;border-top:1px solid var(--border-subtle);padding-top:16px;display:grid;gap:10px;">
-            <textarea id="user-message-input" placeholder="Type a message to admin..." style="width:100%;min-height:92px;background:var(--dark-3);border:1px solid var(--border-subtle);padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;"></textarea>
-            <button class="btn-save" onclick="sendUserMessage()" style="width:max-content;">Send Message</button>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- SETTINGS TAB -->
