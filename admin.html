@@ -198,6 +198,54 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .candidate-name { font-size: 13px; font-weight: 500; }
 .candidate-email { font-size: 11px; color: var(--text-muted); }
 
+
+/* JOB MANAGER */
+.job-admin-layout { display: grid; grid-template-columns: 1.12fr .88fr; gap: 16px; margin-bottom: 16px; }
+.job-composer, .job-preview-card {
+  background: var(--dark-2); border: 1px solid var(--border); padding: 24px;
+}
+.job-panel-title { font-size: 12px; font-weight: 500; margin-bottom: 6px; }
+.job-panel-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.6; }
+.job-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.job-field { display: flex; flex-direction: column; gap: 7px; }
+.job-field.full { grid-column: 1 / -1; }
+.job-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+.job-input, .job-textarea, .job-select {
+  width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle);
+  padding: 11px 13px; color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 13px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.job-input:focus, .job-textarea:focus, .job-select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(200,155,60,0.08); }
+.job-textarea { min-height: 96px; resize: vertical; }
+.job-actions-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; grid-column: 1 / -1; }
+.job-save-btn {
+  padding: 11px 18px; background: var(--gold); color: var(--dark); border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+}
+.job-ghost-btn {
+  padding: 11px 18px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle);
+  cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.job-ghost-btn:hover { color: var(--gold); border-color: var(--gold); }
+.job-preview-card { display: flex; flex-direction: column; gap: 14px; }
+.job-preview-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.job-preview-badge {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--gold); padding: 5px 10px; border: 1px solid rgba(200,155,60,0.25); background: rgba(200,155,60,0.08);
+}
+.job-preview-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 500; line-height: 1.1; margin: 8px 0 6px; }
+.job-preview-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.job-chip {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 10px; border: 1px solid var(--border); color: var(--text-muted);
+}
+.job-preview-desc { color: var(--text-muted); line-height: 1.8; font-size: 13px; }
+.job-preview-list { display: grid; gap: 8px; }
+.job-preview-list span {
+  display: inline-flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text); line-height: 1.6;
+}
+.job-preview-list span::before { content: '•'; color: var(--gold); }
+.job-form-note { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+
 /* JOBS TABLE */
 .job-pill {
   display: inline-flex; align-items: center; gap: 6px;
@@ -241,6 +289,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   .main { margin-left: 0; }
 }
 
+
 .password-field { position: relative; }
 .password-field input { padding-right: 48px; }
 .toggle-password {
@@ -262,6 +311,39 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 }
 .toggle-password:hover { color: var(--gold); }
 
+.messages-layout { display:grid; grid-template-columns:320px 1fr; gap:16px; min-height:560px; }
+.conversation-item { width:100%; text-align:left; padding:14px; border:1px solid var(--border-subtle); background:var(--dark-3); color:var(--text); cursor:pointer; }
+.conversation-item.active { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(200,155,60,0.18) inset; }
+.conversation-item-name { font-size:13px; font-weight:500; }
+.conversation-item-meta, .conversation-item-preview { font-size:11px; color:var(--text-muted); margin-top:4px; }
+.message-bubble { max-width:82%; padding:12px 14px; border:1px solid var(--border-subtle); border-radius:14px; background:var(--dark-3); }
+.message-bubble.mine { margin-left:auto; border-color: rgba(200,155,60,0.28); background: rgba(200,155,60,0.08); }
+.message-bubble small { display:block; margin-top:6px; font-size:10px; color:var(--text-muted); }
+.empty-state { padding:24px; text-align:center; color:var(--text-muted); border:1px dashed var(--border-subtle); background:rgba(255,255,255,0.01); border-radius:12px; }
+.detail-modal { position:fixed; inset:0; background:rgba(0,0,0,0.68); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+.detail-modal.show { display:flex; }
+.detail-card { width:min(980px, 100%); max-height:90vh; overflow:auto; background:var(--dark-2); border:1px solid var(--border); border-radius:20px; padding:24px; position:relative; }
+.detail-close { position:absolute; top:16px; right:16px; background:transparent; border:none; color:var(--text-muted); font-size:28px; cursor:pointer; }
+.detail-grid { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+.detail-title { font-family:'Cormorant Garamond', serif; font-size:30px; }
+.detail-sub { color:var(--text-muted); margin-top:4px; }
+.detail-meta { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; margin:18px 0; }
+.detail-meta > div { background:var(--dark-3); border:1px solid var(--border-subtle); padding:12px; }
+.detail-meta span { display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-muted); margin-bottom:6px; }
+.detail-section { margin-top:18px; padding-top:18px; border-top:1px solid var(--border-subtle); }
+.detail-section h3 { font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
+.cv-mini-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.cv-mini-grid > div { background:var(--dark-3); border:1px solid var(--border-subtle); padding:12px; }
+.cv-mini-grid span { display:block; font-size:10px; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px; }
+.cv-section { background:var(--dark-3); border:1px solid var(--border-subtle); padding:12px; }
+.cv-section h4 { font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold); margin-bottom:8px; }
+.cv-section ul { margin:0; padding-left:18px; color:var(--text); }
+
+@media (max-width: 900px) {
+  .messages-layout { grid-template-columns: 1fr; }
+  .detail-meta { grid-template-columns: repeat(2, 1fr); }
+  .cv-mini-grid { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 </head>
 <body>
@@ -295,6 +377,9 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="nav-item" onclick="showTab('users', this)">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></span> Users
     </div>
+    <div class="nav-item" onclick="showTab('messages', this)">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span> Messages
+    </div>
     <div class="nav-item" onclick="showTab('settings', this)">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6m-1.78 7.78l-4.24-4.24m-2.12-2.12l-4.24-4.24"/></svg></span> Settings
     </div>
@@ -320,7 +405,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="topbar-title" id="page-title">Overview</div>
     <div class="topbar-right">
       <div class="topbar-date" id="topbar-date"></div>
-      <a href="index.html" class="logout-btn">Logout</a>
+      <a href="#" class="logout-btn" onclick="logoutAdmin(); return false;">Logout</a>
     </div>
   </div>
 
@@ -332,22 +417,22 @@ tr:hover td { background: rgba(255,255,255,0.02); }
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-card-label">Total Applications</div>
-          <div class="stat-card-num gold">47</div>
+          <div class="stat-card-num gold">0</div>
           <div class="stat-card-change up">↑ 8 this week</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Approved</div>
-          <div class="stat-card-num green">18</div>
+          <div class="stat-card-num green">0</div>
           <div class="stat-card-change up">↑ 3 this week</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Pending Review</div>
-          <div class="stat-card-num amber">21</div>
+          <div class="stat-card-num amber">0</div>
           <div class="stat-card-change">Awaiting action</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Total Revenue</div>
-          <div class="stat-card-num gold">₦1.4M</div>
+          <div class="stat-card-num gold">₦0</div>
           <div class="stat-card-change up">↑ ₦225k this week</div>
         </div>
       </div>
@@ -367,27 +452,11 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <div class="recent-activity">
           <div class="activity-title">Recent Activity</div>
           <div class="activity-item">
-            <div class="activity-dot" style="background:var(--success)"></div>
-            <div><div class="activity-text"><strong>Adebayo Okon</strong> was approved for Factory Work</div><div class="activity-time">2 hours ago</div></div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-dot" style="background:var(--gold)"></div>
-            <div><div class="activity-text"><strong>Chioma Nwosu</strong> completed payment — Priority Plan</div><div class="activity-time">4 hours ago</div></div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-dot" style="background:var(--info)"></div>
-            <div><div class="activity-text"><strong>Emeka Ibe</strong> submitted a new application</div><div class="activity-time">6 hours ago</div></div>
-          </div>
-          <div class="activity-item">
             <div class="activity-dot" style="background:var(--warning)"></div>
-            <div><div class="activity-text"><strong>Fatima Kano</strong> application pending document upload</div><div class="activity-time">Yesterday</div></div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-dot" style="background:var(--success)"></div>
-            <div><div class="activity-text"><strong>Segun Adeyemi</strong> departed for employment</div><div class="activity-time">Yesterday</div></div>
+            <div><div class="activity-text">Waiting for Firebase records.</div><div class="activity-time">This panel updates automatically when data arrives.</div></div>
           </div>
         </div>
-      </div>
+</div>
 
       <!-- Recent applications mini table -->
       <div class="table-wrap">
@@ -400,11 +469,8 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <th>Candidate</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Date</th>
           </tr></thead>
           <tbody id="admin-recent-applications-body">
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>Factory & Production</td><td>6 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td></tr>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>Auto-mobile Engineer</td><td>3 Month</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td></tr>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>Construction Engineer</td><td>6 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>Agriculture</td><td>3 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 19</td></tr>
-          </tbody>
+<tr><td colspan="5"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+</tbody>
         </table>
       </div>
     </div>
@@ -426,13 +492,8 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <th>Candidate</th><th>Phone</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Applied</th><th>Action</th>
           </tr></thead>
           <tbody id="admin-applications-body">
-            <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Factory & Production</td><td>6 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="processing"><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Auto-mobile Engineer</td><td>3 Month</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Construction Engineer</td><td>6 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>+234 804 567 8901</td><td>Agriculture</td><td>3 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 19</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">SA</div><div><div class="candidate-name">Segun Adeyemi</div><div class="candidate-email">segun@email.com</div></div></div></td><td>+234 805 678 9012</td><td>Electricians</td><td>12 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 18</td><td><button class="action-btn">View</button></td></tr>
-            <tr data-status="rejected"><td><div class="candidate-info"><div class="candidate-avatar">BM</div><div><div class="candidate-name">Blessing Moses</div><div class="candidate-email">blessing@email.com</div></div></div></td><td>+234 806 789 0123</td><td>Factory & Production</td><td>3 Month</td><td><span class="badge badge-rejected">Rejected</span></td><td>Mar 17</td><td><button class="action-btn">View</button></td></tr>
-          </tbody>
+<tr><td colspan="7"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+</tbody>
         </table>
       </div>
     </div>
@@ -440,7 +501,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <!-- PAYMENTS TAB -->
     <div class="tab-panel" id="tab-payments">
       <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stat-card"><div class="stat-card-label">Total Collected</div><div class="stat-card-num gold">₦1.4M</div><div class="stat-card-change">47 transactions</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Collected</div><div class="stat-card-num gold">₦0</div><div class="stat-card-change">47 transactions</div></div>
         <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-num green">₦450,000</div><div class="stat-card-change up">↑ 18 payments</div></div>
         <div class="stat-card"><div class="stat-card-label">Pending Payments</div><div class="stat-card-num amber">8</div><div class="stat-card-change">Awaiting confirmation</div></div>
       </div>
@@ -449,12 +510,8 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <table>
           <thead><tr><th>Candidate</th><th>Plan</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
           <tbody id="admin-payments-body">
-            <tr><td><div class="candidate-name">Adebayo Okon</div></td><td>6 Month</td><td>₦150,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 22</td></tr>
-            <tr><td><div class="candidate-name">Chioma Nwosu</div></td><td>3 Month</td><td>₦200,000</td><td>Flutterwave</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 21</td></tr>
-            <tr><td><div class="candidate-name">Emeka Ibe</div></td><td>6 Month</td><td>₦150,000</td><td>Bank Transfer</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
-            <tr><td><div class="candidate-name">Fatima Kano</div></td><td>3 Month</td><td>₦200,000</td><td>Paga</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 19</td></tr>
-            <tr><td><div class="candidate-name">Segun Adeyemi</div></td><td>12 Month</td><td>₦100,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 18</td></tr>
-          </tbody>
+<tr><td colspan="6"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+</tbody>
         </table>
       </div>
     </div>
@@ -462,27 +519,137 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <!-- JOBS TAB -->
     <div class="tab-panel" id="tab-jobs">
       <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stat-card"><div class="stat-card-label">Total Slots</div><div class="stat-card-num gold">50</div></div>
-        <div class="stat-card"><div class="stat-card-label">Open</div><div class="stat-card-num green">32</div></div>
-        <div class="stat-card"><div class="stat-card-label">Filled</div><div class="stat-card-num amber">18</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Slots</div><div class="stat-card-num gold" id="jobs-total-slots">Getting data</div><div class="stat-card-change">Live Firebase jobs</div></div>
+        <div class="stat-card"><div class="stat-card-label">Open</div><div class="stat-card-num green" id="jobs-open-count">Getting data</div><div class="stat-card-change">Confirmed openings</div></div>
+        <div class="stat-card"><div class="stat-card-label">Filled</div><div class="stat-card-num amber" id="jobs-filled-count">Getting data</div><div class="stat-card-change">Confirmed closed roles</div></div>
       </div>
-      <div class="table-wrap">
-        <div class="table-header"><div class="table-title">Job Listings</div></div>
+
+      <div class="job-admin-layout">
+        <div class="job-composer">
+          <div class="job-panel-title">Post a New Job</div>
+          <div class="job-panel-sub">Create the live template here. The job will save straight into Firebase and appear on the dashboard for users with access.</div>
+          <form id="job-form" class="job-form-grid">
+            <input type="hidden" id="job-id" />
+            <div class="job-field full">
+              <div class="job-label">Job Title</div>
+              <input class="job-input" id="job-title" placeholder="Factory Supervisor" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Category</div>
+              <input class="job-input" id="job-category-input" placeholder="Factory & Production" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Country</div>
+              <input class="job-input" id="job-country-input" placeholder="Poland" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Slots</div>
+              <input class="job-input" id="job-slots" type="number" min="1" placeholder="10" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Salary / Pay</div>
+              <input class="job-input" id="job-salary" placeholder="₦250,000 / month" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Status</div>
+              <select class="job-select" id="job-status">
+                <option value="open">Open</option>
+                <option value="featured">Featured</option>
+                <option value="filled">Filled</option>
+                <option value="paused">Paused</option>
+              </select>
+            </div>
+            <div class="job-field">
+              <div class="job-label">Icon / Emoji</div>
+              <input class="job-input" id="job-icon" placeholder="🏭" autocomplete="off" />
+            </div>
+            <div class="job-field full">
+              <div class="job-label">Short Description</div>
+              <textarea class="job-textarea" id="job-description" placeholder="Write a clear short description of the role..."></textarea>
+            </div>
+            <div class="job-field full">
+              <div class="job-label">Highlights</div>
+              <input class="job-input" id="job-highlights" placeholder="Training provided, No experience required, Visa support" autocomplete="off" />
+            </div>
+            <div class="job-field full">
+              <div class="job-label">Requirements</div>
+              <input class="job-input" id="job-requirements" placeholder="Passport, CV, Basic English" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Deadline</div>
+              <input class="job-input" id="job-deadline" type="date" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Featured Card</div>
+              <select class="job-select" id="job-featured">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="job-actions-row">
+              <button type="submit" class="job-save-btn">Save Job</button>
+              <button type="button" class="job-ghost-btn" onclick="resetJobForm()">Clear</button>
+              <div class="job-form-note">Tip: use the preview card to see exactly how this job will look to users.</div>
+            </div>
+          </form>
+        </div>
+
+        <div class="job-preview-card">
+          <div class="job-panel-title">Job Template Preview</div>
+          <div class="job-panel-sub">This is the live template users will see on the dashboard.</div>
+          <div class="job-preview-head">
+            <div>
+              <div class="job-preview-badge" id="job-preview-status">Getting data</div>
+              <div class="job-preview-title" id="job-preview-title">Factory Supervisor</div>
+              <div class="candidate-email" id="job-preview-location">Poland · 10 Slots</div>
+            </div>
+            <div style="font-size:34px;line-height:1;" id="job-preview-icon">🏭</div>
+          </div>
+          <div class="job-preview-desc" id="job-preview-desc">Write a clear short description of the role so the listing looks polished and trustworthy.</div>
+          <div class="job-preview-meta" id="job-preview-chips"></div>
+          <div>
+            <div class="job-panel-title" style="margin-bottom:10px;">Requirements</div>
+            <div class="job-preview-list" id="job-preview-reqs">
+              <span>Passport</span>
+              <span>CV</span>
+              <span>Basic English</span>
+            </div>
+          </div>
+          <div class="job-form-note">Template updates instantly while you type.</div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:16px;">
+        <div class="table-header">
+          <div class="table-title">Job Listings <span id="admin-job-count" style="color:var(--text-muted);font-weight:400;">(Getting data)</span></div>
+          <div class="table-actions">
+            <input class="search-input" id="job-search" placeholder="Search jobs..." oninput="filterJobs(this.value)"/>
+            <select class="filter-btn" id="job-status-filter" onchange="setJobStatusFilter(this.value)">
+              <option value="all">All Status</option>
+              <option value="open">Open</option>
+              <option value="featured">Featured</option>
+              <option value="filled">Filled</option>
+              <option value="paused">Paused</option>
+            </select>
+            <select class="filter-btn" id="job-category-filter" onchange="setJobCategoryFilter(this.value)">
+              <option value="all">All Categories</option>
+            </select>
+            <select class="filter-btn" id="job-country-filter" onchange="setJobCountryFilter(this.value)">
+              <option value="all">All Countries</option>
+            </select>
+          </div>
+        </div>
         <table>
           <thead><tr><th>#</th><th>Job Title</th><th>Category</th><th>Country</th><th>Slots</th><th>Status</th><th>Action</th></tr></thead>
           <tbody id="admin-jobs-body">
-            <tr><td style="color:var(--text-muted)">001</td><td>Production Line Worker</td><td>Factory</td><td>Poland</td><td>10</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
-            <tr><td style="color:var(--text-muted)">002</td><td>General Construction Labour</td><td>Construction</td><td>Germany</td><td>8</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
-            <tr><td style="color:var(--text-muted)">003</td><td>Hotel Housekeeper</td><td>Hospitality</td><td>UAE</td><td>5</td><td><div class="job-pill"><div class="job-dot filled"></div>Filled</div></td><td><button class="action-btn">Edit</button></td></tr>
-            <tr><td style="color:var(--text-muted)">004</td><td>Farm Harvest Worker</td><td>Agriculture</td><td>Netherlands</td><td>12</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
-            <tr><td style="color:var(--text-muted)">005</td><td>Office Cleaning Staff</td><td>Cleaning</td><td>UK</td><td>6</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
-            <tr><td style="color:var(--text-muted)">006</td><td>Packaging Operator</td><td>Factory</td><td>Romania</td><td>9</td><td><div class="job-pill"><div class="job-dot filled"></div>Filled</div></td><td><button class="action-btn">Edit</button></td></tr>
-          </tbody>
+<tr><td colspan="7"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Getting data from Firebase...</div></td></tr>
+</tbody>
         </table>
       </div>
     </div>
 
     <!-- USERS TAB -->
+
     <div class="tab-panel" id="tab-users">
       <div class="table-wrap">
         <div class="table-header">
@@ -492,12 +659,31 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <table>
           <thead><tr><th>User</th><th>Phone</th><th>State</th><th>Registered</th><th>Application</th><th>Action</th></tr></thead>
           <tbody id="admin-users-body">
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Lagos</td><td>Mar 15</td><td><span class="badge badge-approved">Approved</span></td><td><button class="action-btn">View</button></td></tr>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Anambra</td><td>Mar 16</td><td><span class="badge badge-processing">Processing</span></td><td><button class="action-btn">View</button></td></tr>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Enugu</td><td>Mar 17</td><td><span class="badge badge-pending">Pending</span></td><td><button class="action-btn">View</button></td></tr>
-            <tr><td><div class="candidate-info"><div class="candidate-avatar">FK</div><div><div class="candidate-name">Fatima Kano</div><div class="candidate-email">fatima@email.com</div></div></div></td><td>+234 804 567 8901</td><td>Kano</td><td>Mar 18</td><td><span class="badge badge-pending">Pending</span></td><td><button class="action-btn">View</button></td></tr>
-          </tbody>
+<tr><td colspan="6"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+</tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- MESSAGES TAB -->
+    <div class="tab-panel" id="tab-messages">
+      <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;min-height:560px;">
+        <div class="table-wrap" style="min-height:560px;">
+          <div class="table-header"><div class="table-title">Inbox</div></div>
+          <div id="admin-conversation-list" style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+            <div class="empty-state">Getting data from Firebase...</div>
+          </div>
+        </div>
+        <div class="table-wrap" style="display:flex;flex-direction:column;min-height:560px;">
+          <div class="table-header"><div class="table-title">Conversation</div></div>
+          <div id="admin-message-thread" style="flex:1;padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px;">
+            <div class="empty-state">Select a user conversation to view messages.</div>
+          </div>
+          <div style="padding:16px;border-top:1px solid var(--border);display:grid;gap:10px;">
+            <textarea id="admin-message-input" placeholder="Write a reply..." style="width:100%;min-height:92px;background:var(--dark-3);border:1px solid var(--border-subtle);padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;"></textarea>
+            <button class="filter-btn" style="width:max-content;" onclick="sendAdminMessageFromModal()">Send Message</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -527,147 +713,47 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   </div>
 </div>
 
-<script type="module">
-// Import Firebase admin module
-import('./admin.js').catch(err => {
-  console.error('Failed to load admin module:', err);
-  document.getElementById('admin-feedback')?.textContent = 'Failed to initialize admin dashboard.';
-});
-</script>
 
-<script>
-// Utility functions for HTML templates
-window.togglePassword = function(inputId, btn) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const isPassword = input.type === 'password';
-  input.type = isPassword ? 'text' : 'password';
-  if (btn) {
-    btn.textContent = isPassword ? '🙈' : '👁';
-    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
-  }
-};
+<div class="detail-modal" id="user-detail-modal">
+  <div class="detail-card">
+    <button class="detail-close" onclick="closeUserModal()">×</button>
+    <div class="detail-grid">
+      <div>
+        <div class="detail-title" id="admin-user-name">User</div>
+        <div class="detail-sub" id="admin-user-email">—</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;">
+        <a id="admin-user-email-link" class="action-btn" href="#">Email User</a>
+        <button class="action-btn" id="admin-role-toggle-btn" onclick="toggleUserRole(document.getElementById('user-detail-modal').dataset.uid)">Make Admin</button>
+        <button class="action-btn" id="admin-download-cv-btn" onclick="downloadSelectedUserCv()">Download CV (.docx)</button>
+      </div>
+    </div>
+    <div class="detail-meta">
+      <div><span>Phone</span><strong id="admin-user-phone">—</strong></div>
+      <div><span>State</span><strong id="admin-user-state">—</strong></div>
+      <div><span>Joined</span><strong id="admin-user-joined">—</strong></div>
+      <div><span>Status</span><strong id="admin-user-status">—</strong></div>
+      <div><span>Role</span><strong id="admin-user-role">—</strong></div>
+    </div>
+    <div class="detail-section">
+      <h3>CV Summary</h3>
+      <div id="admin-user-cv-body" style="display:grid;gap:12px;">
+        <div class="empty-state">Getting data...</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h3>Send Message</h3>
+      <textarea id="admin-user-message" placeholder="Type a message..." style="width:100%;min-height:90px;background:var(--dark-3);border:1px solid var(--border-subtle);padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;"></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <button class="filter-btn" id="admin-send-user-message" onclick="sendAdminMessageFromModal()">Send Message</button>
+        <button class="filter-btn" onclick="closeUserModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-const titles = { overview:'Overview', applications:'Applications', payments:'Payments', jobs:'Job Listings', users:'Users', settings:'Settings' };
+<script type="module" src="admin.js"></script>
 
-function showAdminFeedback(message, tone = 'info') {
-  const box = document.getElementById('admin-feedback');
-  if (!box) return;
-  const colors = {
-    success: ['rgba(45,158,107,0.12)', 'rgba(45,158,107,0.35)', '#2D9E6B'],
-    warning: ['rgba(232,168,56,0.12)', 'rgba(232,168,56,0.35)', '#E8A838'],
-    error: ['rgba(226,75,74,0.10)', 'rgba(226,75,74,0.30)', '#E24B4A'],
-    info: ['rgba(58,138,196,0.10)', 'rgba(58,138,196,0.30)', 'var(--text-muted)'],
-  };
-  const [bg, border, color] = colors[tone] || colors.info;
-  box.style.display = 'block';
-  box.style.background = bg;
-  box.style.borderColor = border;
-  box.style.color = color;
-  box.textContent = message;
-}
-
-function showTab(tabId, navEl) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const panel = document.getElementById('tab-' + tabId);
-  if (panel) panel.classList.add('active');
-  if (navEl) navEl.classList.add('active');
-  const title = document.getElementById('page-title');
-  if (title) title.textContent = titles[tabId] || tabId;
-}
-
-function safeParseArray(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-function initials(name) {
-  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] || 'U') + (parts[1]?.[0] || '')).toUpperCase();
-}
-
-function formatDate(value) {
-  if (!value) return '—';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-function emptyRow(cols, message) {
-  return `<tr><td colspan="${cols}"><div style="padding:28px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">${escapeHtml(message)}</div></td></tr>`;
-}
-
-function badgeForStatus(status) {
-  const s = String(status || 'pending').toLowerCase();
-  if (['approved', 'paid', 'active', 'completed'].includes(s)) return 'badge-approved';
-  if (['processing', 'in review', 'review', 'pending review'].includes(s)) return 'badge-processing';
-  if (['rejected', 'declined'].includes(s)) return 'badge-rejected';
-  return 'badge-pending';
-}
-
-function statusLabel(status) {
-  const s = String(status || 'pending').toLowerCase();
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function renderApplicationsTable() {
-  // Handled by admin.js with Firebase data
-}
-
-function renderPaymentsTable() {
-  // Handled by admin.js with Firebase data
-}
-
-function renderJobsTable() {
-  // Handled by admin.js with Firebase data
-}
-
-function renderUsersTable() {
-  // Handled by admin.js with Firebase data
-}
-
-function renderOverview() {
-  // Handled by admin.js with Firebase data
-}
-
-function filterTable(val) {
-  // Handled by admin.js
-}
-
-function filterStatus(status, btn) {
-  // Handled by admin.js
-}
-
-function saveAdminSettings() {
-  // Handled by admin.js
-}
-
-function updateAdminPassword() {
-  // Handled by admin.js
-}
-
-function handleActionButtonClick(btn) {
-  // Handled by admin.js
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  // admin.js module handles initialization and data fetching from Firebase
-  console.log('Admin dashboard loading with Firebase data...');
-});
-</script>
-</script>
-
-</script>
 
 <!-- FLOATING HELP PILL -->
 <style>
