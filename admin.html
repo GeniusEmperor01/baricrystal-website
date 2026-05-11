@@ -198,6 +198,54 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .candidate-name { font-size: 13px; font-weight: 500; }
 .candidate-email { font-size: 11px; color: var(--text-muted); }
 
+
+/* JOB MANAGER */
+.job-admin-layout { display: grid; grid-template-columns: 1.12fr .88fr; gap: 16px; margin-bottom: 16px; }
+.job-composer, .job-preview-card {
+  background: var(--dark-2); border: 1px solid var(--border); padding: 24px;
+}
+.job-panel-title { font-size: 12px; font-weight: 500; margin-bottom: 6px; }
+.job-panel-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.6; }
+.job-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.job-field { display: flex; flex-direction: column; gap: 7px; }
+.job-field.full { grid-column: 1 / -1; }
+.job-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+.job-input, .job-textarea, .job-select {
+  width: 100%; background: var(--dark-3); border: 1px solid var(--border-subtle);
+  padding: 11px 13px; color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 13px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.job-input:focus, .job-textarea:focus, .job-select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(200,155,60,0.08); }
+.job-textarea { min-height: 96px; resize: vertical; }
+.job-actions-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; grid-column: 1 / -1; }
+.job-save-btn {
+  padding: 11px 18px; background: var(--gold); color: var(--dark); border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+}
+.job-ghost-btn {
+  padding: 11px 18px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle);
+  cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.job-ghost-btn:hover { color: var(--gold); border-color: var(--gold); }
+.job-preview-card { display: flex; flex-direction: column; gap: 14px; }
+.job-preview-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.job-preview-badge {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--gold); padding: 5px 10px; border: 1px solid rgba(200,155,60,0.25); background: rgba(200,155,60,0.08);
+}
+.job-preview-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 500; line-height: 1.1; margin: 8px 0 6px; }
+.job-preview-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.job-chip {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 10px; border: 1px solid var(--border); color: var(--text-muted);
+}
+.job-preview-desc { color: var(--text-muted); line-height: 1.8; font-size: 13px; }
+.job-preview-list { display: grid; gap: 8px; }
+.job-preview-list span {
+  display: inline-flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text); line-height: 1.6;
+}
+.job-preview-list span::before { content: '•'; color: var(--gold); }
+.job-form-note { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+
 /* JOBS TABLE */
 .job-pill {
   display: inline-flex; align-items: center; gap: 6px;
@@ -471,22 +519,137 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <!-- JOBS TAB -->
     <div class="tab-panel" id="tab-jobs">
       <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stat-card"><div class="stat-card-label">Total Slots</div><div class="stat-card-num gold">50</div></div>
-        <div class="stat-card"><div class="stat-card-label">Open</div><div class="stat-card-num green">32</div></div>
-        <div class="stat-card"><div class="stat-card-label">Filled</div><div class="stat-card-num amber">18</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Slots</div><div class="stat-card-num gold" id="jobs-total-slots">Getting data</div><div class="stat-card-change">Live Firebase jobs</div></div>
+        <div class="stat-card"><div class="stat-card-label">Open</div><div class="stat-card-num green" id="jobs-open-count">Getting data</div><div class="stat-card-change">Confirmed openings</div></div>
+        <div class="stat-card"><div class="stat-card-label">Filled</div><div class="stat-card-num amber" id="jobs-filled-count">Getting data</div><div class="stat-card-change">Confirmed closed roles</div></div>
       </div>
-      <div class="table-wrap">
-        <div class="table-header"><div class="table-title">Job Listings</div></div>
+
+      <div class="job-admin-layout">
+        <div class="job-composer">
+          <div class="job-panel-title">Post a New Job</div>
+          <div class="job-panel-sub">Create the live template here. The job will save straight into Firebase and appear on the dashboard for users with access.</div>
+          <form id="job-form" class="job-form-grid">
+            <input type="hidden" id="job-id" />
+            <div class="job-field full">
+              <div class="job-label">Job Title</div>
+              <input class="job-input" id="job-title" placeholder="Factory Supervisor" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Category</div>
+              <input class="job-input" id="job-category-input" placeholder="Factory & Production" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Country</div>
+              <input class="job-input" id="job-country-input" placeholder="Poland" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Slots</div>
+              <input class="job-input" id="job-slots" type="number" min="1" placeholder="10" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Salary / Pay</div>
+              <input class="job-input" id="job-salary" placeholder="₦250,000 / month" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Status</div>
+              <select class="job-select" id="job-status">
+                <option value="open">Open</option>
+                <option value="featured">Featured</option>
+                <option value="filled">Filled</option>
+                <option value="paused">Paused</option>
+              </select>
+            </div>
+            <div class="job-field">
+              <div class="job-label">Icon / Emoji</div>
+              <input class="job-input" id="job-icon" placeholder="🏭" autocomplete="off" />
+            </div>
+            <div class="job-field full">
+              <div class="job-label">Short Description</div>
+              <textarea class="job-textarea" id="job-description" placeholder="Write a clear short description of the role..."></textarea>
+            </div>
+            <div class="job-field full">
+              <div class="job-label">Highlights</div>
+              <input class="job-input" id="job-highlights" placeholder="Training provided, No experience required, Visa support" autocomplete="off" />
+            </div>
+            <div class="job-field full">
+              <div class="job-label">Requirements</div>
+              <input class="job-input" id="job-requirements" placeholder="Passport, CV, Basic English" autocomplete="off" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Deadline</div>
+              <input class="job-input" id="job-deadline" type="date" />
+            </div>
+            <div class="job-field">
+              <div class="job-label">Featured Card</div>
+              <select class="job-select" id="job-featured">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="job-actions-row">
+              <button type="submit" class="job-save-btn">Save Job</button>
+              <button type="button" class="job-ghost-btn" onclick="resetJobForm()">Clear</button>
+              <div class="job-form-note">Tip: use the preview card to see exactly how this job will look to users.</div>
+            </div>
+          </form>
+        </div>
+
+        <div class="job-preview-card">
+          <div class="job-panel-title">Job Template Preview</div>
+          <div class="job-panel-sub">This is the live template users will see on the dashboard.</div>
+          <div class="job-preview-head">
+            <div>
+              <div class="job-preview-badge" id="job-preview-status">Getting data</div>
+              <div class="job-preview-title" id="job-preview-title">Factory Supervisor</div>
+              <div class="candidate-email" id="job-preview-location">Poland · 10 Slots</div>
+            </div>
+            <div style="font-size:34px;line-height:1;" id="job-preview-icon">🏭</div>
+          </div>
+          <div class="job-preview-desc" id="job-preview-desc">Write a clear short description of the role so the listing looks polished and trustworthy.</div>
+          <div class="job-preview-meta" id="job-preview-chips"></div>
+          <div>
+            <div class="job-panel-title" style="margin-bottom:10px;">Requirements</div>
+            <div class="job-preview-list" id="job-preview-reqs">
+              <span>Passport</span>
+              <span>CV</span>
+              <span>Basic English</span>
+            </div>
+          </div>
+          <div class="job-form-note">Template updates instantly while you type.</div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:16px;">
+        <div class="table-header">
+          <div class="table-title">Job Listings <span id="admin-job-count" style="color:var(--text-muted);font-weight:400;">(Getting data)</span></div>
+          <div class="table-actions">
+            <input class="search-input" id="job-search" placeholder="Search jobs..." oninput="filterJobs(this.value)"/>
+            <select class="filter-btn" id="job-status-filter" onchange="setJobStatusFilter(this.value)">
+              <option value="all">All Status</option>
+              <option value="open">Open</option>
+              <option value="featured">Featured</option>
+              <option value="filled">Filled</option>
+              <option value="paused">Paused</option>
+            </select>
+            <select class="filter-btn" id="job-category-filter" onchange="setJobCategoryFilter(this.value)">
+              <option value="all">All Categories</option>
+            </select>
+            <select class="filter-btn" id="job-country-filter" onchange="setJobCountryFilter(this.value)">
+              <option value="all">All Countries</option>
+            </select>
+          </div>
+        </div>
         <table>
           <thead><tr><th>#</th><th>Job Title</th><th>Category</th><th>Country</th><th>Slots</th><th>Status</th><th>Action</th></tr></thead>
           <tbody id="admin-jobs-body">
-<tr><td colspan="7"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+<tr><td colspan="7"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Getting data from Firebase...</div></td></tr>
 </tbody>
         </table>
       </div>
     </div>
 
     <!-- USERS TAB -->
+
     <div class="tab-panel" id="tab-users">
       <div class="table-wrap">
         <div class="table-header">

@@ -30,6 +30,11 @@ const state = {
   currentUser: null,
   appSearch: '',
   appStatus: 'all',
+  jobSearch: '',
+  jobStatus: 'all',
+  jobCategory: 'all',
+  jobCountry: 'all',
+  editingJobId: null,
   selectedUserId: null,
   selectedThreadId: null,
   selectedMessages: [],
@@ -133,6 +138,41 @@ function buildCvSections(cv) {
   return sections;
 }
 
+
+function formatCompactMoney(value) {
+  const num = Number(String(value ?? '').replace(/[^\d.]/g, ''));
+  if (!Number.isFinite(num) || !num) return '—';
+  return `₦${num.toLocaleString('en-NG')}`;
+}
+
+function splitList(value) {
+  return String(value || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function jobTemplateIcon(icon, fallback = '✦') {
+  const text = String(icon || '').trim();
+  return text || fallback;
+}
+
+function jobFiltersText(job) {
+  return [
+    job.title,
+    job.jobTitle,
+    job.category,
+    job.jobCategory,
+    job.country,
+    job.description,
+    job.salary,
+    job.status,
+    job.state,
+    ...(job.highlights || []),
+    ...(job.requirements || []),
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
 async function loadSelectedMessages(threadId) {
   if (!threadId) return [];
   const snap = await get(ref(database, `conversationMessages/${threadId}`));
@@ -201,6 +241,16 @@ function renderOverview() {
   if (statNums[1]) statNums[1].textContent = String(approved);
   if (statNums[2]) statNums[2].textContent = String(pending);
   if (statNums[3]) statNums[3].textContent = revenue ? `₦${revenue.toLocaleString('en-NG')}` : '₦0';
+
+  const jobsTotalSlots = jobs.reduce((sum, job) => sum + (Number(job.slots || job.openings || 0) || 0), 0);
+  const jobsOpen = jobs.filter((job) => String(job.status || job.state || 'open').toLowerCase() !== 'filled').length;
+  const jobsFilled = jobs.filter((job) => String(job.status || job.state || '').toLowerCase() === 'filled').length;
+  const jobsSlotsEl = document.getElementById('jobs-total-slots');
+  const jobsOpenEl = document.getElementById('jobs-open-count');
+  const jobsFilledEl = document.getElementById('jobs-filled-count');
+  if (jobsSlotsEl) jobsSlotsEl.textContent = jobs.length ? String(jobsTotalSlots) : 'Getting data';
+  if (jobsOpenEl) jobsOpenEl.textContent = jobs.length ? String(jobsOpen) : 'Getting data';
+  if (jobsFilledEl) jobsFilledEl.textContent = jobs.length ? String(jobsFilled) : 'Getting data';
 
   const weekCounts = [0, 0, 0, 0, 0];
   const now = new Date();
@@ -352,10 +402,24 @@ function renderPaymentsTable() {
   if (tbody) tbody.innerHTML = rows || emptyRow(6, 'No payment records yet. Payments will appear here when Firebase receives them.');
 }
 
+
 function renderJobsTable() {
   const tbody = document.getElementById('admin-jobs-body');
   const data = state.jobs.slice().sort((a, b) => parseDate(b.createdAt || b.updatedAt) - parseDate(a.createdAt || a.updatedAt));
-  const rows = data.map((item, idx) => {
+  const filtered = data.filter((item) => {
+    const search = String(state.jobSearch || '').trim().toLowerCase();
+    const status = String(item.status || item.state || 'open').toLowerCase();
+    const category = String(item.category || item.jobCategory || '').toLowerCase();
+    const country = String(item.country || '').toLowerCase();
+    const haystack = jobFiltersText(item);
+    if (search && !haystack.includes(search)) return false;
+    if (state.jobStatus !== 'all' && status !== state.jobStatus) return false;
+    if (state.jobCategory !== 'all' && category !== state.jobCategory.toLowerCase()) return false;
+    if (state.jobCountry !== 'all' && country !== state.jobCountry.toLowerCase()) return false;
+    return true;
+  });
+
+  const rows = filtered.map((item, idx) => {
     const id = item.id || String(idx + 1).padStart(3, '0');
     const title = item.title || item.jobTitle || 'Untitled Job';
     const category = item.category || item.jobCategory || '—';
@@ -363,10 +427,229 @@ function renderJobsTable() {
     const slots = item.slots ?? item.openings ?? '—';
     const status = item.status || item.state || 'open';
     const pill = String(status).toLowerCase() === 'filled' ? 'filled' : 'open';
-    return `<tr><td style="color:var(--text-muted)">${esc(id)}</td><td>${esc(title)}</td><td>${esc(category)}</td><td>${esc(country)}</td><td>${esc(slots)}</td><td><div class="job-pill"><div class="job-dot ${pill}"></div>${esc(statusLabel(status))}</div></td><td><button class="action-btn" data-action="edit">Edit</button></td></tr>`;
+    const featured = String(status).toLowerCase() === 'featured' ? 'Featured' : '';
+    return `<tr>
+      <td style="color:var(--text-muted)">${esc(id)}</td>
+      <td>
+        <div class="candidate-name">${esc(title)}</div>
+        <div class="candidate-email">${esc(item.salary || item.pay || '')}${featured ? ` · ${esc(featured)}` : ''}</div>
+      </td>
+      <td>${esc(category)}</td>
+      <td>${esc(country)}</td>
+      <td>${esc(slots)}</td>
+      <td><div class="job-pill"><div class="job-dot ${pill}"></div>${esc(statusLabel(status))}</div></td>
+      <td>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="action-btn" data-action="edit-job" data-job-id="${esc(item.id)}">Edit</button>
+          <button class="action-btn" data-action="delete-job" data-job-id="${esc(item.id)}">Delete</button>
+        </div>
+      </td>
+    </tr>`;
   }).join('');
-  if (tbody) tbody.innerHTML = rows || emptyRow(7, 'No job listings yet. Add jobs in Firebase and they will appear here.');
+
+  if (tbody) tbody.innerHTML = rows || emptyRow(7, state.jobSearch || state.jobStatus !== 'all' || state.jobCountry !== 'all' || state.jobCategory !== 'all'
+    ? 'No jobs match the current filters.'
+    : 'Getting data from Firebase...');
+
+  const jobCount = document.getElementById('admin-job-count');
+  if (jobCount) jobCount.textContent = `(${state.jobs.length})`;
+
+  updateJobFilterOptions();
+  renderJobPreview();
 }
+
+
+function updateJobFilterOptions() {
+  const categorySelect = document.getElementById('job-category-filter');
+  const countrySelect = document.getElementById('job-country-filter');
+  const categories = [...new Set(state.jobs.map((job) => String(job.category || job.jobCategory || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const countries = [...new Set(state.jobs.map((job) => String(job.country || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  if (categorySelect) {
+    const current = categorySelect.value || 'all';
+    categorySelect.innerHTML = '<option value="all">All Categories</option>' + categories.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    categorySelect.value = categories.includes(current) || current === 'all' ? current : 'all';
+  }
+  if (countrySelect) {
+    const current = countrySelect.value || 'all';
+    countrySelect.innerHTML = '<option value="all">All Countries</option>' + countries.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    countrySelect.value = countries.includes(current) || current === 'all' ? current : 'all';
+  }
+}
+
+function renderJobPreview() {
+  const title = document.getElementById('job-title')?.value || 'Factory Supervisor';
+  const category = document.getElementById('job-category-input')?.value || 'Factory & Production';
+  const country = document.getElementById('job-country-input')?.value || 'Poland';
+  const slots = document.getElementById('job-slots')?.value || '10';
+  const salary = document.getElementById('job-salary')?.value || '₦250,000 / month';
+  const status = document.getElementById('job-status')?.value || 'open';
+  const icon = document.getElementById('job-icon')?.value || '🏭';
+  const description = document.getElementById('job-description')?.value || 'Write a clear short description of the role so the listing looks polished and trustworthy.';
+  const highlights = splitList(document.getElementById('job-highlights')?.value || 'Training provided, No experience required, Visa support');
+  const requirements = splitList(document.getElementById('job-requirements')?.value || 'Passport, CV, Basic English');
+  const deadline = document.getElementById('job-deadline')?.value ? `Deadline ${formatDate(document.getElementById('job-deadline').value)}` : '';
+
+  const previewStatus = document.getElementById('job-preview-status');
+  const previewTitle = document.getElementById('job-preview-title');
+  const previewLocation = document.getElementById('job-preview-location');
+  const previewIcon = document.getElementById('job-preview-icon');
+  const previewDesc = document.getElementById('job-preview-desc');
+  const previewChips = document.getElementById('job-preview-chips');
+  const previewReqs = document.getElementById('job-preview-reqs');
+
+  if (previewStatus) previewStatus.textContent = statusLabel(status);
+  if (previewTitle) previewTitle.textContent = title;
+  if (previewLocation) previewLocation.textContent = `${country} · ${slots} Slots`;
+  if (previewIcon) previewIcon.textContent = jobTemplateIcon(icon);
+  if (previewDesc) previewDesc.textContent = description;
+  if (previewChips) {
+    const chips = [category, salary, deadline].filter(Boolean);
+    previewChips.innerHTML = chips.map((chip) => `<span class="job-chip">${esc(chip)}</span>`).join('');
+  }
+  if (previewReqs) {
+    previewReqs.innerHTML = requirements.length
+      ? requirements.map((item) => `<span>${esc(item)}</span>`).join('')
+      : '<span>Passport</span><span>CV</span><span>Basic English</span>';
+  }
+}
+
+function clearJobForm() {
+  state.editingJobId = null;
+  ['job-id', 'job-title', 'job-category-input', 'job-country-input', 'job-slots', 'job-salary', 'job-description', 'job-highlights', 'job-requirements', 'job-deadline'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const status = document.getElementById('job-status');
+  const icon = document.getElementById('job-icon');
+  const featured = document.getElementById('job-featured');
+  if (status) status.value = 'open';
+  if (icon) icon.value = '🏭';
+  if (featured) featured.value = 'no';
+  renderJobPreview();
+}
+
+function loadJobIntoForm(jobId) {
+  const job = state.jobs.find((j) => String(j.id) === String(jobId));
+  if (!job) return showAdminFeedback('Job record not found.', 'warning');
+  state.editingJobId = job.id;
+  const map = {
+    'job-id': job.id || '',
+    'job-title': job.title || job.jobTitle || '',
+    'job-category-input': job.category || job.jobCategory || '',
+    'job-country-input': job.country || '',
+    'job-slots': job.slots ?? job.openings ?? '',
+    'job-salary': job.salary || job.pay || '',
+    'job-description': job.description || '',
+    'job-highlights': (job.highlights || []).join(', '),
+    'job-requirements': (job.requirements || []).join(', '),
+    'job-deadline': job.deadline || '',
+    'job-status': job.status || job.state || 'open',
+    'job-icon': job.icon || '🏭',
+    'job-featured': String(job.featured || '').toLowerCase() === 'yes' || job.status === 'featured' ? 'yes' : 'no',
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+  renderJobPreview();
+  document.getElementById('job-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function submitJobForm(event) {
+  event.preventDefault();
+  const title = document.getElementById('job-title')?.value.trim();
+  const category = document.getElementById('job-category-input')?.value.trim();
+  const country = document.getElementById('job-country-input')?.value.trim();
+  const slots = Number(document.getElementById('job-slots')?.value || 0);
+  const salary = document.getElementById('job-salary')?.value.trim();
+  const status = document.getElementById('job-status')?.value || 'open';
+  const icon = document.getElementById('job-icon')?.value.trim() || '🏭';
+  const description = document.getElementById('job-description')?.value.trim();
+  const highlights = splitList(document.getElementById('job-highlights')?.value);
+  const requirements = splitList(document.getElementById('job-requirements')?.value);
+  const deadline = document.getElementById('job-deadline')?.value || '';
+  const featured = document.getElementById('job-featured')?.value === 'yes';
+
+  if (!title || !category || !country || !description) {
+    showAdminFeedback('Fill title, category, country, and description first.', 'warning');
+    return;
+  }
+
+  const payload = {
+    title,
+    jobTitle: title,
+    category,
+    jobCategory: category,
+    country,
+    slots: Number.isFinite(slots) && slots > 0 ? slots : 1,
+    openings: Number.isFinite(slots) && slots > 0 ? slots : 1,
+    salary,
+    pay: salary,
+    status: featured ? 'featured' : status,
+    state: featured ? 'featured' : status,
+    icon,
+    description,
+    highlights,
+    requirements,
+    deadline,
+    featured,
+    updatedAt: new Date().toISOString(),
+    postedBy: state.currentUser?.email || 'admin',
+  };
+
+  try {
+    if (state.editingJobId) {
+      payload.createdAt = state.jobs.find((j) => String(j.id) === String(state.editingJobId))?.createdAt || new Date().toISOString();
+      await set(ref(database, `jobs/${state.editingJobId}`), payload);
+      showAdminFeedback('Job updated and confirmed in Firebase.', 'success');
+    } else {
+      payload.createdAt = new Date().toISOString();
+      const newJobRef = push(ref(database, 'jobs'));
+      await set(newJobRef, payload);
+      showAdminFeedback('Job posted to Firebase.', 'success');
+    }
+    clearJobForm();
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to save job.', 'error');
+  }
+}
+
+async function deleteJob(jobId) {
+  const job = state.jobs.find((j) => String(j.id) === String(jobId));
+  if (!job) return showAdminFeedback('Job record not found.', 'warning');
+  if (!window.confirm(`Delete "${job.title || job.jobTitle || 'this job'}"?`)) return;
+  try {
+    await set(ref(database, `jobs/${jobId}`), null);
+    showAdminFeedback('Job deleted.', 'success');
+    if (String(state.editingJobId) === String(jobId)) clearJobForm();
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to delete job.', 'error');
+  }
+}
+
+window.resetJobForm = clearJobForm;
+window.filterJobs = function filterJobs(value) {
+  state.jobSearch = String(value || '');
+  renderJobsTable();
+};
+window.setJobStatusFilter = function setJobStatusFilter(value) {
+  state.jobStatus = String(value || 'all').toLowerCase();
+  renderJobsTable();
+};
+window.setJobCategoryFilter = function setJobCategoryFilter(value) {
+  state.jobCategory = String(value || 'all');
+  renderJobsTable();
+};
+window.setJobCountryFilter = function setJobCountryFilter(value) {
+  state.jobCountry = String(value || 'all');
+  renderJobsTable();
+};
+window.saveJobPosting = submitJobForm;
+window.editJob = loadJobIntoForm;
+window.deleteJob = deleteJob;
+window.updateJobPreview = renderJobPreview;
 
 function renderUsersTable() {
   const tbody = document.getElementById('admin-users-body');
@@ -448,6 +731,8 @@ function handleActionButtonClick(btn) {
   const uid = String(btn.dataset.userId || '').trim();
   if (action === 'view-user') return openUserModal(uid);
   if (action === 'toggle-role') return toggleUserRole(uid);
+  if (action === 'edit-job') return loadJobIntoForm(uid);
+  if (action === 'delete-job') return deleteJob(uid);
   showAdminFeedback(`Action clicked: ${action}`, 'info');
 }
 
@@ -826,7 +1111,13 @@ function watchFirebase() {
 
   onValue(ref(database, 'jobs'), (snap) => {
     state.jobs = toArray(snap.val(), 'id');
+    const jobStatus = document.getElementById('admin-job-count');
+    if (jobStatus) jobStatus.textContent = state.jobs.length ? `(${state.jobs.length})` : '(Getting data)';
     renderAll();
+    showAdminFeedback(state.jobs.length ? 'Data confirmed from Firebase.' : 'Getting data from Firebase...', state.jobs.length ? 'success' : 'info');
+  }, (error) => {
+    console.error(error);
+    showAdminFeedback('Unable to get data from Firebase.', 'error');
   });
 
   onValue(ref(database, 'adminSettings'), (snap) => {
@@ -893,4 +1184,11 @@ function boot() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', boot);
+document.addEventListener('DOMContentLoaded', () => {
+  boot();
+  document.getElementById('job-form')?.addEventListener('submit', submitJobForm);
+  ['job-title','job-category-input','job-country-input','job-slots','job-salary','job-status','job-icon','job-description','job-highlights','job-requirements','job-deadline','job-featured']
+    .forEach((id) => document.getElementById(id)?.addEventListener('input', renderJobPreview));
+  document.getElementById('job-status')?.addEventListener('change', renderJobPreview);
+  document.getElementById('job-featured')?.addEventListener('change', renderJobPreview);
+});

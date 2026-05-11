@@ -11,6 +11,12 @@ let inboxThreadId = null;
 let inboxMessages = [];
 let inboxMeta = null;
 let inboxListenerStarted = false;
+let jobListenerStarted = false;
+let allJobs = [];
+let jobSearch = '';
+let jobCategory = 'all';
+let jobCountry = 'all';
+let jobStatus = 'all';
 
 // ============================================================================
 // AUTHENTICATION STATE
@@ -89,6 +95,7 @@ function displayUserInfo() {
   renderAccountBanner();
   renderPlanDisplay();
   loadInbox();
+  loadJobs();
 }
 
 function normalizeStatus(raw) {
@@ -164,6 +171,102 @@ function renderPlanDisplay() {
 }
 
 // ============================================================================
+// JOBS DISPLAY
+// ============================================================================
+
+function normalizeText(v) {
+  return String(v || '').trim().toLowerCase();
+}
+
+function jobsFilterText(job) {
+  return [
+    job.title,
+    job.jobTitle,
+    job.category,
+    job.jobCategory,
+    job.country,
+    job.description,
+    job.salary,
+    job.pay,
+    job.status,
+    job.state,
+    ...(job.highlights || []),
+    ...(job.requirements || []),
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function updateDashboardJobFilters() {
+  const categoryEl = document.getElementById('dashboard-job-category');
+  const countryEl = document.getElementById('dashboard-job-country');
+  if (categoryEl) {
+    const categories = [...new Set(allJobs.map((job) => String(job.category || job.jobCategory || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const current = categoryEl.value || 'all';
+    categoryEl.innerHTML = '<option value="all">All Categories</option>' + categories.map((c) => `<option value="${c}">${c}</option>`).join('');
+    categoryEl.value = categories.includes(current) || current === 'all' ? current : 'all';
+  }
+  if (countryEl) {
+    const countries = [...new Set(allJobs.map((job) => String(job.country || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const current = countryEl.value || 'all';
+    countryEl.innerHTML = '<option value="all">All Countries</option>' + countries.map((c) => `<option value="${c}">${c}</option>`).join('');
+    countryEl.value = countries.includes(current) || current === 'all' ? current : 'all';
+  }
+}
+
+function renderDashboardJobs() {
+  const grid = document.getElementById('live-jobs-grid');
+  if (!grid) return;
+  const filtered = allJobs.filter((job) => {
+    const search = normalizeText(jobSearch);
+    const status = normalizeText(job.status || job.state || 'open');
+    const category = normalizeText(job.category || job.jobCategory || '');
+    const country = normalizeText(job.country || '');
+    if (search && !jobsFilterText(job).includes(search)) return false;
+    if (jobStatus !== 'all' && status !== jobStatus) return false;
+    if (jobCategory !== 'all' && category !== jobCategory) return false;
+    if (jobCountry !== 'all' && country !== jobCountry) return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="job-card job-card-full" style="grid-column:1/-1;"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">${allJobs.length ? 'No jobs match the current filters.' : 'Getting data from Firebase...'}</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((job) => {
+    const title = job.title || job.jobTitle || 'Untitled Job';
+    const desc = job.description || 'No description available yet.';
+    const country = job.country || '—';
+    const slots = job.slots ?? job.openings ?? '—';
+    const category = job.category || job.jobCategory || 'General';
+    const status = normalizeText(job.status || job.state || 'open');
+    const icon = job.icon || '✦';
+    const highlights = (job.highlights || []).slice(0, 3);
+    return `<div class="job-card ${status === 'featured' ? 'job-card-full' : ''}">
+      <div class="job-icon">${esc(icon)}</div>
+      <div class="job-name">${esc(title)}</div>
+      <div class="job-desc">${esc(desc)}</div>
+      <div class="job-footer">
+        <span>${esc(country)} · ${esc(slots)} Slots</span>
+        <button class="apply-btn" onclick="switchTab('applications', document.querySelector('.nav-item[onclick*=\"applications\"]'))">Apply Now</button>
+      </div>
+      <div class="job-tags" style="margin-top:16px;">
+        <span class="job-tag highlight">${esc(statusLabel(status))}</span>
+        <span class="job-tag">${esc(category)}</span>
+        ${highlights.map((h) => `<span class="job-tag">${esc(h)}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.filterDashboardJobs = function filterDashboardJobs(value) {
+  if (typeof value === 'string') jobSearch = value;
+  jobCategory = normalizeText(document.getElementById('dashboard-job-category')?.value || 'all');
+  jobCountry = normalizeText(document.getElementById('dashboard-job-country')?.value || 'all');
+  jobStatus = normalizeText(document.getElementById('dashboard-job-status')?.value || 'all');
+  renderDashboardJobs();
+};
+
+// ============================================================================
 // SETTINGS DISPLAY
 // ============================================================================
 
@@ -218,6 +321,27 @@ async function loadInbox() {
 }
 
 window.loadInbox = loadInbox;
+
+async function loadJobs() {
+  try {
+    if (!jobListenerStarted) {
+      jobListenerStarted = true;
+      onValue(ref(database, 'jobs'), (snap) => {
+        allJobs = snap.exists() ? Object.entries(snap.val() || {}).map(([id, item]) => ({ id, ...(item || {}) })) : [];
+        updateDashboardJobFilters();
+        renderDashboardJobs();
+      }, () => {
+        const grid = document.getElementById('live-jobs-grid');
+        if (grid) grid.innerHTML = `<div class="job-card job-card-full" style="grid-column:1/-1;"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Unable to get data.</div></div>`;
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    const grid = document.getElementById('live-jobs-grid');
+    if (grid) grid.innerHTML = `<div class="job-card job-card-full" style="grid-column:1/-1;"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Unable to get data.</div></div>`;
+  }
+}
+
 
 function renderInbox() {
   const list = document.getElementById('user-inbox-list');
