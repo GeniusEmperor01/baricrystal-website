@@ -135,6 +135,56 @@ body {
 .stat-card-num.red { color: var(--error); }
 .stat-card-change { font-size: 11px; color: var(--text-muted); }
 .stat-card-change.up { color: var(--success); }
+.stat-card-change.warning { color: var(--warning); }
+.funds-panel {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.funds-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.funds-item {
+  background: var(--dark-3);
+  border: 1px solid var(--border-subtle);
+  padding: 16px;
+  min-height: 92px;
+}
+.funds-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.funds-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.funds-note {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.role-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+.role-toggle.admin {
+  border-color: rgba(226,75,74,0.3);
+  color: var(--error);
+}
+.role-toggle.user {
+  border-color: rgba(45,158,107,0.3);
+  color: var(--success);
+}
 
 /* TABLE */
 .table-wrap { background: var(--dark-2); border: 1px solid var(--border); }
@@ -333,29 +383,29 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <div class="stat-card">
           <div class="stat-card-label">Total Applications</div>
           <div class="stat-card-num gold">0</div>
-          <div class="stat-card-change up">↑ 8 this week</div>
+          <div class="stat-card-change up">Data confirmed</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Approved</div>
           <div class="stat-card-num green">0</div>
-          <div class="stat-card-change up">↑ 3 this week</div>
+          <div class="stat-card-change up">Data confirmed</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Pending Review</div>
           <div class="stat-card-num amber">0</div>
-          <div class="stat-card-change">Awaiting action</div>
+          <div class="stat-card-change warning">Getting data</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-label">Total Revenue</div>
           <div class="stat-card-num gold">₦0</div>
-          <div class="stat-card-change up">↑ ₦225k this week</div>
+          <div class="stat-card-change up">Data confirmed</div>
         </div>
       </div>
 
       <div class="chart-row">
         <div class="chart-card">
           <div class="chart-card-title">Applications This Month</div>
-          <div class="chart-card-sub">Daily breakdown — March 2025</div>
+          <div class="chart-card-sub">Getting data</div>
           <div class="bar-chart">
             <div class="bar-col"><div class="bar" style="height:40%"></div><div class="bar-label">W1</div></div>
             <div class="bar-col"><div class="bar" style="height:65%"></div><div class="bar-label">W2</div></div>
@@ -368,7 +418,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
           <div class="activity-title">Recent Activity</div>
           <div class="activity-item">
             <div class="activity-dot" style="background:var(--warning)"></div>
-            <div><div class="activity-text">Waiting for Firebase records.</div><div class="activity-time">This panel updates automatically when data arrives.</div></div>
+            <div><div class="activity-text">Getting data…</div><div class="activity-time">Data confirmed once Firebase responds.</div></div>
           </div>
         </div>
 </div>
@@ -384,7 +434,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <th>Candidate</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Date</th>
           </tr></thead>
           <tbody id="admin-recent-applications-body">
-<tr><td colspan="5"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+<tr><td colspan="5"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Getting data…</div></td></tr>
 </tbody>
         </table>
       </div>
@@ -394,7 +444,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="tab-panel" id="tab-applications">
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title">All Applications <span id="admin-app-count" style="color:var(--text-muted);font-weight:400;">(47)</span></div>
+          <div class="table-title">All Applications <span id="admin-app-count" style="color:var(--text-muted);font-weight:400;">(0)</span></div>
           <div class="table-actions">
             <input class="search-input" placeholder="Search candidates..." oninput="filterTable(this.value)"/>
             <button class="filter-btn active" onclick="filterStatus('all', this)">All</button>
@@ -407,7 +457,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <th>Candidate</th><th>Phone</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Applied</th><th>Action</th>
           </tr></thead>
           <tbody id="admin-applications-body">
-<tr><td colspan="7"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+<tr><td colspan="7"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Getting data…</div></td></tr>
 </tbody>
         </table>
       </div>
@@ -416,16 +466,25 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <!-- PAYMENTS TAB -->
     <div class="tab-panel" id="tab-payments">
       <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stat-card"><div class="stat-card-label">Total Collected</div><div class="stat-card-num gold">₦0</div><div class="stat-card-change">47 transactions</div></div>
-        <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-num green">₦450,000</div><div class="stat-card-change up">↑ 18 payments</div></div>
-        <div class="stat-card"><div class="stat-card-label">Pending Payments</div><div class="stat-card-num amber">8</div><div class="stat-card-change">Awaiting confirmation</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Collected</div><div class="stat-card-num gold" id="payments-total-collected">₦0</div><div class="stat-card-change" id="payments-source">Getting data</div></div>
+        <div class="stat-card"><div class="stat-card-label">Confirmed Funds</div><div class="stat-card-num green" id="payments-confirmed-total">₦0</div><div class="stat-card-change up" id="payments-confirmed-note">Data confirmed</div></div>
+        <div class="stat-card"><div class="stat-card-label">Pending / Unknown</div><div class="stat-card-num amber" id="payments-pending-total">₦0</div><div class="stat-card-change warning" id="payments-pending-note">Getting data</div></div>
+      </div>
+      <div class="funds-panel">
+        <div class="table-title" style="margin-bottom:16px;">Funds Transparency</div>
+        <div class="funds-grid">
+          <div class="funds-item"><div class="funds-label">Confirmed Total</div><div class="funds-value" id="funds-confirmed">₦0</div><div class="funds-note">Money with confirmed payment status</div></div>
+          <div class="funds-item"><div class="funds-label">Pending Total</div><div class="funds-value" id="funds-pending">₦0</div><div class="funds-note">Payments awaiting review or confirmation</div></div>
+          <div class="funds-item"><div class="funds-label">Unclear / Unknown</div><div class="funds-value" id="funds-unknown">₦0</div><div class="funds-note">Records without a readable amount or status</div></div>
+          <div class="funds-item"><div class="funds-label">Data Source</div><div class="funds-value" id="funds-source">Firebase</div><div class="funds-note" id="funds-source-note">Realtime Database: /payments</div></div>
+        </div>
       </div>
       <div class="table-wrap">
         <div class="table-header"><div class="table-title">Payment Records</div></div>
         <table>
           <thead><tr><th>Candidate</th><th>Plan</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
           <tbody id="admin-payments-body">
-<tr><td colspan="6"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+<tr><td colspan="6"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Getting data…</div></td></tr>
 </tbody>
         </table>
       </div>
@@ -443,7 +502,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <table>
           <thead><tr><th>#</th><th>Job Title</th><th>Category</th><th>Country</th><th>Slots</th><th>Status</th><th>Action</th></tr></thead>
           <tbody id="admin-jobs-body">
-<tr><td colspan="7"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+<tr><td colspan="7"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Getting data…</div></td></tr>
 </tbody>
         </table>
       </div>
@@ -453,13 +512,13 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="tab-panel" id="tab-users">
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title">Registered Users <span id="admin-user-count" style="color:var(--text-muted);font-weight:400;">(47)</span></div>
+          <div class="table-title">Registered Users <span id="admin-user-count" style="color:var(--text-muted);font-weight:400;">(0)</span></div>
           <input class="search-input" placeholder="Search users..."/>
         </div>
         <table>
-          <thead><tr><th>User</th><th>Phone</th><th>State</th><th>Registered</th><th>Application</th><th>Action</th></tr></thead>
+          <thead><tr><th>User</th><th>Phone</th><th>State</th><th>Registered</th><th>Role</th><th>Application</th><th>Action</th></tr></thead>
           <tbody id="admin-users-body">
-<tr><td colspan="6"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Loading live Firebase data…</div></td></tr>
+<tr><td colspan="7"><div style="padding:26px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">Getting data…</div></td></tr>
 </tbody>
         </table>
       </div>
@@ -475,7 +534,15 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Contact Email</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" id="admin-contact-email" value="info@baricrystalinternational.com"/></div>
             <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">WhatsApp Number</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" id="admin-whatsapp" placeholder="+234 XXX XXX XXXX"/></div>
           </div>
-          <button style="margin-top:20px;padding:11px 28px;background:var(--gold);color:var(--dark);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;" onclick="saveAdminSettings()">Save Changes</button>
+          <button style="margin-top:20px;padding:11px 28px;background:var(--gold);color:var(--dark);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;" onclick="saveAdminSettings()">Save Settings</button>
+        </div>
+        <div style="background:var(--dark-2);border:1px solid var(--border);padding:32px;margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:500;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">User Access Control</div>
+          <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px;">
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">User UID</div><input id="admin-role-uid" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="Paste UID from the Users table"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Role</div><select id="admin-role-value" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;"><option value="user">User</option><option value="admin">Admin</option></select></div>
+          </div>
+          <button style="padding:11px 28px;background:transparent;color:var(--gold);border:1px solid var(--gold);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;" onclick="updateUserRole()">Save Role</button>
         </div>
         <div style="background:var(--dark-2);border:1px solid var(--border);padding:32px;">
           <div style="font-size:12px;font-weight:500;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">Admin Password</div>
@@ -483,7 +550,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <div class="password-field"><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Current Password</div><input id="admin-current-password" type="password" autocomplete="current-password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/><button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('admin-current-password', this)">👁</button></div>
             <div class="password-field"><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">New Password</div><input id="admin-new-password" type="password" autocomplete="new-password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/><button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('admin-new-password', this)">👁</button></div>
           </div>
-          <button style="margin-top:20px;padding:11px 28px;background:transparent;color:var(--gold);border:1px solid var(--gold);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;" onclick="updateAdminPassword()">Update Password</button>
+          <button style="margin-top:20px;padding:11px 28px;background:transparent;color:var(--gold);border:1px solid var(--gold);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;" onclick="updateAdminPassword()">Change Password</button>
         </div>
       </div>
     </div>

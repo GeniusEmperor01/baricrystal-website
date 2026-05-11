@@ -70,10 +70,12 @@ function normalizeUsers(node) {
   return toArray(node, 'uid').map((u) => {
     const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim() || u.displayName || u.fullName || u.name || u.email?.split('@')?.[0] || 'Unnamed User';
     const status = String(u.accountStatus || u.paymentStatus || u.status || 'unpaid').toLowerCase();
+    const role = String(u.role || u.userRole || (isAdminEmail(u.email) ? 'admin' : 'user')).toLowerCase();
     return {
       ...u,
       name,
       status,
+      role,
       registeredAt: u.createdAt || u.registeredAt || u.lastLogin || '',
     };
   });
@@ -95,6 +97,19 @@ function badgeClass(status) {
 function moneyFromPayment(value) {
   const num = Number(String(value ?? '').replace(/[^\d.]/g, ''));
   return Number.isFinite(num) ? num : 0;
+}
+
+function formatMoney(value) {
+  const num = Number(value || 0);
+  if (!Number.isFinite(num)) return '₦0';
+  return `₦${num.toLocaleString('en-NG')}`;
+}
+
+function paymentStatusCategory(status) {
+  const s = String(status || '').toLowerCase();
+  if (['paid', 'confirmed', 'confirmed payment', 'approved', 'successful', 'success', 'completed'].includes(s)) return 'confirmed';
+  if (['pending', 'processing', 'review', 'pending review', 'awaiting', 'awaiting confirmation', 'unverified'].includes(s)) return 'pending';
+  return 'unknown';
 }
 
 function emptyRow(cols, message) {
@@ -145,13 +160,21 @@ function renderOverview() {
 
   const approved = applications.filter((a) => ['approved', 'paid', 'active', 'completed'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
   const pending = applications.filter((a) => ['pending', 'processing', 'review', 'pending review'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
+
+  const confirmedPayments = payments.filter((p) => paymentStatusCategory(p.status || p.paymentStatus) === 'confirmed');
+  const pendingPayments = payments.filter((p) => paymentStatusCategory(p.status || p.paymentStatus) === 'pending');
+  const unknownPayments = payments.filter((p) => paymentStatusCategory(p.status || p.paymentStatus) === 'unknown');
+
   const revenue = payments.reduce((sum, p) => sum + moneyFromPayment(p.amount), 0);
+  const confirmedRevenue = confirmedPayments.reduce((sum, p) => sum + moneyFromPayment(p.amount), 0);
+  const pendingRevenue = pendingPayments.reduce((sum, p) => sum + moneyFromPayment(p.amount), 0);
+  const unknownRevenue = unknownPayments.reduce((sum, p) => sum + moneyFromPayment(p.amount), 0);
 
   const statNums = document.querySelectorAll('.stats-row .stat-card-num');
   if (statNums[0]) statNums[0].textContent = String(applications.length);
   if (statNums[1]) statNums[1].textContent = String(approved);
   if (statNums[2]) statNums[2].textContent = String(pending);
-  if (statNums[3]) statNums[3].textContent = revenue ? `₦${revenue.toLocaleString('en-NG')}` : '₦0';
+  if (statNums[3]) statNums[3].textContent = formatMoney(revenue);
 
   const weekCounts = [0, 0, 0, 0, 0];
   const now = new Date();
@@ -172,11 +195,34 @@ function renderOverview() {
   const sub = document.querySelector('.chart-card-sub');
   if (sub) sub.textContent = `Realtime from Firebase — ${now.toLocaleString('en-GB', { month: 'long', year: 'numeric' })}`;
 
+  const totalCollected = document.getElementById('payments-total-collected');
+  const source = document.getElementById('payments-source');
+  const confirmedTotal = document.getElementById('payments-confirmed-total');
+  const confirmedNote = document.getElementById('payments-confirmed-note');
+  const pendingTotal = document.getElementById('payments-pending-total');
+  const pendingNote = document.getElementById('payments-pending-note');
+  const fundsConfirmed = document.getElementById('funds-confirmed');
+  const fundsPending = document.getElementById('funds-pending');
+  const fundsUnknown = document.getElementById('funds-unknown');
+  const fundsSource = document.getElementById('funds-source');
+  const fundsSourceNote = document.getElementById('funds-source-note');
+  if (totalCollected) totalCollected.textContent = formatMoney(revenue);
+  if (source) source.textContent = payments.length ? 'Data confirmed' : 'Getting data';
+  if (confirmedTotal) confirmedTotal.textContent = formatMoney(confirmedRevenue);
+  if (confirmedNote) confirmedNote.textContent = payments.length ? 'Data confirmed' : 'Getting data';
+  if (pendingTotal) pendingTotal.textContent = formatMoney(pendingRevenue + unknownRevenue);
+  if (pendingNote) pendingNote.textContent = payments.length ? 'Data confirmed' : 'Getting data';
+  if (fundsConfirmed) fundsConfirmed.textContent = formatMoney(confirmedRevenue);
+  if (fundsPending) fundsPending.textContent = formatMoney(pendingRevenue);
+  if (fundsUnknown) fundsUnknown.textContent = formatMoney(unknownRevenue);
+  if (fundsSource) fundsSource.textContent = payments.length ? 'Firebase' : '—';
+  if (fundsSourceNote) fundsSourceNote.textContent = payments.length ? 'Realtime Database: /payments' : 'Getting data';
+
   renderActivity();
   showAdminFeedback(
     users.length || applications.length || payments.length || state.jobs.length
-      ? 'Live Firebase data loaded successfully.'
-      : 'No records found yet. Empty states are showing instead of fake demo data.',
+      ? 'Data confirmed.'
+      : 'Getting data...',
     users.length || applications.length || payments.length || state.jobs.length ? 'success' : 'warning'
   );
 }
@@ -226,7 +272,7 @@ function renderActivity() {
       <div class="activity-dot" style="background:${item.color}"></div>
       <div><div class="activity-text">${item.text}</div><div class="activity-time">${esc(item.time)}</div></div>
     </div>
-  `).join('') : '<div class="activity-item"><div class="activity-dot" style="background:var(--warning)"></div><div><div class="activity-text">No activity yet.</div><div class="activity-time">Once Firebase has records, this panel will update automatically.</div></div></div>'}`;
+  `).join('') : '<div class="activity-item"><div class="activity-dot" style="background:var(--warning)"></div><div><div class="activity-text">Data confirmed. No recent activity yet.</div><div class="activity-time">Getting data from Firebase now.</div></div></div>'}`;
 }
 
 function matchesAppFilter(item) {
@@ -329,12 +375,58 @@ function renderUsersTable() {
     const stateName = item.state || item.location || '—';
     const registered = formatDate(item.registeredAt || item.createdAt || item.lastLogin);
     const appStatus = item.applicationStatus || item.status || item.accountStatus || 'pending';
-    return `<tr><td><div class="candidate-info"><div class="candidate-avatar">${esc(initials(name))}</div><div><div class="candidate-name">${esc(name)}</div><div class="candidate-email">${esc(email)}</div></div></div></td><td>${esc(phone)}</td><td>${esc(stateName)}</td><td>${esc(registered)}</td><td><span class="badge ${badgeClass(appStatus)}">${esc(statusLabel(appStatus))}</span></td><td><button class="action-btn" data-action="view">View</button></td></tr>`;
+    const role = String(item.role || 'user').toLowerCase();
+    const nextRole = role === 'admin' ? 'user' : 'admin';
+    const roleLabel = role === 'admin' ? 'Admin' : 'User';
+    const roleBtnLabel = role === 'admin' ? 'Remove Admin' : 'Make Admin';
+    const roleBtnClass = role === 'admin' ? 'admin' : 'user';
+    return `<tr data-uid="${esc(item.uid)}"><td><div class="candidate-info"><div class="candidate-avatar">${esc(initials(name))}</div><div><div class="candidate-name">${esc(name)}</div><div class="candidate-email">${esc(email)}</div></div></div></td><td>${esc(phone)}</td><td>${esc(stateName)}</td><td>${esc(registered)}</td><td><span class="badge ${badgeClass(role)}">${esc(roleLabel)}</span></td><td><span class="badge ${badgeClass(appStatus)}">${esc(statusLabel(appStatus))}</span></td><td><button class="action-btn user-role-btn role-toggle ${roleBtnClass}" data-uid="${esc(item.uid)}" data-next-role="${esc(nextRole)}">${esc(roleBtnLabel)}</button></td></tr>`;
   }).join('');
-  if (tbody) tbody.innerHTML = rows || emptyRow(6, 'No users yet. Firebase user records will appear here automatically.');
+  if (tbody) tbody.innerHTML = rows || emptyRow(7, 'Data confirmed. No users yet.');
 
   const userCount = document.getElementById('admin-user-count');
   if (userCount) userCount.textContent = `(${state.users.length})`;
+}
+
+async function updateUserRole() {
+  const uid = String(document.getElementById('admin-role-uid')?.value || '').trim();
+  const role = String(document.getElementById('admin-role-value')?.value || 'user').toLowerCase();
+  if (!uid) {
+    showAdminFeedback('Paste a user UID first.', 'warning');
+    return;
+  }
+  try {
+    await update(ref(database, `users/${uid}`), {
+      role,
+      updatedAt: new Date().toISOString(),
+      updatedBy: state.currentUser?.email || 'admin',
+    });
+    showAdminFeedback(role === 'admin' ? 'User promoted to admin.' : 'Admin role removed from user.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to update user role.', 'error');
+  }
+}
+
+async function toggleUserRole(uid, nextRole) {
+  const targetUid = String(uid || '').trim();
+  const role = String(nextRole || 'user').toLowerCase();
+  if (!targetUid) return;
+  if (auth.currentUser?.uid && targetUid === auth.currentUser.uid && role !== 'admin') {
+    showAdminFeedback('You cannot remove your own admin access from here.', 'warning');
+    return;
+  }
+  try {
+    await update(ref(database, `users/${targetUid}`), {
+      role,
+      updatedAt: new Date().toISOString(),
+      updatedBy: state.currentUser?.email || 'admin',
+    });
+    showAdminFeedback(role === 'admin' ? 'User promoted to admin.' : 'Admin role removed from user.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to update user role.', 'error');
+  }
 }
 
 function saveAdminSettings() {
@@ -360,7 +452,7 @@ async function updateAdminPassword() {
   const currentPassword = document.getElementById('admin-current-password')?.value || '';
   const newPassword = document.getElementById('admin-new-password')?.value || '';
   if (!currentPassword || !newPassword) {
-    showAdminFeedback('Fill in both password fields first.', 'warning');
+    showAdminFeedback('Enter your current and new password first.', 'warning');
     return;
   }
   const user = auth.currentUser;
@@ -374,7 +466,7 @@ async function updateAdminPassword() {
     await updatePassword(user, newPassword);
     document.getElementById('admin-current-password').value = '';
     document.getElementById('admin-new-password').value = '';
-    showAdminFeedback('Admin password updated successfully.', 'success');
+    showAdminFeedback('Password updated successfully.', 'success');
   } catch (error) {
     console.error(error);
     showAdminFeedback(error?.code === 'auth/wrong-password' ? 'Current password is incorrect.' : 'Password update failed.', 'error');
@@ -418,6 +510,8 @@ window.filterStatus = function filterStatus(status, btn) {
 };
 
 window.saveAdminSettings = saveAdminSettings;
+window.updateUserRole = updateUserRole;
+window.toggleUserRole = toggleUserRole;
 window.updateAdminPassword = updateAdminPassword;
 window.logoutAdmin = async function logoutAdmin() {
   try {
@@ -443,6 +537,11 @@ function applyActionHandlers() {
     btn.dataset.bound = '1';
     btn.addEventListener('click', () => handleActionButtonClick(btn));
   });
+  document.querySelectorAll('.user-role-btn').forEach((btn) => {
+    if (btn.dataset.roleBound === '1') return;
+    btn.dataset.roleBound = '1';
+    btn.addEventListener('click', () => toggleUserRole(btn.dataset.uid, btn.dataset.nextRole));
+  });
 }
 
 function loadSettingsIntoForm() {
@@ -450,33 +549,61 @@ function loadSettingsIntoForm() {
   if (document.getElementById('admin-agency-name')) document.getElementById('admin-agency-name').value = s.agencyName || 'BARICRYSTAL INTERNATIONAL';
   if (document.getElementById('admin-contact-email')) document.getElementById('admin-contact-email').value = s.contactEmail || 'info@baricrystalinternational.com';
   if (document.getElementById('admin-whatsapp')) document.getElementById('admin-whatsapp').value = s.whatsapp || '';
+  if (document.getElementById('admin-role-value') && s.defaultRole) document.getElementById('admin-role-value').value = s.defaultRole;
 }
 
 function watchFirebase() {
   onValue(ref(database, 'users'), (snap) => {
     state.users = normalizeUsers(snap.val());
     renderAll();
+    showAdminFeedback('Data confirmed.', 'success');
+  }, (error) => {
+    console.error(error);
+    state.users = [];
+    renderAll();
+    showAdminFeedback('Unable to get data.', 'error');
   });
 
   onValue(ref(database, 'applications'), (snap) => {
     state.applications = toArray(snap.val(), 'id');
     renderAll();
+    showAdminFeedback('Data confirmed.', 'success');
+  }, (error) => {
+    console.error(error);
+    state.applications = [];
+    renderAll();
+    showAdminFeedback('Unable to get data.', 'error');
   });
 
   onValue(ref(database, 'payments'), (snap) => {
     state.payments = toArray(snap.val(), 'id');
     renderAll();
+    showAdminFeedback('Data confirmed.', 'success');
+  }, (error) => {
+    console.error(error);
+    state.payments = [];
+    renderAll();
+    showAdminFeedback('Unable to get data.', 'error');
   });
 
   onValue(ref(database, 'jobs'), (snap) => {
     state.jobs = toArray(snap.val(), 'id');
     renderAll();
+    showAdminFeedback('Data confirmed.', 'success');
+  }, (error) => {
+    console.error(error);
+    state.jobs = [];
+    renderAll();
+    showAdminFeedback('Unable to get data.', 'error');
   });
 
   onValue(ref(database, 'adminSettings'), (snap) => {
     state.settings = snap.val() || {};
     loadSettingsIntoForm();
     renderOverview();
+  }, (error) => {
+    console.error(error);
+    showAdminFeedback('Unable to get data.', 'error');
   });
 }
 
