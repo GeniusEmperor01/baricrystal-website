@@ -89,6 +89,28 @@ body { display: flex; min-height: 100vh; }
 .field input::placeholder { color: var(--text-muted); }
 .field input:focus, .field select:focus { border-color: var(--gold); }
 .field input.error { border-color: var(--error); }
+
+.password-field { position: relative; }
+.password-field input { padding-right: 48px; }
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 41px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.toggle-password:hover { color: var(--gold); }
+
 .field select option { background: var(--dark-3); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
@@ -123,6 +145,43 @@ body { display: flex; min-height: 100vh; }
 .login-link a { color: var(--gold); text-decoration: none; font-weight: 500; }
 
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+.google-btn {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border);
+  background: var(--dark-2);
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: border-color 0.2s, color 0.2s, transform 0.2s;
+  margin-top: 12px;
+}
+.google-btn:hover { border-color: var(--gold); color: var(--gold); }
+.google-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
 
 @media (max-width: 800px) {
   body { flex-direction: column; }
@@ -184,11 +243,11 @@ body { display: flex; min-height: 100vh; }
     <p class="form-sub">Already have an account? <a href="login.html">Sign in here</a></p>
 
     <div class="field-row">
-      <div class="field"><label>First Name</label><input type="text" id="fname" placeholder="John"/></div>
-      <div class="field"><label>Last Name</label><input type="text" id="lname" placeholder="Doe"/></div>
+      <div class="field"><label>First Name</label><input type="text" id="fname" placeholder="John" autocomplete="given-name"/></div>
+      <div class="field"><label>Last Name</label><input type="text" id="lname" placeholder="Doe" autocomplete="family-name"/></div>
     </div>
-    <div class="field"><label>Email Address</label><input type="email" id="email" placeholder="john@email.com"/></div>
-    <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="phone" placeholder="+234 801 234 5678" oninput="this.value=this.value.replace(/[^0-9+\s]/g,'')" maxlength="20"/></div>
+    <div class="field"><label>Email Address</label><input type="email" id="email" placeholder="john@email.com" autocomplete="email"/></div>
+    <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="phone" placeholder="+234 801 234 5678" autocomplete="tel" oninput="this.value=this.value.replace(/[^0-9+\s]/g,'')" maxlength="20"/></div>
     <div class="field">
       <label>State of Origin</label>
       <select id="state">
@@ -204,9 +263,10 @@ body { display: flex; min-height: 100vh; }
         <option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option><option>Zamfara</option>
       </select>
     </div>
-    <div class="field">
+    <div class="field password-field">
       <label>Password</label>
-      <input type="password" id="password" placeholder="Min. 8 characters" oninput="checkStrength(this.value)"/>
+      <input type="password" id="password" placeholder="Min. 8 characters" autocomplete="new-password" oninput="checkStrength(this.value)"/>
+      <button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('password', this)">👁</button>
       <div class="password-strength">
         <div class="strength-bar" id="bar1"></div>
         <div class="strength-bar" id="bar2"></div>
@@ -215,7 +275,7 @@ body { display: flex; min-height: 100vh; }
       </div>
       <div class="strength-label" id="strength-label"></div>
     </div>
-    <div class="field"><label>Confirm Password</label><input type="password" id="confirm" placeholder="Repeat your password"/></div>
+    <div class="field password-field"><label>Confirm Password</label><input type="password" id="confirm" placeholder="Repeat your password" autocomplete="new-password"/><button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('confirm', this)">👁</button></div>
 
     <div class="terms">
       <input type="checkbox" id="terms-check"/>
@@ -225,6 +285,10 @@ body { display: flex; min-height: 100vh; }
     <div class="error-msg" id="error-msg"></div>
 
     <button class="submit-btn" id="signup-btn" type="button">Create Account</button>
+
+    <div class="auth-divider">or</div>
+
+    <button class="google-btn" type="button" id="google-signup-btn">Sign Up with Google</button>
 
     <div class="login-link">Already registered? <a href="login.html">Log in</a></div>
 
@@ -296,7 +360,229 @@ body { display: flex; min-height: 100vh; }
 </script>
 
 <!-- Firebase signup module with validation and fraud prevention -->
+<script>
+window.togglePassword = function(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  if (btn) {
+    btn.textContent = isPassword ? '🙈' : '👁';
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+  }
+};
+</script>
+
 <script type="module" src="signup.js"></script>
+
+
+<!-- FLOATING HELP PILL -->
+<style>
+.help-pill {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px 14px 16px;
+  background: var(--gold);
+  border-radius: 50px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: slideInUp 0.5s ease-out;
+}
+.help-pill:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(200,155,60,0.4);
+}
+.help-pill-icon {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+.help-pill-text {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dark);
+  white-space: nowrap;
+}
+.help-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+.help-modal.show {
+  display: flex;
+}
+.help-modal-content {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+  position: relative;
+}
+.help-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+.help-modal-close:hover {
+  color: var(--gold);
+}
+.help-modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+.help-modal-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.help-modal-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.help-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.help-section-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.help-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--dark-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  transition: all 0.2s;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.help-contact-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (max-width: 768px) {
+  .help-pill { bottom: 24px; right: 24px; padding: 12px 16px 12px 14px; }
+  .help-pill-text { display: none; }
+  .help-pill { width: 50px; height: 50px; border-radius: 50%; justify-content: center; }
+  .help-modal-content { padding: 24px; }
+  .help-modal-title { font-size: 24px; }
+}
+</style>
+<div class="help-pill" onclick="openHelpModal()">
+  <div class="help-pill-icon">?</div>
+  <div class="help-pill-text">Help</div>
+</div>
+<div class="help-modal" id="helpModal" onclick="closeHelpModal(event)">
+  <div class="help-modal-content" onclick="event.stopPropagation()">
+    <button class="help-modal-close" onclick="closeHelpModal()">×</button>
+    <div class="help-modal-title">How Can We Help?</div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Getting Started</div>
+      <div class="help-section-text">New to BARICRYSTAL? Start by creating an account, filling out your CV, and submitting your application. Our team will review your profile and match you with suitable job opportunities.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Application Status</div>
+      <div class="help-section-text">You can track your application status anytime by logging into your dashboard. We'll notify you via email at each stage of the process.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Payment & Plans</div>
+      <div class="help-section-text">We offer Standard (₦25,000) and Priority (₦45,000) plans. Both include full processing and employer matching. Priority includes faster processing and a dedicated agent.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">CV & Documents</div>
+      <div class="help-section-text">Use our CV builder to fill out your profile following the BARICRYSTAL template. Make sure to upload all required documents including passport scans and medical reports.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Email Verification</div>
+      <div class="help-section-text">Use the same email you registered with. If your account is pending, follow the on-screen instructions to continue.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Still Need Help?</div>
+      <div class="help-section-text">Contact our team for personalized support. We're here to guide you through every step of your journey.</div>
+      <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="mailto:info@baricrystalinternational.com" class="help-contact-btn">Email</a>
+        <a href="contact.html" class="help-contact-btn">Contact Page</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function openHelpModal() {
+  document.getElementById('helpModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeHelpModal(event) {
+  if (event && event.target.id !== 'helpModal') return;
+  document.getElementById('helpModal').classList.remove('show');
+  document.body.style.overflow = 'auto';
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeHelpModal();
+});
+</script>
 
 </body>
 </html>

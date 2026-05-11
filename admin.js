@@ -1,0 +1,1194 @@
+import { auth, database, baseUrl } from './firebase-config.js';
+import {
+  onAuthStateChanged,
+  signOut,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from 'https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js';
+import {
+  ref,
+  onValue,
+  get,
+  set,
+  update,
+  push,
+} from 'https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js';
+
+
+const ADMIN_EMAIL = 'admin@baricrystal.com';
+const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
+
+const state = {
+  users: [],
+  applications: [],
+  payments: [],
+  jobs: [],
+  conversations: [],
+  cvs: {},
+  settings: {},
+  currentUser: null,
+  appSearch: '',
+  appStatus: 'all',
+  jobSearch: '',
+  jobStatus: 'all',
+  jobCategory: 'all',
+  jobCountry: 'all',
+  editingJobId: null,
+  selectedUserId: null,
+  selectedThreadId: null,
+  selectedMessages: [],
+};
+
+const titles = {
+  overview: 'Overview',
+  applications: 'Applications',
+  payments: 'Payments',
+  jobs: 'Job Listings',
+  users: 'Users',
+  settings: 'Settings',
+};
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function initials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] || 'U') + (parts[1]?.[0] || '')).toUpperCase();
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function parseDate(value) {
+  const d = new Date(value || 0);
+  return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+}
+
+function toArray(node, keyName = 'id') {
+  if (!node) return [];
+  if (Array.isArray(node)) {
+    return node.filter(Boolean).map((item, idx) => ({ [keyName]: item?.[keyName] || String(idx + 1), ...(item || {}) }));
+  }
+  return Object.entries(node).map(([key, item]) => ({ [keyName]: key, ...(item || {}) }));
+}
+
+function normalizeUsers(node) {
+  return toArray(node, 'uid').map((u) => {
+    const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim() || u.displayName || u.fullName || u.name || u.email?.split('@')?.[0] || 'Unnamed User';
+    const status = String(u.accountStatus || u.paymentStatus || u.status || 'unpaid').toLowerCase();
+    return {
+      ...u,
+      name,
+      status,
+      registeredAt: u.createdAt || u.registeredAt || u.lastLogin || '',
+    };
+  });
+}
+
+function statusLabel(status) {
+  const s = String(status || 'pending').toLowerCase().replace(/_/g, ' ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function badgeClass(status) {
+  const s = String(status || 'pending').toLowerCase();
+  if (['approved', 'paid', 'active', 'completed', 'admin'].includes(s)) return 'badge-approved';
+  if (['processing', 'in review', 'review', 'pending review'].includes(s)) return 'badge-processing';
+  if (['rejected', 'declined'].includes(s)) return 'badge-rejected';
+  return 'badge-pending';
+}
+
+function moneyFromPayment(value) {
+  const num = Number(String(value ?? '').replace(/[^\d.]/g, ''));
+  return Number.isFinite(num) ? num : 0;
+}
+
+function getThreadId(userUid) {
+  return `baricrystal_${String(userUid || '').trim()}`;
+}
+
+function formatDateTime(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function getCvData(uid) {
+  return state.cvs?.[uid] || null;
+}
+
+function buildCvSections(cv) {
+  if (!cv) return [];
+  const sections = [];
+  const education = cv.sections?.education || cv.education || [];
+  const experience = cv.sections?.experience || cv.experience || [];
+  const languages = cv.sections?.languages || cv.languages || [];
+  const skills = cv.sections?.skills || cv.skills || [];
+  if (education?.length) sections.push({ title: 'Education', items: education.map((r) => `${r.school || r.institution || ''} • ${r.qualification || ''} • ${r.year || ''}`.trim()) });
+  if (experience?.length) sections.push({ title: 'Experience', items: experience.map((r) => `${r.company || ''} • ${r.position || ''} • ${r.duration || ''}`.trim()) });
+  if (languages?.length) sections.push({ title: 'Languages', items: languages.map((r) => `${r.language || ''} • Speak: ${r.speak || ''} • Read: ${r.read || ''} • Write: ${r.write || ''}`.trim()) });
+  if (skills?.length) sections.push({ title: 'Skills', items: skills.map((r) => r.skill || '').filter(Boolean) });
+  return sections;
+}
+
+
+function formatCompactMoney(value) {
+  const num = Number(String(value ?? '').replace(/[^\d.]/g, ''));
+  if (!Number.isFinite(num) || !num) return '—';
+  return `₦${num.toLocaleString('en-NG')}`;
+}
+
+function splitList(value) {
+  return String(value || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function jobTemplateIcon(icon, fallback = '✦') {
+  const text = String(icon || '').trim();
+  return text || fallback;
+}
+
+function jobFiltersText(job) {
+  return [
+    job.title,
+    job.jobTitle,
+    job.category,
+    job.jobCategory,
+    job.country,
+    job.description,
+    job.salary,
+    job.status,
+    job.state,
+    ...(job.highlights || []),
+    ...(job.requirements || []),
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+async function loadSelectedMessages(threadId) {
+  if (!threadId) return [];
+  const snap = await get(ref(database, `conversationMessages/${threadId}`));
+  if (!snap.exists()) return [];
+  return Object.entries(snap.val() || {}).map(([id, item]) => ({ id, ...(item || {}) })).sort((a, b) => parseDate(a.createdAt) - parseDate(b.createdAt));
+}
+
+function resetSelectedUserState() {
+  state.selectedUserId = null;
+  state.selectedThreadId = null;
+  state.selectedMessages = [];
+}
+
+function emptyRow(cols, message) {
+  return `<tr><td colspan="${cols}"><div style="padding:28px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">${esc(message)}</div></td></tr>`;
+}
+
+function showAdminFeedback(message, tone = 'info') {
+  const box = document.getElementById('admin-feedback');
+  if (!box) return;
+  const colors = {
+    success: ['rgba(45,158,107,0.12)', 'rgba(45,158,107,0.35)', '#2D9E6B'],
+    warning: ['rgba(232,168,56,0.12)', 'rgba(232,168,56,0.35)', '#E8A838'],
+    error: ['rgba(226,75,74,0.10)', 'rgba(226,75,74,0.30)', '#E24B4A'],
+    info: ['rgba(58,138,196,0.10)', 'rgba(58,138,196,0.30)', 'var(--text-muted)'],
+  };
+  const [bg, border, color] = colors[tone] || colors.info;
+  box.style.display = 'block';
+  box.style.background = bg;
+  box.style.borderColor = border;
+  box.style.color = color;
+  box.textContent = message;
+}
+
+function setActiveTab(tabId, navEl) {
+  document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'));
+  const panel = document.getElementById(`tab-${tabId}`);
+  if (panel) panel.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  const title = document.getElementById('page-title');
+  if (title) title.textContent = titles[tabId] || tabId;
+}
+
+function renderAdminIdentity() {
+  const name = state.currentUser?.displayName || state.currentUser?.email || 'Admin';
+  const adminName = document.querySelector('.admin-name');
+  const adminRole = document.querySelector('.admin-role');
+  const avatar = document.querySelector('.admin-avatar');
+  if (adminName) adminName.textContent = name;
+  if (adminRole) adminRole.textContent = isAdminEmail(state.currentUser?.email) ? 'Super Admin' : 'Admin';
+  if (avatar) avatar.textContent = initials(name);
+}
+
+function renderOverview() {
+  const applications = state.applications;
+  const payments = state.payments;
+  const users = state.users;
+
+  const approved = applications.filter((a) => ['approved', 'paid', 'active', 'completed'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
+  const pending = applications.filter((a) => ['pending', 'processing', 'review', 'pending review'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
+  const revenue = payments.reduce((sum, p) => sum + moneyFromPayment(p.amount), 0);
+
+  const statNums = document.querySelectorAll('.stats-row .stat-card-num');
+  if (statNums[0]) statNums[0].textContent = String(applications.length);
+  if (statNums[1]) statNums[1].textContent = String(approved);
+  if (statNums[2]) statNums[2].textContent = String(pending);
+  if (statNums[3]) statNums[3].textContent = revenue ? `₦${revenue.toLocaleString('en-NG')}` : '₦0';
+
+  const jobsTotalSlots = jobs.reduce((sum, job) => sum + (Number(job.slots || job.openings || 0) || 0), 0);
+  const jobsOpen = jobs.filter((job) => String(job.status || job.state || 'open').toLowerCase() !== 'filled').length;
+  const jobsFilled = jobs.filter((job) => String(job.status || job.state || '').toLowerCase() === 'filled').length;
+  const jobsSlotsEl = document.getElementById('jobs-total-slots');
+  const jobsOpenEl = document.getElementById('jobs-open-count');
+  const jobsFilledEl = document.getElementById('jobs-filled-count');
+  if (jobsSlotsEl) jobsSlotsEl.textContent = jobs.length ? String(jobsTotalSlots) : 'Getting data';
+  if (jobsOpenEl) jobsOpenEl.textContent = jobs.length ? String(jobsOpen) : 'Getting data';
+  if (jobsFilledEl) jobsFilledEl.textContent = jobs.length ? String(jobsFilled) : 'Getting data';
+
+  const weekCounts = [0, 0, 0, 0, 0];
+  const now = new Date();
+  applications.forEach((app) => {
+    const ts = parseDate(app.appliedAt || app.createdAt || app.date);
+    if (!ts) return;
+    const d = new Date(ts);
+    if (d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return;
+    const week = Math.min(4, Math.floor((d.getDate() - 1) / 7));
+    weekCounts[week] += 1;
+  });
+  const bars = document.querySelectorAll('.bar-chart .bar-col .bar');
+  const max = Math.max(1, ...weekCounts);
+  bars.forEach((bar, idx) => {
+    const h = 18 + Math.round((weekCounts[idx] / max) * 72);
+    bar.style.height = `${h}%`;
+  });
+  const sub = document.querySelector('.chart-card-sub');
+  if (sub) sub.textContent = `Realtime from Firebase — ${now.toLocaleString('en-GB', { month: 'long', year: 'numeric' })}`;
+
+  renderActivity();
+  showAdminFeedback(
+    users.length || applications.length || payments.length || state.jobs.length
+      ? 'Live Firebase data loaded successfully.'
+      : 'No records found yet. Empty states are showing instead of fake demo data.',
+    users.length || applications.length || payments.length || state.jobs.length ? 'success' : 'warning'
+  );
+}
+
+function renderActivity() {
+  const box = document.querySelector('.recent-activity');
+  if (!box) return;
+
+  const events = [];
+
+  state.users.slice().sort((a, b) => parseDate(b.registeredAt) - parseDate(a.registeredAt)).slice(0, 2).forEach((u) => {
+    events.push({
+      ts: parseDate(u.registeredAt),
+      color: 'var(--success)',
+      text: `<strong>${esc(u.name)}</strong> joined the system`,
+      time: formatDate(u.registeredAt),
+    });
+  });
+
+  state.applications.slice().sort((a, b) => parseDate(b.appliedAt || b.createdAt || b.date) - parseDate(a.appliedAt || a.createdAt || a.date)).slice(0, 2).forEach((a) => {
+    const name = a.name || [a.firstName, a.lastName].filter(Boolean).join(' ') || a.email || 'Unnamed Applicant';
+    const job = a.jobCategory || a.category || a.jobTitle || 'application';
+    events.push({
+      ts: parseDate(a.appliedAt || a.createdAt || a.date),
+      color: 'var(--info)',
+      text: `<strong>${esc(name)}</strong> submitted ${esc(job)}`,
+      time: formatDate(a.appliedAt || a.createdAt || a.date),
+    });
+  });
+
+  state.payments.slice().sort((a, b) => parseDate(b.date || b.createdAt || b.paidAt) - parseDate(a.date || a.createdAt || a.paidAt)).slice(0, 1).forEach((p) => {
+    const name = p.name || p.candidate || p.email || 'Payment';
+    const plan = p.plan || p.planName || 'Plan';
+    events.push({
+      ts: parseDate(p.date || p.createdAt || p.paidAt),
+      color: 'var(--gold)',
+      text: `<strong>${esc(name)}</strong> completed payment — ${esc(plan)}`,
+      time: formatDate(p.date || p.createdAt || p.paidAt),
+    });
+  });
+
+  events.sort((a, b) => b.ts - a.ts);
+  const slice = events.slice(0, 5);
+
+  box.innerHTML = `<div class="activity-title">Recent Activity</div>${slice.length ? slice.map((item) => `
+    <div class="activity-item">
+      <div class="activity-dot" style="background:${item.color}"></div>
+      <div><div class="activity-text">${item.text}</div><div class="activity-time">${esc(item.time)}</div></div>
+    </div>
+  `).join('') : '<div class="activity-item"><div class="activity-dot" style="background:var(--warning)"></div><div><div class="activity-text">No activity yet.</div><div class="activity-time">Once Firebase has records, this panel will update automatically.</div></div></div>'}`;
+}
+
+function matchesAppFilter(item) {
+  if (state.appStatus !== 'all') {
+    const status = String(item.status || item.applicationStatus || 'pending').toLowerCase();
+    if (status !== state.appStatus) return false;
+  }
+  const q = state.appSearch.trim().toLowerCase();
+  if (!q) return true;
+  const haystack = [
+    item.name,
+    item.firstName,
+    item.lastName,
+    item.email,
+    item.phone,
+    item.jobCategory,
+    item.category,
+    item.jobTitle,
+    item.plan,
+    item.planName,
+    item.status,
+    item.applicationStatus,
+  ].filter(Boolean).join(' ').toLowerCase();
+  return haystack.includes(q);
+}
+
+function renderApplicationsTable() {
+  const tbody = document.getElementById('admin-applications-body');
+  const recent = document.getElementById('admin-recent-applications-body');
+  const data = state.applications.slice().sort((a, b) => parseDate(b.appliedAt || b.createdAt || b.date) - parseDate(a.appliedAt || a.createdAt || a.date));
+  const filtered = data.filter(matchesAppFilter);
+
+  const rows = filtered.map((item) => {
+    const name = item.name || [item.firstName, item.lastName].filter(Boolean).join(' ') || item.email || 'Unnamed Applicant';
+    const email = item.email || '—';
+    const phone = item.phone || '—';
+    const job = item.jobCategory || item.category || item.jobTitle || '—';
+    const plan = item.plan || item.planName || '—';
+    const status = item.status || item.applicationStatus || 'pending';
+    const applied = formatDate(item.appliedAt || item.createdAt || item.date);
+    return `<tr data-status="${esc(String(status).toLowerCase())}"><td><div class="candidate-info"><div class="candidate-avatar">${esc(initials(name))}</div><div><div class="candidate-name">${esc(name)}</div><div class="candidate-email">${esc(email)}</div></div></div></td><td>${esc(phone)}</td><td>${esc(job)}</td><td>${esc(plan)}</td><td><span class="badge ${badgeClass(status)}">${esc(statusLabel(status))}</span></td><td>${esc(applied)}</td><td><button class="action-btn" data-action="view">View</button></td></tr>`;
+  }).join('');
+
+  if (tbody) tbody.innerHTML = rows || emptyRow(7, state.appSearch || state.appStatus !== 'all' ? 'No applications match the current filter.' : 'No applications yet. Once Firebase is connected, applications will show here automatically.');
+
+  if (recent) {
+    const latest = data.slice(0, 4);
+    recent.innerHTML = latest.length ? latest.map((item) => {
+      const name = item.name || [item.firstName, item.lastName].filter(Boolean).join(' ') || item.email || 'Unnamed Applicant';
+      const email = item.email || '—';
+      const job = item.jobCategory || item.category || item.jobTitle || '—';
+      const status = item.status || item.applicationStatus || 'pending';
+      const date = formatDate(item.appliedAt || item.createdAt || item.date);
+      return `<tr><td><div class="candidate-info"><div class="candidate-avatar">${esc(initials(name))}</div><div><div class="candidate-name">${esc(name)}</div><div class="candidate-email">${esc(email)}</div></div></div></td><td>${esc(job)}</td><td>${esc(item.plan || item.planName || '—')}</td><td><span class="badge ${badgeClass(status)}">${esc(statusLabel(status))}</span></td><td>${esc(date)}</td></tr>`;
+    }).join('') : emptyRow(5, 'No recent applications yet.');
+  }
+
+  const appCount = document.getElementById('admin-app-count');
+  if (appCount) appCount.textContent = `(${state.applications.length})`;
+}
+
+function renderPaymentsTable() {
+  const tbody = document.getElementById('admin-payments-body');
+  const data = state.payments.slice().sort((a, b) => parseDate(b.date || b.createdAt || b.paidAt) - parseDate(a.date || a.createdAt || a.paidAt));
+  const rows = data.map((item) => {
+    const name = item.name || item.candidate || item.email || 'Unnamed Client';
+    const plan = item.plan || item.planName || '—';
+    const amount = item.amount || '—';
+    const method = item.method || item.paymentMethod || '—';
+    const status = item.status || item.paymentStatus || 'pending';
+    const date = formatDate(item.date || item.createdAt || item.paidAt);
+    return `<tr><td><div class="candidate-name">${esc(name)}</div><div class="candidate-email">${esc(item.email || '')}</div></td><td>${esc(plan)}</td><td>${esc(amount)}</td><td>${esc(method)}</td><td><span class="badge ${badgeClass(status)}">${esc(statusLabel(status))}</span></td><td>${esc(date)}</td></tr>`;
+  }).join('');
+  if (tbody) tbody.innerHTML = rows || emptyRow(6, 'No payment records yet. Payments will appear here when Firebase receives them.');
+}
+
+
+function renderJobsTable() {
+  const tbody = document.getElementById('admin-jobs-body');
+  const data = state.jobs.slice().sort((a, b) => parseDate(b.createdAt || b.updatedAt) - parseDate(a.createdAt || a.updatedAt));
+  const filtered = data.filter((item) => {
+    const search = String(state.jobSearch || '').trim().toLowerCase();
+    const status = String(item.status || item.state || 'open').toLowerCase();
+    const category = String(item.category || item.jobCategory || '').toLowerCase();
+    const country = String(item.country || '').toLowerCase();
+    const haystack = jobFiltersText(item);
+    if (search && !haystack.includes(search)) return false;
+    if (state.jobStatus !== 'all' && status !== state.jobStatus) return false;
+    if (state.jobCategory !== 'all' && category !== state.jobCategory.toLowerCase()) return false;
+    if (state.jobCountry !== 'all' && country !== state.jobCountry.toLowerCase()) return false;
+    return true;
+  });
+
+  const rows = filtered.map((item, idx) => {
+    const id = item.id || String(idx + 1).padStart(3, '0');
+    const title = item.title || item.jobTitle || 'Untitled Job';
+    const category = item.category || item.jobCategory || '—';
+    const country = item.country || '—';
+    const slots = item.slots ?? item.openings ?? '—';
+    const status = item.status || item.state || 'open';
+    const pill = String(status).toLowerCase() === 'filled' ? 'filled' : 'open';
+    const featured = String(status).toLowerCase() === 'featured' ? 'Featured' : '';
+    return `<tr>
+      <td style="color:var(--text-muted)">${esc(id)}</td>
+      <td>
+        <div class="candidate-name">${esc(title)}</div>
+        <div class="candidate-email">${esc(item.salary || item.pay || '')}${featured ? ` · ${esc(featured)}` : ''}</div>
+      </td>
+      <td>${esc(category)}</td>
+      <td>${esc(country)}</td>
+      <td>${esc(slots)}</td>
+      <td><div class="job-pill"><div class="job-dot ${pill}"></div>${esc(statusLabel(status))}</div></td>
+      <td>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="action-btn" data-action="edit-job" data-job-id="${esc(item.id)}">Edit</button>
+          <button class="action-btn" data-action="delete-job" data-job-id="${esc(item.id)}">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  if (tbody) tbody.innerHTML = rows || emptyRow(7, state.jobSearch || state.jobStatus !== 'all' || state.jobCountry !== 'all' || state.jobCategory !== 'all'
+    ? 'No jobs match the current filters.'
+    : 'Getting data from Firebase...');
+
+  const jobCount = document.getElementById('admin-job-count');
+  if (jobCount) jobCount.textContent = `(${state.jobs.length})`;
+
+  updateJobFilterOptions();
+  renderJobPreview();
+}
+
+
+function updateJobFilterOptions() {
+  const categorySelect = document.getElementById('job-category-filter');
+  const countrySelect = document.getElementById('job-country-filter');
+  const categories = [...new Set(state.jobs.map((job) => String(job.category || job.jobCategory || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const countries = [...new Set(state.jobs.map((job) => String(job.country || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  if (categorySelect) {
+    const current = categorySelect.value || 'all';
+    categorySelect.innerHTML = '<option value="all">All Categories</option>' + categories.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    categorySelect.value = categories.includes(current) || current === 'all' ? current : 'all';
+  }
+  if (countrySelect) {
+    const current = countrySelect.value || 'all';
+    countrySelect.innerHTML = '<option value="all">All Countries</option>' + countries.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    countrySelect.value = countries.includes(current) || current === 'all' ? current : 'all';
+  }
+}
+
+function renderJobPreview() {
+  const title = document.getElementById('job-title')?.value || 'Factory Supervisor';
+  const category = document.getElementById('job-category-input')?.value || 'Factory & Production';
+  const country = document.getElementById('job-country-input')?.value || 'Poland';
+  const slots = document.getElementById('job-slots')?.value || '10';
+  const salary = document.getElementById('job-salary')?.value || '₦250,000 / month';
+  const status = document.getElementById('job-status')?.value || 'open';
+  const icon = document.getElementById('job-icon')?.value || '🏭';
+  const description = document.getElementById('job-description')?.value || 'Write a clear short description of the role so the listing looks polished and trustworthy.';
+  const highlights = splitList(document.getElementById('job-highlights')?.value || 'Training provided, No experience required, Visa support');
+  const requirements = splitList(document.getElementById('job-requirements')?.value || 'Passport, CV, Basic English');
+  const deadline = document.getElementById('job-deadline')?.value ? `Deadline ${formatDate(document.getElementById('job-deadline').value)}` : '';
+
+  const previewStatus = document.getElementById('job-preview-status');
+  const previewTitle = document.getElementById('job-preview-title');
+  const previewLocation = document.getElementById('job-preview-location');
+  const previewIcon = document.getElementById('job-preview-icon');
+  const previewDesc = document.getElementById('job-preview-desc');
+  const previewChips = document.getElementById('job-preview-chips');
+  const previewReqs = document.getElementById('job-preview-reqs');
+
+  if (previewStatus) previewStatus.textContent = statusLabel(status);
+  if (previewTitle) previewTitle.textContent = title;
+  if (previewLocation) previewLocation.textContent = `${country} · ${slots} Slots`;
+  if (previewIcon) previewIcon.textContent = jobTemplateIcon(icon);
+  if (previewDesc) previewDesc.textContent = description;
+  if (previewChips) {
+    const chips = [category, salary, deadline].filter(Boolean);
+    previewChips.innerHTML = chips.map((chip) => `<span class="job-chip">${esc(chip)}</span>`).join('');
+  }
+  if (previewReqs) {
+    previewReqs.innerHTML = requirements.length
+      ? requirements.map((item) => `<span>${esc(item)}</span>`).join('')
+      : '<span>Passport</span><span>CV</span><span>Basic English</span>';
+  }
+}
+
+function clearJobForm() {
+  state.editingJobId = null;
+  ['job-id', 'job-title', 'job-category-input', 'job-country-input', 'job-slots', 'job-salary', 'job-description', 'job-highlights', 'job-requirements', 'job-deadline'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const status = document.getElementById('job-status');
+  const icon = document.getElementById('job-icon');
+  const featured = document.getElementById('job-featured');
+  if (status) status.value = 'open';
+  if (icon) icon.value = '🏭';
+  if (featured) featured.value = 'no';
+  renderJobPreview();
+}
+
+function loadJobIntoForm(jobId) {
+  const job = state.jobs.find((j) => String(j.id) === String(jobId));
+  if (!job) return showAdminFeedback('Job record not found.', 'warning');
+  state.editingJobId = job.id;
+  const map = {
+    'job-id': job.id || '',
+    'job-title': job.title || job.jobTitle || '',
+    'job-category-input': job.category || job.jobCategory || '',
+    'job-country-input': job.country || '',
+    'job-slots': job.slots ?? job.openings ?? '',
+    'job-salary': job.salary || job.pay || '',
+    'job-description': job.description || '',
+    'job-highlights': (job.highlights || []).join(', '),
+    'job-requirements': (job.requirements || []).join(', '),
+    'job-deadline': job.deadline || '',
+    'job-status': job.status || job.state || 'open',
+    'job-icon': job.icon || '🏭',
+    'job-featured': String(job.featured || '').toLowerCase() === 'yes' || job.status === 'featured' ? 'yes' : 'no',
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+  renderJobPreview();
+  document.getElementById('job-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function submitJobForm(event) {
+  event.preventDefault();
+  const title = document.getElementById('job-title')?.value.trim();
+  const category = document.getElementById('job-category-input')?.value.trim();
+  const country = document.getElementById('job-country-input')?.value.trim();
+  const slots = Number(document.getElementById('job-slots')?.value || 0);
+  const salary = document.getElementById('job-salary')?.value.trim();
+  const status = document.getElementById('job-status')?.value || 'open';
+  const icon = document.getElementById('job-icon')?.value.trim() || '🏭';
+  const description = document.getElementById('job-description')?.value.trim();
+  const highlights = splitList(document.getElementById('job-highlights')?.value);
+  const requirements = splitList(document.getElementById('job-requirements')?.value);
+  const deadline = document.getElementById('job-deadline')?.value || '';
+  const featured = document.getElementById('job-featured')?.value === 'yes';
+
+  if (!title || !category || !country || !description) {
+    showAdminFeedback('Fill title, category, country, and description first.', 'warning');
+    return;
+  }
+
+  const payload = {
+    title,
+    jobTitle: title,
+    category,
+    jobCategory: category,
+    country,
+    slots: Number.isFinite(slots) && slots > 0 ? slots : 1,
+    openings: Number.isFinite(slots) && slots > 0 ? slots : 1,
+    salary,
+    pay: salary,
+    status: featured ? 'featured' : status,
+    state: featured ? 'featured' : status,
+    icon,
+    description,
+    highlights,
+    requirements,
+    deadline,
+    featured,
+    updatedAt: new Date().toISOString(),
+    postedBy: state.currentUser?.email || 'admin',
+  };
+
+  try {
+    if (state.editingJobId) {
+      payload.createdAt = state.jobs.find((j) => String(j.id) === String(state.editingJobId))?.createdAt || new Date().toISOString();
+      await set(ref(database, `jobs/${state.editingJobId}`), payload);
+      showAdminFeedback('Job updated and confirmed in Firebase.', 'success');
+    } else {
+      payload.createdAt = new Date().toISOString();
+      const newJobRef = push(ref(database, 'jobs'));
+      await set(newJobRef, payload);
+      showAdminFeedback('Job posted to Firebase.', 'success');
+    }
+    clearJobForm();
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to save job.', 'error');
+  }
+}
+
+async function deleteJob(jobId) {
+  const job = state.jobs.find((j) => String(j.id) === String(jobId));
+  if (!job) return showAdminFeedback('Job record not found.', 'warning');
+  if (!window.confirm(`Delete "${job.title || job.jobTitle || 'this job'}"?`)) return;
+  try {
+    await set(ref(database, `jobs/${jobId}`), null);
+    showAdminFeedback('Job deleted.', 'success');
+    if (String(state.editingJobId) === String(jobId)) clearJobForm();
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to delete job.', 'error');
+  }
+}
+
+window.resetJobForm = clearJobForm;
+window.filterJobs = function filterJobs(value) {
+  state.jobSearch = String(value || '');
+  renderJobsTable();
+};
+window.setJobStatusFilter = function setJobStatusFilter(value) {
+  state.jobStatus = String(value || 'all').toLowerCase();
+  renderJobsTable();
+};
+window.setJobCategoryFilter = function setJobCategoryFilter(value) {
+  state.jobCategory = String(value || 'all');
+  renderJobsTable();
+};
+window.setJobCountryFilter = function setJobCountryFilter(value) {
+  state.jobCountry = String(value || 'all');
+  renderJobsTable();
+};
+window.saveJobPosting = submitJobForm;
+window.editJob = loadJobIntoForm;
+window.deleteJob = deleteJob;
+window.updateJobPreview = renderJobPreview;
+
+function renderUsersTable() {
+  const tbody = document.getElementById('admin-users-body');
+  const data = state.users.slice().sort((a, b) => parseDate(b.registeredAt) - parseDate(a.registeredAt));
+  const rows = data.map((item) => {
+    const name = item.name || item.displayName || item.fullName || item.email?.split('@')?.[0] || 'Unnamed User';
+    const email = item.email || '—';
+    const phone = item.phone || '—';
+    const stateName = item.state || item.location || '—';
+    const registered = formatDate(item.registeredAt || item.createdAt || item.lastLogin);
+    const appStatus = item.applicationStatus || item.status || item.accountStatus || 'pending';
+    const role = String(item.role || '').toLowerCase();
+    return `<tr>
+      <td><div class="candidate-info"><div class="candidate-avatar">${esc(initials(name))}</div><div><div class="candidate-name">${esc(name)}</div><div class="candidate-email">${esc(email)}</div></div></div></td>
+      <td>${esc(phone)}</td>
+      <td>${esc(stateName)}</td>
+      <td>${esc(registered)}</td>
+      <td><span class="badge ${badgeClass(appStatus)}">${esc(statusLabel(appStatus))}</span></td>
+      <td>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="action-btn" data-action="view-user" data-user-id="${esc(item.uid)}">View</button>
+          <button class="action-btn" data-action="toggle-role" data-user-id="${esc(item.uid)}">${role === 'admin' ? 'Remove Admin' : 'Make Admin'}</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  if (tbody) tbody.innerHTML = rows || emptyRow(6, 'Getting data from Firebase...');
+
+  const userCount = document.getElementById('admin-user-count');
+  if (userCount) userCount.textContent = `(${state.users.length})`;
+}
+
+function saveAdminSettings() {
+  const payload = {
+    agencyName: document.getElementById('admin-agency-name')?.value || '',
+    contactEmail: document.getElementById('admin-contact-email')?.value || '',
+    whatsapp: document.getElementById('admin-whatsapp')?.value || '',
+    updatedAt: new Date().toISOString(),
+    updatedBy: state.currentUser?.email || 'admin',
+  };
+  set(ref(database, 'adminSettings'), payload)
+    .then(() => {
+      state.settings = payload;
+      showAdminFeedback('Settings saved to Firebase.', 'success');
+    })
+    .catch((error) => {
+      console.error(error);
+      showAdminFeedback('Could not save settings to Firebase.', 'error');
+    });
+}
+
+async function updateAdminPassword() {
+  const currentPassword = document.getElementById('admin-current-password')?.value || '';
+  const newPassword = document.getElementById('admin-new-password')?.value || '';
+  if (!currentPassword || !newPassword) {
+    showAdminFeedback('Fill in both password fields first.', 'warning');
+    return;
+  }
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    showAdminFeedback('No signed-in admin session found.', 'error');
+    return;
+  }
+  try {
+    const cred = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, cred);
+    await updatePassword(user, newPassword);
+    document.getElementById('admin-current-password').value = '';
+    document.getElementById('admin-new-password').value = '';
+    showAdminFeedback('Admin password updated successfully.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback(error?.code === 'auth/wrong-password' ? 'Current password is incorrect.' : 'Password update failed.', 'error');
+  }
+}
+
+function handleActionButtonClick(btn) {
+  const action = String(btn.dataset.action || btn.textContent || '').trim().toLowerCase();
+  const uid = String(btn.dataset.userId || '').trim();
+  if (action === 'view-user') return openUserModal(uid);
+  if (action === 'toggle-role') return toggleUserRole(uid);
+  if (action === 'edit-job') return loadJobIntoForm(uid);
+  if (action === 'delete-job') return deleteJob(uid);
+  showAdminFeedback(`Action clicked: ${action}`, 'info');
+}
+
+async function toggleUserRole(uid) {
+  const user = state.users.find((u) => String(u.uid) === String(uid));
+  if (!user) {
+    showAdminFeedback('User record not found.', 'warning');
+    return;
+  }
+  const nextRole = String(user.role || '').toLowerCase() === 'admin' ? '' : 'admin';
+  try {
+    await update(ref(database, `users/${uid}`), { role: nextRole || null, updatedAt: new Date().toISOString() });
+    showAdminFeedback(nextRole === 'admin' ? 'User promoted to admin.' : 'Admin access removed.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to update user role.', 'error');
+  }
+}
+
+window.toggleUserRole = toggleUserRole;
+
+function renderConversationList() {
+  const list = document.getElementById('admin-conversation-list');
+  const selected = state.selectedThreadId;
+  if (!list) return;
+  const conversations = state.conversations.slice().sort((a, b) => parseDate(b.lastMessageAt || b.updatedAt || b.createdAt) - parseDate(a.lastMessageAt || a.updatedAt || a.createdAt));
+  list.innerHTML = conversations.length ? conversations.map((c) => {
+    const threadId = c.threadId || c.id;
+    const name = c.userName || c.name || c.userEmail || 'Unnamed User';
+    const preview = c.lastMessage || 'No messages yet';
+    const active = String(threadId) === String(selected) ? 'active' : '';
+    return `<button class="conversation-item ${active}" data-thread-id="${esc(threadId)}" onclick="openConversation('${esc(threadId)}')">
+      <div class="conversation-item-name">${esc(name)}</div>
+      <div class="conversation-item-meta">${esc(c.userEmail || '')}</div>
+      <div class="conversation-item-preview">${esc(preview)}</div>
+    </button>`;
+  }).join('') : '<div class="empty-state">Getting data from Firebase...</div>';
+}
+
+function renderConversationThread() {
+  const box = document.getElementById('admin-message-thread');
+  if (!box) return;
+  if (!state.selectedThreadId) {
+    box.innerHTML = '<div class="empty-state">Select a user conversation to view messages.</div>';
+    return;
+  }
+  const msgs = state.selectedMessages || [];
+  if (!msgs.length) {
+    box.innerHTML = '<div class="empty-state">Data confirmed, but no messages yet.</div>';
+    return;
+  }
+  box.innerHTML = msgs.map((m) => {
+    const mine = String(m.senderType || '').toLowerCase() === 'admin';
+    return `<div class="message-bubble ${mine ? 'mine' : 'theirs'}">
+      <div>${esc(m.text || '')}</div>
+      <small>${esc(formatDateTime(m.createdAt))}</small>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function openConversation(threadId) {
+  state.selectedThreadId = threadId;
+  renderConversationList();
+  try {
+    state.selectedMessages = await loadSelectedMessages(threadId);
+    renderConversationThread();
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to get data for this conversation.', 'error');
+  }
+}
+
+async function sendAdminReply() {
+  const threadId = state.selectedThreadId;
+  const input = document.getElementById('admin-message-input');
+  if (!threadId || !input) {
+    showAdminFeedback('Select a conversation first.', 'warning');
+    return;
+  }
+  const text = String(input.value || '').trim();
+  if (!text) {
+    showAdminFeedback('Type a message before sending.', 'warning');
+    return;
+  }
+  const convo = state.conversations.find((c) => String(c.threadId || c.id) === String(threadId)) || {};
+  state.selectedUserId = convo.userUid || state.selectedUserId;
+  const msgRef = push(ref(database, `conversationMessages/${threadId}`));
+  const userUid = convo.userUid || state.selectedUserId || '';
+  try {
+    await set(msgRef, {
+      text,
+      senderType: 'admin',
+      senderUid: state.currentUser?.uid || 'admin',
+      senderEmail: state.currentUser?.email || 'admin',
+      createdAt: new Date().toISOString(),
+    });
+    await update(ref(database, `conversations/${threadId}`), {
+      threadId,
+      userUid,
+      userEmail: convo.userEmail || '',
+      userName: convo.userName || '',
+      adminEmail: state.currentUser?.email || '',
+      lastMessage: text,
+      lastMessageAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      unreadByUser: true,
+      unreadByAdmin: false,
+    });
+    input.value = '';
+    state.selectedMessages = await loadSelectedMessages(threadId);
+    renderConversationThread();
+    renderConversationList();
+    showAdminFeedback('Message sent to user.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to send message.', 'error');
+  }
+}
+
+function renderSelectedUserModal() {
+  const user = state.users.find((u) => String(u.uid) === String(state.selectedUserId));
+  const modal = document.getElementById('user-detail-modal');
+  if (!modal || !user) return;
+  modal.dataset.uid = user.uid;
+  const cv = getCvData(user.uid);
+  const role = String(user.role || '').toLowerCase();
+  const threadId = getThreadId(user.uid);
+  const cvSections = buildCvSections(cv);
+  const joined = formatDate(user.createdAt || user.registeredAt || user.lastLogin);
+  const sendBtn = document.getElementById('admin-send-user-message');
+  const roleBtn = document.getElementById('admin-role-toggle-btn');
+  const emailLink = document.getElementById('admin-user-email-link');
+  const cvDownloadBtn = document.getElementById('admin-download-cv-btn');
+  const cvBox = document.getElementById('admin-user-cv-body');
+  const info = {
+    'admin-user-name': user.name || 'Unnamed User',
+    'admin-user-email': user.email || '—',
+    'admin-user-phone': user.phone || '—',
+    'admin-user-state': user.state || '—',
+    'admin-user-joined': joined,
+    'admin-user-status': user.accountStatus || user.paymentStatus || user.status || 'pending',
+    'admin-user-role': role === 'admin' ? 'Admin' : 'User',
+  };
+  Object.entries(info).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  });
+  if (emailLink) emailLink.href = `mailto:${encodeURIComponent(user.email || '')}?subject=${encodeURIComponent('BARICRYSTAL Support')}`;
+  if (roleBtn) roleBtn.textContent = role === 'admin' ? 'Remove Admin' : 'Make Admin';
+  if (sendBtn) sendBtn.dataset.threadId = threadId;
+  if (cvDownloadBtn) cvDownloadBtn.dataset.userId = user.uid;
+  if (cvBox) {
+    if (!cv) {
+      cvBox.innerHTML = '<div class="empty-state">Unable to get data. No CV saved for this user.</div>';
+    } else {
+      const sectionsHtml = cvSections.length ? cvSections.map((section) => `
+        <div class="cv-section">
+          <h4>${esc(section.title)}</h4>
+          <ul>${section.items.map((item) => `<li>${esc(item || '—')}</li>`).join('')}</ul>
+        </div>`).join('') : '<div class="empty-state">Data confirmed, but CV sections are empty.</div>';
+      cvBox.innerHTML = `
+        <div class="cv-mini-grid">
+          <div><span>Full Name</span><strong>${esc(cv.fullName || user.name || '—')}</strong></div>
+          <div><span>Email</span><strong>${esc(cv.email || user.email || '—')}</strong></div>
+          <div><span>Phone</span><strong>${esc(cv.phone || user.phone || '—')}</strong></div>
+          <div><span>Passport Number</span><strong>${esc(cv.passportNumber || '—')}</strong></div>
+        </div>
+        ${sectionsHtml}
+      `;
+    }
+  }
+  modal.classList.add('show');
+  state.selectedMessages = [];
+  state.selectedThreadId = threadId;
+  openConversation(threadId);
+}
+
+window.openUserModal = function openUserModal(uid) {
+  state.selectedUserId = uid;
+  renderSelectedUserModal();
+};
+
+window.closeUserModal = function closeUserModal() {
+  const modal = document.getElementById('user-detail-modal');
+  if (modal) modal.classList.remove('show');
+  resetSelectedUserState();
+};
+
+window.downloadSelectedUserCv = async function downloadSelectedUserCv() {
+  const user = state.users.find((u) => String(u.uid) === String(state.selectedUserId));
+  if (!user) return showAdminFeedback('Select a user first.', 'warning');
+  const cv = getCvData(user.uid);
+  if (!cv) return showAdminFeedback('Unable to get data. No CV found for this user.', 'warning');
+  try {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('https://cdn.jsdelivr.net/npm/docx@8.5.0/+esm');
+    const sections = [];
+    const addPair = (label, value) => {
+      sections.push(new Paragraph({ children: [new TextRun({ text: `${label}: `, bold: true }), new TextRun(String(value || '—'))] }));
+    };
+    sections.push(new Paragraph({ text: cv.fullName || user.name || 'CV', heading: HeadingLevel.TITLE }));
+    sections.push(new Paragraph({ text: 'Personal Details', heading: HeadingLevel.HEADING_1 }));
+    addPair('Email', cv.email || user.email);
+    addPair('Phone', cv.phone || user.phone);
+    addPair('Address', cv.address);
+    addPair('Nationality', cv.nationality);
+    addPair('Passport Number', cv.passportNumber);
+    addPair('Passport Expiry', cv.passportExpiry);
+    const addListSection = (title, rows, mapper) => {
+      if (!rows || !rows.length) return;
+      sections.push(new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }));
+      rows.forEach((row) => {
+        sections.push(new Paragraph({ children: [new TextRun(`• ${mapper(row)}`)] }));
+      });
+    };
+    const edu = cv.sections?.education || cv.education || [];
+    const exp = cv.sections?.experience || cv.experience || [];
+    const langs = cv.sections?.languages || cv.languages || [];
+    const skills = cv.sections?.skills || cv.skills || [];
+    addListSection('Education', edu, (r) => `${r.school || r.institution || ''} ${r.qualification || ''} ${r.year || ''}`.trim());
+    addListSection('Experience', exp, (r) => `${r.company || ''} ${r.position || ''} ${r.duration || ''}`.trim());
+    addListSection('Languages', langs, (r) => `${r.language || ''} speak:${r.speak || ''} read:${r.read || ''} write:${r.write || ''}`.trim());
+    addListSection('Skills', skills, (r) => r.skill || '');
+    const doc = new Document({ sections: [{ properties: {}, children: sections }] });
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(cv.fullName || user.name || 'cv').replace(/[^a-z0-9]+/gi, '_').toLowerCase()}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showAdminFeedback('CV DOCX download started.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to export DOCX right now.', 'error');
+  }
+};
+
+window.sendAdminMessageFromModal = async function sendAdminMessageFromModal() {
+  const input = document.getElementById('admin-user-message') || document.getElementById('admin-message-input');
+  const threadId = state.selectedThreadId || getThreadId(state.selectedUserId);
+  if (!threadId) return showAdminFeedback('Select a user first.', 'warning');
+  const text = String(input?.value || '').trim();
+  if (!text) return showAdminFeedback('Type a message before sending.', 'warning');
+  const targetUid = state.selectedUserId || state.conversations.find((c) => String(c.threadId || c.id) === String(threadId))?.userUid || '';
+  try {
+    const msgRef = push(ref(database, `conversationMessages/${threadId}`));
+    await set(msgRef, {
+      text,
+      senderType: 'admin',
+      senderUid: state.currentUser?.uid || 'admin',
+      senderEmail: state.currentUser?.email || '',
+      createdAt: new Date().toISOString(),
+    });
+    const user = state.users.find((u) => String(u.uid) === String(targetUid || state.selectedUserId)) || {};
+    await update(ref(database, `conversations/${threadId}`), {
+      threadId,
+      userUid: targetUid || state.selectedUserId,
+      userEmail: user.email || '',
+      userName: user.name || '',
+      lastMessage: text,
+      lastMessageAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      unreadByUser: true,
+      unreadByAdmin: false,
+    });
+    if (input) input.value = '';
+    showAdminFeedback('Message sent.', 'success');
+    if (state.selectedThreadId === threadId) {
+      state.selectedMessages = await loadSelectedMessages(threadId);
+      renderConversationThread();
+      renderConversationList();
+      renderSelectedUserModal();
+    }
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to send message.', 'error');
+  }
+};
+
+window.openConversation = async function openConversation(threadId) {
+  state.selectedThreadId = threadId;
+  try {
+    state.selectedMessages = await loadSelectedMessages(threadId);
+  } catch (error) {
+    console.error(error);
+    showAdminFeedback('Unable to get data for this conversation.', 'error');
+    state.selectedMessages = [];
+  }
+  renderConversationList();
+  renderConversationThread();
+};
+
+window.togglePassword = function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  if (btn) {
+    btn.textContent = isPassword ? '🙈' : '👁';
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+  }
+};
+
+window.showTab = function showTab(tabId, navEl) {
+  setActiveTab(tabId, navEl);
+};
+
+window.filterTable = function filterTable(val) {
+  state.appSearch = String(val || '');
+  renderApplicationsTable();
+};
+
+window.filterStatus = function filterStatus(status, btn) {
+  state.appStatus = String(status || 'all').toLowerCase();
+  document.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderApplicationsTable();
+};
+
+window.saveAdminSettings = saveAdminSettings;
+window.updateAdminPassword = updateAdminPassword;
+window.logoutAdmin = async function logoutAdmin() {
+  try {
+    await signOut(auth);
+  } finally {
+    window.location.href = baseUrl + 'login.html';
+  }
+};
+
+function renderAll() {
+  renderAdminIdentity();
+  renderUsersTable();
+  renderApplicationsTable();
+  renderPaymentsTable();
+  renderJobsTable();
+  renderOverview();
+  renderConversationList();
+  if (state.selectedThreadId) renderConversationThread();
+  if (state.selectedUserId) renderSelectedUserModal();
+  applyActionHandlers();
+}
+
+function applyActionHandlers() {
+  document.querySelectorAll('.action-btn').forEach((btn) => {
+    if (btn.dataset.bound === '1') return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', () => handleActionButtonClick(btn));
+  });
+}
+
+function loadSettingsIntoForm() {
+  const s = state.settings || {};
+  if (document.getElementById('admin-agency-name')) document.getElementById('admin-agency-name').value = s.agencyName || 'BARICRYSTAL INTERNATIONAL';
+  if (document.getElementById('admin-contact-email')) document.getElementById('admin-contact-email').value = s.contactEmail || 'info@baricrystalinternational.com';
+  if (document.getElementById('admin-whatsapp')) document.getElementById('admin-whatsapp').value = s.whatsapp || '';
+}
+
+function watchFirebase() {
+  onValue(ref(database, 'users'), (snap) => {
+    state.users = normalizeUsers(snap.val());
+    renderAll();
+  });
+
+  onValue(ref(database, 'applications'), (snap) => {
+    state.applications = toArray(snap.val(), 'id');
+    renderAll();
+  });
+
+  onValue(ref(database, 'payments'), (snap) => {
+    state.payments = toArray(snap.val(), 'id');
+    renderAll();
+  });
+
+  onValue(ref(database, 'jobs'), (snap) => {
+    state.jobs = toArray(snap.val(), 'id');
+    const jobStatus = document.getElementById('admin-job-count');
+    if (jobStatus) jobStatus.textContent = state.jobs.length ? `(${state.jobs.length})` : '(Getting data)';
+    renderAll();
+    showAdminFeedback(state.jobs.length ? 'Data confirmed from Firebase.' : 'Getting data from Firebase...', state.jobs.length ? 'success' : 'info');
+  }, (error) => {
+    console.error(error);
+    showAdminFeedback('Unable to get data from Firebase.', 'error');
+  });
+
+  onValue(ref(database, 'adminSettings'), (snap) => {
+    state.settings = snap.val() || {};
+    loadSettingsIntoForm();
+    renderOverview();
+  });
+
+  onValue(ref(database, 'cvs'), (snap) => {
+    state.cvs = snap.val() || {};
+    if (state.selectedUserId) renderSelectedUserModal();
+  });
+
+  onValue(ref(database, 'conversations'), (snap) => {
+    state.conversations = toArray(snap.val(), 'id').map((c) => ({ ...c, threadId: c.threadId || c.id }));
+    renderConversationList();
+  });
+}
+
+function boot() {
+  const dateEl = document.getElementById('topbar-date');
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = baseUrl + 'login.html';
+      return;
+    }
+
+    state.currentUser = user;
+    renderAdminIdentity();
+
+    const isAdmin = isAdminEmail(user.email);
+    if (!isAdmin) {
+      try {
+        const snap = await get(ref(database, `users/${user.uid}`));
+        const role = String(snap.exists() ? snap.val()?.role : '').toLowerCase();
+        if (role !== 'admin') {
+          window.location.href = baseUrl + 'dashboard.html';
+          return;
+        }
+      } catch (error) {
+        console.error(error);
+        window.location.href = baseUrl + 'dashboard.html';
+        return;
+      }
+    }
+
+    watchFirebase();
+    renderAll();
+  });
+
+  if (!document.querySelector('script[data-admin-init]')) {
+    const mark = document.createElement('script');
+    mark.dataset.adminInit = '1';
+    document.head.appendChild(mark);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  boot();
+  document.getElementById('job-form')?.addEventListener('submit', submitJobForm);
+  ['job-title','job-category-input','job-country-input','job-slots','job-salary','job-status','job-icon','job-description','job-highlights','job-requirements','job-deadline','job-featured']
+    .forEach((id) => document.getElementById(id)?.addEventListener('input', renderJobPreview));
+  document.getElementById('job-status')?.addEventListener('change', renderJobPreview);
+  document.getElementById('job-featured')?.addEventListener('change', renderJobPreview);
+});

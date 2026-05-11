@@ -1,6 +1,11 @@
 import { auth, database, baseUrl } from './firebase-config.js';
-import { createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+const ADMIN_EMAIL = 'admin@baricrystal.com';
+const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 // ============================================================================
 // BLOCKED EMAIL DOMAINS
@@ -35,6 +40,12 @@ function recordSignupAttempt() {
   localStorage.setItem(SIGNUP_ATTEMPT_KEY, JSON.stringify(recentAttempts));
 }
 
+function setBusy(button, busy, busyText, normalText) {
+  if (!button) return;
+  button.disabled = busy;
+  button.textContent = busy ? busyText : normalText;
+}
+
 // ============================================================================
 // SHOW MESSAGE HELPER
 // ============================================================================
@@ -56,13 +67,54 @@ function showMessage(text, type = 'error') {
   errorMsg.classList.add('show');
 }
 
+async function saveUserRecord(user, providerName = 'email', defaults = {}) {
+  const userRef = ref(database, 'users/' + user.uid);
+  const snapshot = await get(userRef);
+  const existing = snapshot.exists() ? snapshot.val() : {};
+  const admin = isAdminEmail(user.email) || existing.role === 'admin';
+  const joinedAt = existing.joinedAt || existing.createdAt || new Date().toISOString();
+  const accountStatus = defaults.accountStatus || existing.accountStatus || existing.paymentStatus || (admin ? 'paid' : 'unpaid');
+  const emailVerified = typeof defaults.emailVerified === 'boolean' ? defaults.emailVerified : Boolean(user.emailVerified || admin);
+  const displayName = user.displayName || existing.name || '';
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+
+  const payload = {
+    uid: user.uid,
+    firstName: defaults.firstName || existing.firstName || parts[0] || '',
+    lastName: defaults.lastName || existing.lastName || parts.slice(1).join(' ') || '',
+    name: defaults.name || displayName,
+    email: user.email || existing.email || '',
+    phone: defaults.phone || existing.phone || '',
+    state: defaults.state || existing.state || '',
+    photoURL: user.photoURL || existing.photoURL || '',
+    provider: providerName,
+    joinedAt,
+    createdAt: existing.createdAt || joinedAt,
+    lastLogin: new Date().toISOString(),
+    emailVerified,
+    flaggedForReview: existing.flaggedForReview || false,
+    reviewReason: existing.reviewReason || null,
+    accountStatus,
+    paymentStatus: existing.paymentStatus || accountStatus,
+    planName: existing.planName || (accountStatus === 'paid' ? 'Active Plan' : 'Unpaid'),
+    role: admin ? 'admin' : (existing.role || 'user')
+  };
+
+  await update(userRef, payload);
+  return payload;
+}
+
 // ============================================================================
 // AUTH STATE
-// FIX: Only redirect if user is verified — prevents leftover sessions
-// from booting users off the signup page before they can see the form
+// Admin bypasses email verification.
 // ============================================================================
 onAuthStateChanged(auth, (user) => {
-  if (user && user.emailVerified) {
+  if (!user) return;
+  if (isAdminEmail(user.email)) {
+    window.location.href = baseUrl + 'admin.html';
+    return;
+  }
+  if (user.emailVerified) {
     window.location.href = baseUrl + 'dashboard.html';
   }
 });
@@ -93,6 +145,40 @@ window.resendVerificationEmail = async function() {
   }
 };
 
+async function googleSignup() {
+  const btn = document.getElementById('google-signup-btn');
+  showMessage('', 'error');
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.classList.remove('show');
+  setBusy(btn, true, 'Opening Google...', 'Sign Up with Google');
+
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    const admin = isAdminEmail(user.email);
+    const record = await saveUserRecord(user, 'google', {
+      emailVerified: Boolean(user.emailVerified),
+      accountStatus: admin ? 'paid' : 'unpaid',
+      firstName: user.displayName?.split(/\s+/)[0] || '',
+      lastName: user.displayName?.split(/\s+/).slice(1).join(' ') || '',
+      name: user.displayName || ''
+    });
+    window.location.href = record.role === 'admin' ? baseUrl + 'admin.html' : baseUrl + 'dashboard.html';
+  } catch (error) {
+    console.error('❌ Google signup error:', error.code, error.message);
+    const errorMessages = {
+      'auth/popup-closed-by-user': 'Google sign-in was closed before completion.',
+      'auth/cancelled-popup-request': 'Google sign-in was cancelled.',
+      'auth/account-exists-with-different-credential': 'This email already has another sign-in method. Use your existing login first.',
+      'auth/unauthorized-domain': 'This domain is not authorized for Google sign-in in Firebase.',
+      'auth/network-request-failed': 'Network error. Check your internet connection.'
+    };
+    showMessage(errorMessages[error.code] || error.message);
+  } finally {
+    setBusy(btn, false, 'Opening Google...', 'Sign Up with Google');
+  }
+}
+
 // ============================================================================
 // MAIN SIGNUP
 // ============================================================================
@@ -107,7 +193,6 @@ window.firebaseSignup = async function() {
   const terms = document.getElementById('terms-check').checked;
   const btn = document.getElementById('signup-btn');
 
-  // --- Validation ---
   if (!fname || !lname || !email || !phone || !state || !password || !confirm) {
     showMessage('Please fill in all required fields.');
     return;
@@ -133,50 +218,51 @@ window.firebaseSignup = async function() {
     return;
   }
 
-  btn.disabled = true;
-  btn.textContent = 'Creating account...';
+  setBusy(btn, true, 'Creating account...', 'Create Account');
 
   try {
-    // 1. Create Firebase Auth user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-
     recordSignupAttempt();
 
-    // 2. Save to Realtime Database
-    const flagForReview = /\d{5,}/.test(fname + lname) ||
-                          /[!@#$%^&*]/.test(fname + lname) ||
-                          fname.length < 2 || lname.length < 2;
+    const flagForReview = /\d{5,}/.test(fname + lname) || /[!@#$%^&*]/.test(fname + lname) || fname.length < 2 || lname.length < 2;
+    const admin = isAdminEmail(email);
 
     await set(ref(database, 'users/' + user.uid), {
+      uid: user.uid,
       firstName: fname,
       lastName: lname,
+      name: `${fname} ${lname}`.trim(),
       email: email,
       phone: phone,
       state: state,
       createdAt: new Date().toISOString(),
-      emailVerified: false,
+      joinedAt: new Date().toISOString(),
+      emailVerified: admin ? true : false,
       flaggedForReview: flagForReview,
       reviewReason: flagForReview ? 'Suspicious name pattern detected' : null,
-      accountStatus: 'pending_verification'
+      accountStatus: admin ? 'paid' : 'unpaid',
+      paymentStatus: admin ? 'paid' : 'unpaid',
+      planName: admin ? 'Admin Access' : 'Unpaid',
+      role: admin ? 'admin' : 'user',
+      provider: 'password'
     });
 
-    console.log('✅ User saved to DB:', user.uid);
+    if (admin) {
+      await signOut(auth);
+      showMessage('✓ Admin account created. You can sign in without email verification.', 'success');
+      setBusy(btn, false, 'Creating account...', 'Create Account');
+      btn.textContent = 'Create Admin Account';
+      return;
+    }
 
-    // 3. Send verification email
     await sendEmailVerification(user, {
       url: baseUrl + 'dashboard.html',
       handleCodeInApp: true
     });
 
-    console.log('✅ Verification email sent to:', email);
-    console.log('✅ Redirect URL:', baseUrl + 'dashboard.html');
-
-    // 4. FIX: Sign out after signup so the unverified session doesn't
-    // cause unexpected behaviour elsewhere in the app
     await signOut(auth);
 
-    // 5. Show success + resend option
     const errorMsg = document.getElementById('error-msg');
     errorMsg.innerHTML = `
       ✓ Account created! A verification email was sent to <strong>${email}</strong>.<br>
@@ -190,20 +276,17 @@ window.firebaseSignup = async function() {
     errorMsg.classList.add('show');
 
     btn.textContent = 'Check your email';
-
   } catch (error) {
     console.error('❌ Signup error:', error.code, error.message);
-
     const errorMessages = {
       'auth/email-already-in-use': 'This email is already registered. Please log in instead.',
       'auth/weak-password': 'Password is too weak. Use at least 6 characters.',
       'auth/invalid-email': 'Invalid email format. Please check and try again.',
       'auth/network-request-failed': 'Network error. Check your internet connection and try again.',
+      'auth/account-exists-with-different-credential': 'This email already has another sign-in method. Use your existing login first.'
     };
-
     showMessage(errorMessages[error.code] || error.message);
-    btn.disabled = false;
-    btn.textContent = 'Create Account';
+    setBusy(btn, false, 'Creating account...', 'Create Account');
   }
 };
 
@@ -212,7 +295,7 @@ window.firebaseSignup = async function() {
 // ============================================================================
 document.addEventListener('DOMContentLoaded', function() {
   const signupBtn = document.getElementById('signup-btn');
-  if (signupBtn) {
-    signupBtn.addEventListener('click', window.firebaseSignup);
-  }
+  if (signupBtn) signupBtn.addEventListener('click', window.firebaseSignup);
+  const googleBtn = document.getElementById('google-signup-btn');
+  if (googleBtn) googleBtn.addEventListener('click', googleSignup);
 });

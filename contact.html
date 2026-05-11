@@ -83,37 +83,38 @@
     <div class="contact-channels">
 
       <div class="channel">
-        <div class="channel-icon">📞</div>
+        <div class="channel-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
         <div>
           <div class="channel-label">Phone & WhatsApp</div>
-          <div class="channel-value">+234 XXX XXX XXXX</div>
+          <div class="channel-value">08038811959 (NG)<br>+355692874910 (AL)</div>
           <div class="channel-note">Available Monday – Saturday, 8am – 6pm WAT</div>
         </div>
       </div>
 
       <div class="channel">
-        <div class="channel-icon">✉</div>
+        <div class="channel-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
         <div>
           <div class="channel-label">Email</div>
-          <a href="mailto:info@baricrystalinternational.com" class="channel-link">
-            <div class="channel-value">info@baricrystalinternational.com</div>
+          <a href="mailto:baricrystalinternational@gmail.com" class="channel-link">
+            <div class="channel-value">baricrystalinternational@gmail.com</div>
           </a>
           <div class="channel-note">We respond within 1–2 business days</div>
         </div>
       </div>
 
       <div class="channel">
-        <div class="channel-icon">📍</div>
+        <div class="channel-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
         <div>
-          <div class="channel-label">Office Address</div>
+          <div class="channel-label">Office Addresses</div>
           <div class="channel-value">Lagos, Nigeria</div>
-          <div class="channel-note">Full address available on request</div>
+          <div class="channel-value" style="font-size: 13px; margin-top: 8px;">Albania office: Rruga Anita Bitri, Vlore, Albania</div>
+          <div class="channel-note">Both offices available for support</div>
         </div>
       </div>
 
     </div>
 
-    <a href="https://wa.me/234XXXXXXXXXX" target="_blank" class="whatsapp-btn">
+    <a href="https://wa.me/2348038811959" target="_blank" class="whatsapp-btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
       </svg>
@@ -161,5 +162,214 @@ function handleContact() {
   document.getElementById('contact-success').style.display = 'block';
 }
 </script>
+
+<!-- FLOATING HELP PILL -->
+<style>
+.help-pill {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px 14px 16px;
+  background: var(--gold);
+  border-radius: 50px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: slideInUp 0.5s ease-out;
+}
+.help-pill:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(200,155,60,0.4);
+}
+.help-pill-icon {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+.help-pill-text {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dark);
+  white-space: nowrap;
+}
+.help-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+.help-modal.show {
+  display: flex;
+}
+.help-modal-content {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+  position: relative;
+}
+.help-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+.help-modal-close:hover {
+  color: var(--gold);
+}
+.help-modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+.help-modal-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.help-modal-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.help-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.help-section-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.help-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--dark-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  transition: all 0.2s;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.help-contact-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (max-width: 768px) {
+  .help-pill { bottom: 24px; right: 24px; padding: 12px 16px 12px 14px; }
+  .help-pill-text { display: none; }
+  .help-pill { width: 50px; height: 50px; border-radius: 50%; justify-content: center; }
+  .help-modal-content { padding: 24px; }
+  .help-modal-title { font-size: 24px; }
+}
+</style>
+<div class="help-pill" onclick="openHelpModal()">
+  <div class="help-pill-icon">?</div>
+  <div class="help-pill-text">Help</div>
+</div>
+<div class="help-modal" id="helpModal" onclick="closeHelpModal(event)">
+  <div class="help-modal-content" onclick="event.stopPropagation()">
+    <button class="help-modal-close" onclick="closeHelpModal()">×</button>
+    <div class="help-modal-title">How Can We Help?</div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Getting Started</div>
+      <div class="help-section-text">New to BARICRYSTAL? Start by creating an account, filling out your CV, and submitting your application. Our team will review your profile and match you with suitable job opportunities.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Application Status</div>
+      <div class="help-section-text">You can track your application status anytime by logging into your dashboard. We'll notify you via email at each stage of the process.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Payment & Plans</div>
+      <div class="help-section-text">We offer Standard (₦25,000) and Priority (₦45,000) plans. Both include full processing and employer matching. Priority includes faster processing and a dedicated agent.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">CV & Documents</div>
+      <div class="help-section-text">Use our CV builder to fill out your profile following the BARICRYSTAL template. Make sure to upload all required documents including passport scans and medical reports.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Email Verification</div>
+      <div class="help-section-text">Use the same email you registered with. If your account is pending, follow the on-screen instructions to continue.</div>
+    </div>
+    <div class="help-modal-section">
+      <div class="help-section-title">Still Need Help?</div>
+      <div class="help-section-text">Contact our team for personalized support. We're here to guide you through every step of your journey.</div>
+      <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="mailto:info@baricrystalinternational.com" class="help-contact-btn">Email</a>
+        <a href="contact.html" class="help-contact-btn">Contact Page</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function openHelpModal() {
+  document.getElementById('helpModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeHelpModal(event) {
+  if (event && event.target.id !== 'helpModal') return;
+  document.getElementById('helpModal').classList.remove('show');
+  document.body.style.overflow = 'auto';
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeHelpModal();
+});
+</script>
+
 </body>
 </html>

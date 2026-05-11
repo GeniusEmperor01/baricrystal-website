@@ -151,18 +151,24 @@ async function firebaseLogin() {
       return;
     }
 
-    // Update last login + sync verified status to DB
+    // Update last login + keep account status synced
     const userRef = ref(database, 'users/' + user.uid);
+    const snapshot = await get(userRef);
+    const userData = snapshot.exists() ? snapshot.val() : {};
+
+    const accountStatus = userData.accountStatus || userData.paymentStatus || 'unpaid';
+
     await update(userRef, {
       lastLogin: new Date().toISOString(),
-      emailVerified: true
+      emailVerified: true,
+      accountStatus,
+      paymentStatus: userData.paymentStatus || accountStatus,
+      planName: userData.planName || (accountStatus === 'paid' || accountStatus === 'active' ? 'Active Plan' : 'Unpaid')
     });
 
     // Redirect based on role
-    const snapshot = await get(userRef);
-    if (snapshot.exists()) {
-      const userData = snapshot.val();
-      window.location.href = baseUrl + (userData.role === 'admin' ? 'admin.html' : 'dashboard.html');
+    if (userData.role === 'admin') {
+      window.location.href = baseUrl + 'admin.html';
     } else {
       window.location.href = baseUrl + 'dashboard.html';
     }
