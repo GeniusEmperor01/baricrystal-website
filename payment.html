@@ -109,23 +109,21 @@ body {
 import { auth, baseUrl } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
+const ADMIN_EMAIL = 'admin@baricrystal.com';
+const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
+
 onAuthStateChanged(auth, (user) => {
   const authCheck = document.getElementById('auth-check');
   const paymentForm = document.getElementById('payment-form');
 
-  if (!user || !user.emailVerified) {
-    // Not authenticated — show login prompt
+  if (!user || (!user.emailVerified && !isAdminEmail(user.email))) {
     authCheck.style.display = 'block';
     paymentForm.style.display = 'none';
     return;
   }
 
-  // User is authenticated — hide login prompt and load payment form
   authCheck.style.display = 'none';
   paymentForm.style.display = 'block';
-
-  // TODO: Load actual payment form content here
-  // This can be injected dynamically or you can merge both into one file
 });
 </script>
 

@@ -2,6 +2,9 @@ import { auth, database, baseUrl } from './firebase-config.js';
 import { onAuthStateChanged, signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { ref, get, update, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
+const ADMIN_EMAIL = 'admin@baricrystal.com';
+const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
+
 let currentUser = null;
 let userData = null;
 
@@ -14,7 +17,7 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  if (!user.emailVerified) {
+  if (!user.emailVerified && !isAdminEmail(user.email)) {
     const content = document.querySelector('.content');
     if (content) {
       content.innerHTML = `

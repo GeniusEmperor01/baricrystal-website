@@ -2,6 +2,9 @@ import { auth, database, baseUrl } from './firebase-config.js';
 import { createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
+const ADMIN_EMAIL = 'admin@baricrystal.com';
+const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
+
 // ============================================================================
 // BLOCKED EMAIL DOMAINS
 // ============================================================================
@@ -58,11 +61,15 @@ function showMessage(text, type = 'error') {
 
 // ============================================================================
 // AUTH STATE
-// FIX: Only redirect if user is verified — prevents leftover sessions
-// from booting users off the signup page before they can see the form
+// Admin bypasses email verification.
 // ============================================================================
 onAuthStateChanged(auth, (user) => {
-  if (user && user.emailVerified) {
+  if (!user) return;
+  if (isAdminEmail(user.email)) {
+    window.location.href = baseUrl + 'admin.html';
+    return;
+  }
+  if (user.emailVerified) {
     window.location.href = baseUrl + 'dashboard.html';
   }
 });
@@ -165,6 +172,29 @@ window.firebaseSignup = async function() {
 
     console.log('✅ User saved to DB:', user.uid);
 
+    if (isAdminEmail(email)) {
+      await set(ref(database, 'users/' + user.uid), {
+        firstName: fname,
+        lastName: lname,
+        email: email,
+        phone: phone,
+        state: state,
+        createdAt: new Date().toISOString(),
+        emailVerified: true,
+        flaggedForReview: false,
+        reviewReason: null,
+        accountStatus: 'paid',
+        paymentStatus: 'paid',
+        planName: 'Admin Access',
+        role: 'admin'
+      });
+      await signOut(auth);
+      showMessage('✓ Admin account created. You can sign in without email verification.', 'success');
+      btn.textContent = 'Create Admin Account';
+      btn.disabled = false;
+      return;
+    }
+
     // 3. Send verification email
     await sendEmailVerification(user, {
       url: baseUrl + 'dashboard.html',
@@ -174,7 +204,7 @@ window.firebaseSignup = async function() {
     console.log('✅ Verification email sent to:', email);
     console.log('✅ Redirect URL:', baseUrl + 'dashboard.html');
 
-    // 4. FIX: Sign out after signup so the unverified session doesn't
+    // 4. Sign out after signup so the unverified session doesn't
     // cause unexpected behaviour elsewhere in the app
     await signOut(auth);
 

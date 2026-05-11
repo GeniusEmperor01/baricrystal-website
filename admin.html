@@ -325,6 +325,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   </div>
 
   <div class="content">
+    <div id="admin-feedback" class="admin-feedback" style="display:none;margin-bottom:20px;padding:14px 16px;border:1px solid var(--border);background:rgba(255,255,255,0.02);color:var(--text-muted);font-size:13px;"></div>
 
     <!-- OVERVIEW TAB -->
     <div class="tab-panel active" id="tab-overview">
@@ -398,7 +399,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
           <thead><tr>
             <th>Candidate</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Date</th>
           </tr></thead>
-          <tbody>
+          <tbody id="admin-recent-applications-body">
             <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>Factory & Production</td><td>6 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td></tr>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>Auto-mobile Engineer</td><td>3 Month</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td></tr>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>Construction Engineer</td><td>6 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
@@ -412,7 +413,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="tab-panel" id="tab-applications">
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title">All Applications <span style="color:var(--text-muted);font-weight:400;">(47)</span></div>
+          <div class="table-title">All Applications <span id="admin-app-count" style="color:var(--text-muted);font-weight:400;">(47)</span></div>
           <div class="table-actions">
             <input class="search-input" placeholder="Search candidates..." oninput="filterTable(this.value)"/>
             <button class="filter-btn active" onclick="filterStatus('all', this)">All</button>
@@ -424,7 +425,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
           <thead><tr>
             <th>Candidate</th><th>Phone</th><th>Job Category</th><th>Plan</th><th>Status</th><th>Applied</th><th>Action</th>
           </tr></thead>
-          <tbody>
+          <tbody id="admin-applications-body">
             <tr data-status="approved"><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Factory & Production</td><td>6 Month</td><td><span class="badge badge-approved">Approved</span></td><td>Mar 22</td><td><button class="action-btn">View</button></td></tr>
             <tr data-status="processing"><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Auto-mobile Engineer</td><td>3 Month</td><td><span class="badge badge-processing">Processing</span></td><td>Mar 21</td><td><button class="action-btn">View</button></td></tr>
             <tr data-status="pending"><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Construction Engineer</td><td>6 Month</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td><td><button class="action-btn">View</button></td></tr>
@@ -447,7 +448,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <div class="table-header"><div class="table-title">Payment Records</div></div>
         <table>
           <thead><tr><th>Candidate</th><th>Plan</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
-          <tbody>
+          <tbody id="admin-payments-body">
             <tr><td><div class="candidate-name">Adebayo Okon</div></td><td>6 Month</td><td>₦150,000</td><td>Card</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 22</td></tr>
             <tr><td><div class="candidate-name">Chioma Nwosu</div></td><td>3 Month</td><td>₦200,000</td><td>Flutterwave</td><td><span class="badge badge-paid">Paid</span></td><td>Mar 21</td></tr>
             <tr><td><div class="candidate-name">Emeka Ibe</div></td><td>6 Month</td><td>₦150,000</td><td>Bank Transfer</td><td><span class="badge badge-pending">Pending</span></td><td>Mar 20</td></tr>
@@ -469,7 +470,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <div class="table-header"><div class="table-title">Job Listings</div></div>
         <table>
           <thead><tr><th>#</th><th>Job Title</th><th>Category</th><th>Country</th><th>Slots</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody>
+          <tbody id="admin-jobs-body">
             <tr><td style="color:var(--text-muted)">001</td><td>Production Line Worker</td><td>Factory</td><td>Poland</td><td>10</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
             <tr><td style="color:var(--text-muted)">002</td><td>General Construction Labour</td><td>Construction</td><td>Germany</td><td>8</td><td><div class="job-pill"><div class="job-dot open"></div>Open</div></td><td><button class="action-btn">Edit</button></td></tr>
             <tr><td style="color:var(--text-muted)">003</td><td>Hotel Housekeeper</td><td>Hospitality</td><td>UAE</td><td>5</td><td><div class="job-pill"><div class="job-dot filled"></div>Filled</div></td><td><button class="action-btn">Edit</button></td></tr>
@@ -485,12 +486,12 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="tab-panel" id="tab-users">
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title">Registered Users <span style="color:var(--text-muted);font-weight:400;">(47)</span></div>
+          <div class="table-title">Registered Users <span id="admin-user-count" style="color:var(--text-muted);font-weight:400;">(47)</span></div>
           <input class="search-input" placeholder="Search users..."/>
         </div>
         <table>
           <thead><tr><th>User</th><th>Phone</th><th>State</th><th>Registered</th><th>Application</th><th>Action</th></tr></thead>
-          <tbody>
+          <tbody id="admin-users-body">
             <tr><td><div class="candidate-info"><div class="candidate-avatar">AO</div><div><div class="candidate-name">Adebayo Okon</div><div class="candidate-email">adebayo@email.com</div></div></div></td><td>+234 801 234 5678</td><td>Lagos</td><td>Mar 15</td><td><span class="badge badge-approved">Approved</span></td><td><button class="action-btn">View</button></td></tr>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">CN</div><div><div class="candidate-name">Chioma Nwosu</div><div class="candidate-email">chioma@email.com</div></div></div></td><td>+234 802 345 6789</td><td>Anambra</td><td>Mar 16</td><td><span class="badge badge-processing">Processing</span></td><td><button class="action-btn">View</button></td></tr>
             <tr><td><div class="candidate-info"><div class="candidate-avatar">EI</div><div><div class="candidate-name">Emeka Ibe</div><div class="candidate-email">emeka@email.com</div></div></div></td><td>+234 803 456 7890</td><td>Enugu</td><td>Mar 17</td><td><span class="badge badge-pending">Pending</span></td><td><button class="action-btn">View</button></td></tr>
@@ -506,11 +507,11 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <div style="background:var(--dark-2);border:1px solid var(--border);padding:32px;margin-bottom:16px;">
           <div style="font-size:12px;font-weight:500;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">Agency Information</div>
           <div style="display:flex;flex-direction:column;gap:14px;">
-            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Agency Name</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" value="BARICRYSTAL INTERNATIONAL"/></div>
-            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Contact Email</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" value="info@baricrystalinternational.com"/></div>
-            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">WhatsApp Number</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="+234 XXX XXX XXXX"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Agency Name</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" id="admin-agency-name" value="BARICRYSTAL INTERNATIONAL"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Contact Email</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" id="admin-contact-email" value="info@baricrystalinternational.com"/></div>
+            <div><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">WhatsApp Number</div><input style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" id="admin-whatsapp" placeholder="+234 XXX XXX XXXX"/></div>
           </div>
-          <button style="margin-top:20px;padding:11px 28px;background:var(--gold);color:var(--dark);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;">Save Changes</button>
+          <button style="margin-top:20px;padding:11px 28px;background:var(--gold);color:var(--dark);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;" onclick="saveAdminSettings()">Save Changes</button>
         </div>
         <div style="background:var(--dark-2);border:1px solid var(--border);padding:32px;">
           <div style="font-size:12px;font-weight:500;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">Admin Password</div>
@@ -518,7 +519,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <div class="password-field"><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">Current Password</div><input id="admin-current-password" type="password" autocomplete="current-password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/><button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('admin-current-password', this)">👁</button></div>
             <div class="password-field"><div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;">New Password</div><input id="admin-new-password" type="password" autocomplete="new-password" style="width:100%;background:var(--dark-3);border:1px solid var(--border-subtle);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="••••••••"/><button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('admin-new-password', this)">👁</button></div>
           </div>
-          <button style="margin-top:20px;padding:11px 28px;background:transparent;color:var(--gold);border:1px solid var(--gold);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;">Update Password</button>
+          <button style="margin-top:20px;padding:11px 28px;background:transparent;color:var(--gold);border:1px solid var(--gold);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;" onclick="updateAdminPassword()">Update Password</button>
         </div>
       </div>
     </div>
@@ -529,6 +530,9 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 <script>
 // Set date
 document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+const ADMIN_EMAIL = 'admin@baricrystal.com';
+const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
 
 window.togglePassword = function(inputId, btn) {
   const input = document.getElementById(inputId);
@@ -543,25 +547,177 @@ window.togglePassword = function(inputId, btn) {
 
 const titles = { overview:'Overview', applications:'Applications', payments:'Payments', jobs:'Job Listings', users:'Users', settings:'Settings' };
 
+function showAdminFeedback(message, tone = 'info') {
+  const box = document.getElementById('admin-feedback');
+  if (!box) return;
+  const colors = {
+    success: ['rgba(45,158,107,0.12)', 'rgba(45,158,107,0.35)', '#2D9E6B'],
+    warning: ['rgba(232,168,56,0.12)', 'rgba(232,168,56,0.35)', '#E8A838'],
+    error: ['rgba(226,75,74,0.10)', 'rgba(226,75,74,0.30)', '#E24B4A'],
+    info: ['rgba(58,138,196,0.10)', 'rgba(58,138,196,0.30)', 'var(--text-muted)'],
+  };
+  const [bg, border, color] = colors[tone] || colors.info;
+  box.style.display = 'block';
+  box.style.background = bg;
+  box.style.borderColor = border;
+  box.style.color = color;
+  box.textContent = message;
+}
+
 function showTab(tabId, navEl) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('tab-' + tabId).classList.add('active');
+  const panel = document.getElementById('tab-' + tabId);
+  if (panel) panel.classList.add('active');
   if (navEl) navEl.classList.add('active');
-  document.getElementById('page-title').textContent = titles[tabId] || tabId;
+  const title = document.getElementById('page-title');
+  if (title) title.textContent = titles[tabId] || tabId;
+}
+
+function safeParseArray(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function initials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] || 'U') + (parts[1]?.[0] || '')).toUpperCase();
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function emptyRow(cols, message) {
+  return `<tr><td colspan="${cols}"><div style="padding:28px 18px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-subtle);background:rgba(255,255,255,0.01);border-radius:12px;">${escapeHtml(message)}</div></td></tr>`;
+}
+
+function badgeForStatus(status) {
+  const s = String(status || 'pending').toLowerCase();
+  if (['approved', 'paid', 'active', 'completed'].includes(s)) return 'badge-approved';
+  if (['processing', 'in review', 'review', 'pending review'].includes(s)) return 'badge-processing';
+  if (['rejected', 'declined'].includes(s)) return 'badge-rejected';
+  return 'badge-pending';
+}
+
+function statusLabel(status) {
+  const s = String(status || 'pending').toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function renderApplicationsTable() {
+  const tbody = document.getElementById('admin-applications-body');
+  const recent = document.getElementById('admin-recent-applications-body');
+  const data = safeParseArray('baricrystal_admin_applications');
+
+  const rows = data.map((item, idx) => {
+    const name = item.name || [item.firstName, item.lastName].filter(Boolean).join(' ') || 'Unnamed Applicant';
+    const email = item.email || '—';
+    const phone = item.phone || '—';
+    const job = item.jobCategory || item.category || item.jobTitle || '—';
+    const plan = item.plan || item.planName || '—';
+    const status = item.status || item.applicationStatus || 'pending';
+    const applied = formatDate(item.appliedAt || item.createdAt || item.date);
+    const avatar = initials(name);
+    return `<tr data-status="${escapeHtml(String(status).toLowerCase())}"><td><div class="candidate-info"><div class="candidate-avatar">${escapeHtml(avatar)}</div><div><div class="candidate-name">${escapeHtml(name)}</div><div class="candidate-email">${escapeHtml(email)}</div></div></div></td><td>${escapeHtml(phone)}</td><td>${escapeHtml(job)}</td><td>${escapeHtml(plan)}</td><td><span class="badge ${badgeForStatus(status)}">${escapeHtml(statusLabel(status))}</span></td><td>${escapeHtml(applied)}</td><td><button class="action-btn" data-action="view">View</button></td></tr>`;
+  }).join('');
+
+  const fallback = data.length ? rows : emptyRow(7, 'No applications yet. Once Firebase is connected, applications will show up here automatically.');
+  if (tbody) tbody.innerHTML = fallback;
+  if (recent) recent.innerHTML = data.length ? data.slice(0, 4).map((item) => {
+    const name = item.name || [item.firstName, item.lastName].filter(Boolean).join(' ') || 'Unnamed Applicant';
+    const email = item.email || '—';
+    const job = item.jobCategory || item.category || item.jobTitle || '—';
+    const status = item.status || item.applicationStatus || 'pending';
+    const date = formatDate(item.appliedAt || item.createdAt || item.date);
+    return `<tr><td><div class="candidate-info"><div class="candidate-avatar">${escapeHtml(initials(name))}</div><div><div class="candidate-name">${escapeHtml(name)}</div><div class="candidate-email">${escapeHtml(email)}</div></div></div></td><td>${escapeHtml(job)}</td><td>${escapeHtml(item.plan || item.planName || '—')}</td><td><span class="badge ${badgeForStatus(status)}">${escapeHtml(statusLabel(status))}</span></td><td>${escapeHtml(date)}</td></tr>`;
+  }).join('') : emptyRow(5, 'No recent applications yet.');
+}
+
+function renderPaymentsTable() {
+  const tbody = document.getElementById('admin-payments-body');
+  const data = safeParseArray('baricrystal_admin_payments');
+  const rows = data.map((item) => {
+    const name = item.name || item.candidate || 'Unnamed Client';
+    const plan = item.plan || item.planName || '—';
+    const amount = item.amount || '—';
+    const method = item.method || item.paymentMethod || '—';
+    const status = item.status || item.paymentStatus || 'pending';
+    const date = formatDate(item.date || item.createdAt || item.paidAt);
+    return `<tr><td><div class="candidate-name">${escapeHtml(name)}</div><div class="candidate-email">${escapeHtml(item.email || '')}</div></td><td>${escapeHtml(plan)}</td><td>${escapeHtml(amount)}</td><td>${escapeHtml(method)}</td><td><span class="badge ${badgeForStatus(status)}">${escapeHtml(statusLabel(status))}</span></td><td>${escapeHtml(date)}</td></tr>`;
+  }).join('');
+  if (tbody) tbody.innerHTML = data.length ? rows : emptyRow(6, 'No payment records yet. Payments will appear here once your gateway or Firebase writes them.');
+}
+
+function renderJobsTable() {
+  const tbody = document.getElementById('admin-jobs-body');
+  const data = safeParseArray('baricrystal_admin_jobs');
+  const rows = data.map((item, idx) => {
+    const id = item.id || String(idx + 1).padStart(3, '0');
+    const title = item.title || item.jobTitle || 'Untitled Job';
+    const category = item.category || item.jobCategory || '—';
+    const country = item.country || '—';
+    const slots = item.slots ?? item.openings ?? '—';
+    const status = item.status || item.state || 'open';
+    const pill = String(status).toLowerCase() === 'filled' ? 'filled' : 'open';
+    return `<tr><td style="color:var(--text-muted)">${escapeHtml(id)}</td><td>${escapeHtml(title)}</td><td>${escapeHtml(category)}</td><td>${escapeHtml(country)}</td><td>${escapeHtml(slots)}</td><td><div class="job-pill"><div class="job-dot ${pill}"></div>${escapeHtml(statusLabel(status))}</div></td><td><button class="action-btn" data-action="edit">Edit</button></td></tr>`;
+  }).join('');
+  if (tbody) tbody.innerHTML = data.length ? rows : emptyRow(7, 'No job listings yet. Add jobs from Firebase or local storage and they will render here.');
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById('admin-users-body');
+  const data = safeParseArray('baricrystal_admin_users');
+  const rows = data.map((item) => {
+    const name = item.name || [item.firstName, item.lastName].filter(Boolean).join(' ') || 'Unnamed User';
+    const email = item.email || '—';
+    const phone = item.phone || '—';
+    const state = item.state || item.location || '—';
+    const registered = formatDate(item.registeredAt || item.createdAt);
+    const app = item.applicationStatus || item.status || 'pending';
+    return `<tr><td><div class="candidate-info"><div class="candidate-avatar">${escapeHtml(initials(name))}</div><div><div class="candidate-name">${escapeHtml(name)}</div><div class="candidate-email">${escapeHtml(email)}</div></div></div></td><td>${escapeHtml(phone)}</td><td>${escapeHtml(state)}</td><td>${escapeHtml(registered)}</td><td><span class="badge ${badgeForStatus(app)}">${escapeHtml(statusLabel(app))}</span></td><td><button class="action-btn" data-action="view">View</button></td></tr>`;
+  }).join('');
+  if (tbody) tbody.innerHTML = data.length ? rows : emptyRow(6, 'No users yet. When Firebase data arrives, this table will populate automatically.');
+}
+
+function renderOverview() {
+  const applications = safeParseArray('baricrystal_admin_applications');
+  const payments = safeParseArray('baricrystal_admin_payments');
+  const approved = applications.filter(a => ['approved', 'paid', 'active', 'completed'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
+  const pending = applications.filter(a => ['pending', 'processing', 'review'].includes(String(a.status || a.applicationStatus || '').toLowerCase())).length;
+  const revenue = payments.reduce((sum, p) => sum + (Number(String(p.amount).replace(/[^\d.]/g, '')) || 0), 0);
+  const stats = document.querySelectorAll('.stats-row .stat-card-num');
+  if (stats[0]) stats[0].textContent = String(applications.length || 0);
+  if (stats[1]) stats[1].textContent = String(approved || 0);
+  if (stats[2]) stats[2].textContent = String(pending || 0);
+  if (stats[3]) stats[3].textContent = revenue ? `₦${revenue.toLocaleString('en-NG')}` : '₦0';
+  showAdminFeedback(applications.length || payments.length ? 'Live admin data loaded from storage. Replace the local arrays with Firebase collections when ready.' : 'No live records yet. The tables are showing empty states instead of fake demo data.', applications.length || payments.length ? 'success' : 'warning');
 }
 
 function filterTable(val) {
-  const rows = document.querySelectorAll('#applications-table tbody tr');
+  const rows = document.querySelectorAll('#admin-applications-body tr');
+  const q = val.toLowerCase();
   rows.forEach(row => {
-    row.style.display = row.textContent.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 }
 
 function filterStatus(status, btn) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const rows = document.querySelectorAll('#applications-table tbody tr');
+  if (btn) btn.classList.add('active');
+  const rows = document.querySelectorAll('#admin-applications-body tr');
   rows.forEach(row => {
     row.style.display = status === 'all' || row.dataset.status === status ? '' : 'none';
   });
@@ -574,31 +730,31 @@ function saveAdminSettings() {
     whatsapp: document.getElementById('admin-whatsapp')?.value || ''
   };
   localStorage.setItem('baricrystal_admin_settings', JSON.stringify(payload));
-  alert('Admin settings saved locally. Firebase can be wired in later.');
+  showAdminFeedback('Settings saved locally. Wire Firebase later to make these values persistent for the whole team.', 'success');
 }
 
 function updateAdminPassword() {
   const currentPassword = document.getElementById('admin-current-password')?.value || '';
   const newPassword = document.getElementById('admin-new-password')?.value || '';
   if (!currentPassword || !newPassword) {
-    alert('Fill in both password fields first.');
+    showAdminFeedback('Fill in both password fields first.', 'warning');
     return;
   }
-  alert('Password update is a placeholder for now. Wire this to Firebase Auth later.');
+  showAdminFeedback('Password update is still a placeholder. Wire this to Firebase Auth later.', 'info');
 }
 
 function handleActionButtonClick(btn) {
   const row = btn.closest('tr');
-  const text = (btn.textContent || '').trim().toLowerCase();
+  const text = (btn.dataset.action || btn.textContent || '').trim().toLowerCase();
   const rowText = row ? row.textContent.replace(/\s+/g, ' ').trim() : '';
 
   if (text === 'view') {
-    alert('Opening record: ' + rowText);
+    showAdminFeedback(`Viewing record: ${rowText}`, 'info');
     return;
   }
 
   if (text === 'edit') {
-    alert('Editing item: ' + rowText);
+    showAdminFeedback(`Editing item: ${rowText}`, 'info');
     return;
   }
 
@@ -607,14 +763,22 @@ function handleActionButtonClick(btn) {
     return;
   }
 
-  alert('Action clicked: ' + text);
+  showAdminFeedback(`Action clicked: ${text}`, 'info');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  renderApplicationsTable();
+  renderPaymentsTable();
+  renderJobsTable();
+  renderUsersTable();
+  renderOverview();
+
   document.querySelectorAll('.action-btn').forEach(btn => {
     btn.addEventListener('click', () => handleActionButtonClick(btn));
   });
 });
+</script>
+
 </script>
 
 <!-- FLOATING HELP PILL -->

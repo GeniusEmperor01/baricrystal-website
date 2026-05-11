@@ -1,16 +1,24 @@
 import { auth, database, baseUrl } from './firebase-config.js';
-import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { ref, get, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+const ADMIN_EMAIL = 'admin@baricrystal.com';
+const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
 
 const errorMsg = document.getElementById('error-msg');
 const submitBtn = document.getElementById('login-btn');
 
 // ============================================================================
 // AUTH STATE
-// FIX: Only redirect verified users — unverified sessions are ignored
+// Admin bypasses email verification.
 // ============================================================================
 onAuthStateChanged(auth, (user) => {
-  if (user && user.emailVerified) {
+  if (!user) return;
+  if (isAdminEmail(user.email)) {
+    window.location.href = baseUrl + 'admin.html';
+    return;
+  }
+  if (user.emailVerified) {
     window.location.href = baseUrl + 'dashboard.html';
   }
 });
@@ -51,9 +59,9 @@ async function firebaseLogin() {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // FIX: Block unverified users from logging in
-    if (!user.emailVerified) {
-      await auth.signOut();
+    // Keep admin sign-in free of email verification
+    if (!isAdminEmail(user.email) && !user.emailVerified) {
+      await signOut(auth);
       showError('Please verify your email before logging in. Check your inbox for the verification link.');
       submitBtn.disabled = false;
       submitBtn.textContent = 'Sign In';
@@ -75,8 +83,8 @@ async function firebaseLogin() {
       planName: userData.planName || (accountStatus === 'paid' || accountStatus === 'active' ? 'Active Plan' : 'Unpaid')
     });
 
-    // Redirect based on role
-    if (userData.role === 'admin') {
+    // Redirect based on role or admin email
+    if (userData.role === 'admin' || isAdminEmail(user.email)) {
       window.location.href = baseUrl + 'admin.html';
     } else {
       window.location.href = baseUrl + 'dashboard.html';
