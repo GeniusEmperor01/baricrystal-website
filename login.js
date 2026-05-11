@@ -172,22 +172,35 @@ async function firebaseLogin() {
 
     // Update last login + keep account status synced
     const userRef = ref(database, 'users/' + user.uid);
-    const snapshot = await get(userRef);
+    let snapshot;
+    try {
+      snapshot = await get(userRef);
+    } catch (e) {
+      console.warn('Could not fetch user data:', e);
+      snapshot = { exists: () => false };
+    }
+    
     const userData = snapshot.exists() ? snapshot.val() : {};
+    
+    // FORCE: Admin accounts MUST be marked as admin and verified
+    const finalRole = hasAdminRole ? 'admin' : (userData.role || 'user');
+    const accountStatus = userData.accountStatus || userData.paymentStatus || (finalRole === 'admin' ? 'paid' : 'unpaid');
 
-    const accountStatus = userData.accountStatus || userData.paymentStatus || (hasAdminRole ? 'paid' : 'unpaid');
-
-    await update(userRef, {
-      lastLogin: new Date().toISOString(),
-      emailVerified: true,
-      accountStatus,
-      paymentStatus: userData.paymentStatus || accountStatus,
-      planName: userData.planName || (accountStatus === 'paid' || accountStatus === 'active' ? 'Active Plan' : 'Unpaid'),
-      role: userData.role || (hasAdminRole ? 'admin' : 'user')
-    });
+    try {
+      await update(userRef, {
+        lastLogin: new Date().toISOString(),
+        emailVerified: true,
+        accountStatus,
+        paymentStatus: userData.paymentStatus || accountStatus,
+        planName: userData.planName || (accountStatus === 'paid' || accountStatus === 'active' ? 'Active Plan' : 'Unpaid'),
+        role: finalRole
+      });
+    } catch (e) {
+      console.error('Could not update user data:', e);
+    }
 
     // Redirect based on role
-    if (hasAdminRole || userData.role === 'admin') {
+    if (finalRole === 'admin') {
       window.location.href = baseUrl + 'admin.html';
     } else {
       window.location.href = baseUrl + 'dashboard.html';
