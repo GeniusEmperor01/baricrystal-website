@@ -145,9 +145,24 @@ async function firebaseLogin() {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // FIX: Block unverified users from logging in (except admins)
+    // Check if user is admin (by email OR database role)
     const isAdmin = user.email && String(user.email).trim().toLowerCase() === 'admin@baricrystal.com';
-    if (!user.emailVerified && !isAdmin) {
+    
+    // Check database for role to be extra sure
+    let userRole = null;
+    try {
+      const dbSnapshot = await get(ref(database, 'users/' + user.uid));
+      if (dbSnapshot.exists()) {
+        userRole = dbSnapshot.val()?.role;
+      }
+    } catch (e) {
+      console.warn('Could not check database role:', e);
+    }
+    
+    const hasAdminRole = isAdmin || userRole === 'admin';
+
+    // FIX: Block unverified users from logging in (except admins)
+    if (!user.emailVerified && !hasAdminRole) {
       await auth.signOut();
       showError('Please verify your email before logging in. Check your inbox for the verification link.');
       submitBtn.disabled = false;
@@ -160,18 +175,19 @@ async function firebaseLogin() {
     const snapshot = await get(userRef);
     const userData = snapshot.exists() ? snapshot.val() : {};
 
-    const accountStatus = userData.accountStatus || userData.paymentStatus || 'unpaid';
+    const accountStatus = userData.accountStatus || userData.paymentStatus || (hasAdminRole ? 'paid' : 'unpaid');
 
     await update(userRef, {
       lastLogin: new Date().toISOString(),
       emailVerified: true,
       accountStatus,
       paymentStatus: userData.paymentStatus || accountStatus,
-      planName: userData.planName || (accountStatus === 'paid' || accountStatus === 'active' ? 'Active Plan' : 'Unpaid')
+      planName: userData.planName || (accountStatus === 'paid' || accountStatus === 'active' ? 'Active Plan' : 'Unpaid'),
+      role: userData.role || (hasAdminRole ? 'admin' : 'user')
     });
 
     // Redirect based on role
-    if (userData.role === 'admin') {
+    if (hasAdminRole || userData.role === 'admin') {
       window.location.href = baseUrl + 'admin.html';
     } else {
       window.location.href = baseUrl + 'dashboard.html';
